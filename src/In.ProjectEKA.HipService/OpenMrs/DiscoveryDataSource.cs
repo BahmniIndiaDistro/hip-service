@@ -24,11 +24,11 @@ namespace In.ProjectEKA.HipService.OpenMrs
             if (!string.IsNullOrEmpty(name)) {
                 query["name"]=name;
             }
-            if (!string.IsNullOrEmpty(yearOfBirth)) {
-                query["birthdate"]=yearOfBirth;
-            }
             if (gender != null) {
                 query["gender"]=gender.ToString().ToLower();
+            }
+            if (!string.IsNullOrEmpty(yearOfBirth)) {
+                query["birthdate"]=yearOfBirth;
             }
             if (query.ToString() != ""){
                 path = $"{path}/?{query}";

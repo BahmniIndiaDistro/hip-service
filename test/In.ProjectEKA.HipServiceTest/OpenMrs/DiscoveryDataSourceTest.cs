@@ -60,14 +60,23 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
 
             //Then
             patients.Count.Should().Be(0);
+            patients.Should().BeEmpty();
         }
 
         [Theory]
-        [InlineData("ws/fhir2/Patient/?name=David", "David", null, null)]
+        [InlineData("ws/fhir2/Patient/?name=David%3f", "David?", null, null)]
+        [InlineData("ws/fhir2/Patient/?name=David1", "David1", null, null)]
+        [InlineData("ws/fhir2/Patient/?name=david", "david", null, null)]
+        [InlineData("ws/fhir2/Patient", "", null, null)]
         [InlineData("ws/fhir2/Patient/?gender=male", null, AdministrativeGender.Male, null)]
         [InlineData("ws/fhir2/Patient/?gender=female", null, AdministrativeGender.Female, null)]
         [InlineData("ws/fhir2/Patient/?gender=unknown", null, AdministrativeGender.Unknown, null)]
-        [InlineData("ws/fhir2/Patient/?birthdate=1982-05-05", null, null, "1982-05-05")]
+        [InlineData("ws/fhir2/Patient/?gender=other", null, AdministrativeGender.Other, null)]
+        [InlineData("ws/fhir2/Patient/?birthdate=1982-05-21", null, null, "1982-05-21")]
+        [InlineData("ws/fhir2/Patient/?birthdate=1982", null, null, "1982")]
+        [InlineData("ws/fhir2/Patient/?birthdate=1", null, null, "1")]
+        [InlineData("ws/fhir2/Patient/?name=David&birthdate=1982-05-21", "David", null, "1982-05-21")]
+        [InlineData("ws/fhir2/Patient/?name=David&gender=male&birthdate=1982-05-21", "David", AdministrativeGender.Male, "1982-05-21")]
         public async System.Threading.Tasks.Task ShouldQueryDataSourceByNameAccordingToTheFilter(
             string expectedPath, string name, AdministrativeGender? gender, string yearOfBrith)
         {
