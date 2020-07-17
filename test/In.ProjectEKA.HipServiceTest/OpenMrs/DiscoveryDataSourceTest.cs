@@ -112,10 +112,10 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             };
             var httpClient = new HttpClient(handler);
             var openmrsConfiguration = new OpenMrsConfiguration {
-                Url = "https://bahmni-0.92.bahmni-covid19.in/openmrs/",
-                Username = "superman",
-                Password = "Admin123"
-                };
+                Url = "https://someurl/openmrs/",
+                Username = "someusername",
+                Password = "somepassword"
+            };
             var openmrsClient = new OpenMrsClient(httpClient, openmrsConfiguration);
             var discoveryDataSource = new DiscoveryDataSource(openmrsClient);
             //When

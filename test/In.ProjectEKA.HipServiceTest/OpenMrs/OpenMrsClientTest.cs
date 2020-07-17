@@ -25,9 +25,9 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             };
             var httpClient = new HttpClient(handler);
             var openmrsConfiguration = new OpenMrsConfiguration {
-                Url = "https://192.168.33.10/openmrs/",
-                Username = "superman",
-                Password = "Admin123"
+                Url = "https://someurl/openmrs/",
+                Username = "someusername",
+                Password = "somepassword"
             };
             var openmrsClient = new OpenMrsClient(httpClient, openmrsConfiguration);
             //When
