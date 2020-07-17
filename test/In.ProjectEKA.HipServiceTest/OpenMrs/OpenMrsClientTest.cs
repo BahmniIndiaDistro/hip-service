@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using In.ProjectEKA.HipService.OpenMrs;
 using Moq;
 using Moq.Protected;
 using Xunit;

@@ -1,7 +1,7 @@
-﻿namespace In.ProjectEKA.HipServiceTest.OpenMrs
+﻿namespace In.ProjectEKA.HipService.OpenMrs
 {
     public static class DiscoveryPathConstants
     {
-        public static readonly string OnPatientPath = "ws/fhir2/Patient";
+        public const string OnPatientPath = "ws/fhir2/Patient";
     }
 }

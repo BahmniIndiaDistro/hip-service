@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web;
@@ -7,7 +6,7 @@ using Hl7.Fhir.Serialization;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using Patient = Hl7.Fhir.Model.Patient;
 
-namespace In.ProjectEKA.HipServiceTest.OpenMrs
+namespace In.ProjectEKA.HipService.OpenMrs
 {
     public class DiscoveryDataSource : IPatientDal
     {

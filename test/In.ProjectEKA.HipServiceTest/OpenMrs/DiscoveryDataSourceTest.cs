@@ -4,6 +4,7 @@ using System.Net.Http;
 using FluentAssertions;
 using Hl7.Fhir.Model;
 using In.ProjectEKA.HipLibrary.Patient.Model;
+using In.ProjectEKA.HipService.OpenMrs;
 using Moq;
 using Xunit;
 

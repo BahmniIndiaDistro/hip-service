@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using Patient = Hl7.Fhir.Model.Patient;
 
-namespace In.ProjectEKA.HipServiceTest.OpenMrs
+namespace In.ProjectEKA.HipService.OpenMrs
 {
     public interface IPatientDal
     {

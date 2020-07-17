@@ -1,4 +1,4 @@
-namespace In.ProjectEKA.HipServiceTest.OpenMrs
+namespace In.ProjectEKA.HipService.OpenMrs
 {
     public class OpenMrsConfiguration
     {

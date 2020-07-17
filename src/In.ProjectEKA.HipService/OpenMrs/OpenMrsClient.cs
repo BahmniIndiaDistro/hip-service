@@ -5,24 +5,24 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace In.ProjectEKA.HipServiceTest.OpenMrs
+namespace In.ProjectEKA.HipService.OpenMrs
 {
     public class OpenMrsClient: IOpenMrsClient
     {
         private readonly HttpClient httpClient;
         private readonly OpenMrsConfiguration configuration;
 
-        public OpenMrsClient(HttpClient httpClient, OpenMrsConfiguration openmrsConfiguration)
+        public OpenMrsClient(HttpClient httpClient, OpenMrsConfiguration openMrsConfiguration)
         {
             this.httpClient = httpClient;
-            configuration = openmrsConfiguration;
+            configuration = openMrsConfiguration;
 
             SettingUpHeaderAuthorization();
         }
 
-        public async Task<HttpResponseMessage> GetAsync(string openmrsUrl)
+        public async Task<HttpResponseMessage> GetAsync(string openMrsUrl)
         {
-            return await httpClient.GetAsync(Path.Join(configuration.Url, openmrsUrl));
+            return await httpClient.GetAsync(Path.Join(configuration.Url, openMrsUrl));
         }
 
         private void SettingUpHeaderAuthorization()
