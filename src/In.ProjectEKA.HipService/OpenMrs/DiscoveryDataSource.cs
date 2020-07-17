@@ -17,7 +17,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
             this.openMrsClient = openMrsClient;
         }
 
-        public async Task<List<Patient>> LoadPatientsAsync(string name, Gender? gender, string yearOfBirth)
+        public async Task<List<Patient>> LoadPatientsAsync(string name, AdministrativeGender? gender, string yearOfBirth)
         {
             var path = DiscoveryPathConstants.OnPatientPath;
             var query = HttpUtility.ParseQueryString(string.Empty);
@@ -28,7 +28,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
                 query["birthdate"]=yearOfBirth;
             }
             if (gender != null) {
-                query["gender"]=gender.ToString();
+                query["gender"]=gender.ToString().ToLower();
             }
             if (query.ToString() != ""){
                 path = $"{path}/?{query}";
