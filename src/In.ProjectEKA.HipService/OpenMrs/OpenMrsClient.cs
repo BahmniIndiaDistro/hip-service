@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using In.ProjectEKA.HipService.Logger;
 
 namespace In.ProjectEKA.HipService.OpenMrs
 {
@@ -22,7 +23,14 @@ namespace In.ProjectEKA.HipService.OpenMrs
 
         public async Task<HttpResponseMessage> GetAsync(string openMrsUrl)
         {
-            return await httpClient.GetAsync(Path.Join(configuration.Url, openMrsUrl));
+            try {
+                return await httpClient.GetAsync(Path.Join(configuration.Url, openMrsUrl));
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, exception.StackTrace);
+                throw exception;
+            }
         }
 
         private void SettingUpHeaderAuthorization()
