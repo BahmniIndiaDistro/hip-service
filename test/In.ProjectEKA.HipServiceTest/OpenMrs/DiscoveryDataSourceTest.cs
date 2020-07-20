@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Http;
 using FluentAssertions;
 using Hl7.Fhir.Model;
-using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.OpenMrs;
 using Moq;
 using Xunit;
@@ -47,7 +46,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             secondPatient.Gender.Should().Be(AdministrativeGender.Male);
             secondPatient.BirthDate.Should().Be("1997-04-10");
         }
-        
+
         [Fact]
         public async System.Threading.Tasks.Task ShouldReturnEmptyListIfAllResourcesAreDifferentFromPatient()
         {
@@ -209,7 +208,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             }
             ]
         }";
-        
+
         private const string PatientSample = @"{
             ""resourceType"": ""Bundle"",
             ""id"": ""fbfee329-6108-4a7e-87b4-e047ae013c3a"",
