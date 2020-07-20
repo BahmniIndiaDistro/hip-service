@@ -109,6 +109,7 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton(new OpenMrsClient(HttpClient,
                     Configuration.GetSection("OpenMrs").Get<OpenMrsConfiguration>()))
                 .AddScoped<IOpenMrsClient, OpenMrsClient>()
+                .AddScoped<IPatientDal, DiscoveryDataSource>()
                 .AddTransient<IDataFlow, DataFlow.DataFlow>()
                 .AddRouting(options => options.LowercaseUrls = true)
                 .AddControllers()
