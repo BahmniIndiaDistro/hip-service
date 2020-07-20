@@ -38,7 +38,14 @@ namespace In.ProjectEKA.HipService.OpenMrs
             var response = await openMrsClient.GetAsync(path);
             var content = await response.Content.ReadAsStringAsync();
             var bundle = new FhirJsonParser().Parse<Bundle>(content);
-            bundle.Entry.ForEach(entry => {patients.Add((Patient) entry.Resource);});
+            bundle.Entry.ForEach(entry =>
+            {
+                if (entry.Resource.ResourceType.Equals(ResourceType.Patient))
+                {
+                    patients.Add((Patient) entry.Resource);
+                }
+            });
+            
             return patients;
         }
     }

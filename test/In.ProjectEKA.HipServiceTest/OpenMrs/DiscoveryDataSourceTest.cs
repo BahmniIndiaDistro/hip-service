@@ -10,6 +10,11 @@ using Xunit;
 
 namespace In.ProjectEKA.HipServiceTest.OpenMrs
 {
+    public static class ExpectedDiscoveryPathConstants
+    {
+        public const string OnPatientPath = "ws/fhir2/Patient";
+    }
+
     [Collection("Discovery Data Source Tests")]
     public class DiscoveryDataSourceTest
     {
@@ -20,10 +25,12 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             var openmrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
 
-            openmrsClientMock.Setup(x => x.GetAsync("ws/fhir2/Patient")).ReturnsAsync(new HttpResponseMessage
+            openmrsClientMock
+                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(patientSample)
+                    Content = new StringContent(PatientSample)
                 })
                 .Verifiable();
 
@@ -40,18 +47,43 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             secondPatient.Gender.Should().Be(AdministrativeGender.Male);
             secondPatient.BirthDate.Should().Be("1997-04-10");
         }
+        
+        [Fact]
+        public async System.Threading.Tasks.Task ShouldReturnEmptyListIfAllResourcesAreDifferentFromPatient()
+        {
+            //Given
+            var openMrsClientMock = new Mock<IOpenMrsClient>();
+            var discoveryDataSource = new DiscoveryDataSource(openMrsClientMock.Object);
+
+            openMrsClientMock
+                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(PersonsSample)
+                })
+                .Verifiable();
+
+            //When
+            var patients = await discoveryDataSource.LoadPatientsAsync(null, null, null);
+
+            //Then
+            patients.Should().BeEmpty();
+        }
 
         [Fact]
-        public async System.Threading.Tasks.Task ShouldReturnEmptyPatientWhenGotNoRecord()
+        public async System.Threading.Tasks.Task ShouldReturnEmptyListWhenGotNoRecord()
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
 
-            openmrsClientMock.Setup(x => x.GetAsync("ws/fhir2/Patient")).ReturnsAsync(new HttpResponseMessage
+            openmrsClientMock
+                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(notFoundData)
+                    Content = new StringContent(NotFoundData)
                 })
                 .Verifiable();
 
@@ -76,7 +108,8 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         [InlineData("ws/fhir2/Patient/?birthdate=1982", null, null, "1982")]
         [InlineData("ws/fhir2/Patient/?birthdate=1", null, null, "1")]
         [InlineData("ws/fhir2/Patient/?name=David&birthdate=1982-05-21", "David", null, "1982-05-21")]
-        [InlineData("ws/fhir2/Patient/?name=David&gender=male&birthdate=1982-05-21", "David", AdministrativeGender.Male, "1982-05-21")]
+        [InlineData("ws/fhir2/Patient/?name=David&gender=male&birthdate=1982-05-21", "David", AdministrativeGender.Male,
+            "1982-05-21")]
         public async System.Threading.Tasks.Task ShouldQueryDataSourceByNameAccordingToTheFilter(
             string expectedPath, string name, AdministrativeGender? gender, string yearOfBrith)
         {
@@ -89,7 +122,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(patientSample)
+                    Content = new StringContent(PatientSample)
                 })
                 .Verifiable();
 
@@ -100,7 +133,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             openmrsClientMock.Verify(client => client.GetAsync(expectedPath), Times.Once);
         }
 
-        [Fact(Skip="Requires AWS access")]
+        [Fact(Skip = "Requires AWS access")]
         [Trait("Category", "Infrastructure")]
         public async System.Threading.Tasks.Task ShouldGetPatientDataRealCallAsync()
         {
@@ -108,10 +141,12 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             // Disable SSL verification in test only
             var handler = new HttpClientHandler()
             {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             };
             var httpClient = new HttpClient(handler);
-            var openmrsConfiguration = new OpenMrsConfiguration {
+            var openmrsConfiguration = new OpenMrsConfiguration
+            {
                 Url = "https://someurl/openmrs/",
                 Username = "someusername",
                 Password = "somepassword"
@@ -124,7 +159,58 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             patients.Should().NotBeEmpty();
         }
 
-        private const string patientSample = @"{
+        private const string PersonsSample = @"{
+            ""resourceType"": ""Bundle"",
+            ""id"": ""356ccc7d-fc38-4dab-809b-9efc6e33188a"",
+            ""meta"": {
+                ""lastUpdated"": ""2020-07-20T10:10:38.559+05:30""
+            },
+            ""type"": ""searchset"",
+            ""total"": 2,
+            ""link"": [
+            {
+                ""relation"": ""self"",
+                ""url"": ""http://bahmni-0.92.bahmni-covid19.in/openmrs/ws/fhir2/Person/?name=Super""
+            }
+            ],
+            ""entry"": [
+            {
+                ""resource"": {
+                    ""resourceType"": ""Person"",
+                    ""id"": ""4ec280ac-3f10-11e4-adec-0800271c1b75"",
+                    ""name"": [
+                    {
+                        ""id"": ""4ec7e2a4-3f10-11e4-adec-0800271c1b75"",
+                        ""family"": ""User"",
+                        ""given"": [""Super""]
+                    }
+                    ],
+                    ""gender"": ""male"",
+                    ""active"": true
+                }
+            },
+            {
+                ""resource"": {
+                    ""resourceType"": ""Person"",
+                    ""id"": ""c1bc22a5-3f10-11e4-adec-0800271c1b75"",
+                    ""meta"": {
+                        ""lastUpdated"": ""2015-08-21T12:13:23.000+05:30""
+                    },
+                    ""name"": [
+                    {
+                        ""id"": ""c1bc22a5-3f10-11e4-adec-0800271c1b75"",
+                        ""family"": ""Man"",
+                        ""given"": [""Super""]
+                    }
+                    ],
+                    ""gender"": ""male"",
+                    ""active"": true
+                },
+            }
+            ]
+        }";
+        
+        private const string PatientSample = @"{
             ""resourceType"": ""Bundle"",
             ""id"": ""fbfee329-6108-4a7e-87b4-e047ae013c3a"",
             ""meta"": {
@@ -245,7 +331,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                 }
             ]
         }";
-        private const string notFoundData = @"{
+        private const string NotFoundData = @"{
             ""resourceType"": ""Bundle"",
             ""id"": ""aa12ec40-c9e8-40e9-9475-88a8fbab2793"",
             ""meta"": {
