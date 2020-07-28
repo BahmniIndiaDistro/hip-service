@@ -1,6 +1,9 @@
 name: Run Code Coverage Check
 
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+      - '**'
     
 jobs:
   build:
