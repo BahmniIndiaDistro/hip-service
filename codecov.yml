@@ -10,6 +10,7 @@ coverage:
         paths: "src/"
         branches:
           - master
+          - codecov-test
     comment:
       layout: "reach, diff, flags, files"
       behavior: default
