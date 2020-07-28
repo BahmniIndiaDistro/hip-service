@@ -7,7 +7,6 @@ coverage:
         base: auto
         only_pulls: false
         paths: "src"
-        if_ci_failed: success
         branches:
           - master
           - test_codecov_yml
