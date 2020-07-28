@@ -1,8 +1,7 @@
 coverage:
   status:
     project:
-      default: false
-      service: 
+      default: 
         target: auto
         threshold: 0.01%
         base: auto
