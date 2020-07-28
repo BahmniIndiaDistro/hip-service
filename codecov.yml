@@ -6,7 +6,9 @@ coverage:
           target: auto
           threshold: 1%
           only_pulls: false
-          paths: "src/"
+          paths: "src"
+          branches: 
+            - master
       comment:
         layout: "reach, diff, flags, files"
         behavior: default
