@@ -9,6 +9,7 @@ coverage:
         paths: "src"
         branches:
           - master
+          - test_codecov_yml
     comment:
       layout: "reach, diff, flags, files"
       behavior: default
@@ -17,3 +18,4 @@ coverage:
       require_head: no       # [yes :: must have a head report to post]
       branches:               # branch names that can post comment
         - master
+        - test_codecov_yml
