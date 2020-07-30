@@ -7,6 +7,7 @@ namespace In.ProjectEKA.DefaultHip.Link
     using System.Collections.Generic;
     using System.Linq;
     using Optional;
+    using System.Threading.Tasks;
 
     public class PatientRepository : IPatientRepository
     {
@@ -29,6 +30,11 @@ namespace In.ProjectEKA.DefaultHip.Link
             {
                 return Option.None<Patient>();
             }
+        }
+
+        public Task<Option<Patient>> PatientWithAsync(string referenceNumber)
+        {
+            throw new NotImplementedException();
         }
 
         private IEnumerable<Patient> All()
