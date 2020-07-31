@@ -33,13 +33,15 @@
             Mock<ILinkPatientRepository> linkPatientRepository = new Mock<ILinkPatientRepository>();
             Mock<IMatchingRepository> matchingRepository = new Mock<IMatchingRepository>();
             Mock<IPatientRepository> patientRepository = new Mock<IPatientRepository>();
+            Mock<ICareContextRepository> careContextRepository = new Mock<ICareContextRepository>();
             Mock<IBackgroundJobClient> backgroundJobClient = new Mock<IBackgroundJobClient>();
 
             var patientDiscovery = new PatientDiscovery(
                 matchingRepository.Object,
                 discoveryRequestRepository.Object,
                 linkPatientRepository.Object,
-                patientRepository.Object);
+                patientRepository.Object,
+                careContextRepository.Object);
 
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             var httpClient = new HttpClient(handlerMock.Object);
@@ -47,8 +49,8 @@
             var gatewayClient = new GatewayClient(httpClient, gatewayConfiguration);
 
             services
-                .AddScoped(provider => patientDiscovery)
-                .AddScoped(provider => gatewayClient)
+                .AddScoped<IPatientDiscovery, PatientDiscovery>(provider => patientDiscovery)
+                .AddScoped<IGatewayClient, GatewayClient>(provider => gatewayClient)
                 .AddScoped(provider => backgroundJobClient.Object)
                 .AddRouting(options => options.LowercaseUrls = true)
                 .AddControllers()

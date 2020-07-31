@@ -14,15 +14,15 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public const string OnPatientPath = "ws/fhir2/Patient";
     }
 
-    [Collection("Discovery Data Source Tests")]
-    public class DiscoveryDataSourceTest
+    [Collection("Fhir Discovery Data Source Tests")]
+    public class FhirDiscoveryDataSourceTest
     {
         [Fact]
         public async System.Threading.Tasks.Task ShouldReturnListOfPatientDto()
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
@@ -52,7 +52,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         {
             //Given
             var openMrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openMrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openMrsClientMock.Object);
 
             openMrsClientMock
                 .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
@@ -75,7 +75,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
@@ -114,7 +114,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(It.IsAny<string>()))
@@ -150,8 +150,8 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                 Username = "someusername",
                 Password = "somepassword"
             };
-            var openmrsClient = new OpenMrsClient(httpClient, openmrsConfiguration);
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClient);
+            var openmrsClient = new FhirClient(httpClient, openmrsConfiguration);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClient);
             //When
             var patients = await discoveryDataSource.LoadPatientsAsync(null, null, null);
             //Then
@@ -162,7 +162,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task LoadPatientAsync_ShouldReturnPatient_WhenFound() {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
             var patientId = "95db77c6-cc8a-4208-99cc-c69a207114a3";
             var path = $"{ExpectedDiscoveryPathConstants.OnPatientPath}/{patientId}";
 
@@ -187,7 +187,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task LoadPatientAsync_ShouldReturnError_WhenFound() {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
             var invalidPatientId = "000000000";
             var path = $"{ExpectedDiscoveryPathConstants.OnPatientPath}/{invalidPatientId}";
 
