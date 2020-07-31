@@ -47,35 +47,12 @@ namespace In.ProjectEKA.HipService.OpenMrs
             var jsonDoc = JsonDocument.Parse(content);
             var root = jsonDoc.RootElement;
 
-            Logger.Log.Information("response from program enrollments: {0}", content);
-/*
-response from program enrollments: 
-    {
-        "results": [
-            {
-                "uuid":"14f5a670-a7f7-474c-89de-77aa107707ad",
-                "display":"test program",
-                "links": [
-                    {
-                        "rel":"self",
-                        "uri":"http://bahmni-0.92.bahmni-covid19.in/openmrs/ws/rest/v1/bahmniprogramenrollment/14f5a670-a7f7-474c-89de-77aa107707ad"
-                    }
-                ]
-            }
-        ]
-    }
-*/
             var careContexts = new List<CareContextRepresentation>();
             var results = root.GetProperty("results");
             for (int i = 0; i < results.GetArrayLength(); i++)
             {
-                // **PREVIOUS IMPLEMENTATION
-                // var attributes = results[i].GetProperty("attributes");
-                // var referenceNumber = attributes[0].GetProperty("value").GetString();
-
-                // **NEW IMPLEMENTATION BASED ON RESPONSE FROM AWS BAHMNI INSTANCE
-                var referenceNumber = results[i].GetProperty("uuid").GetString();
-
+                var attributes = results[i].GetProperty("attributes");
+                var referenceNumber = attributes[0].GetProperty("value").GetString();
                 var display = results[i].GetProperty("display").GetString();
                 careContexts.Add(new CareContextRepresentation(referenceNumber, display));
             }
