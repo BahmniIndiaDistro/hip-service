@@ -87,8 +87,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
                                                                          linkReferenceNumber))
                 .ReturnsAsync(Option.Some(initiatedLinkRequest));
 
-            patientRepository.Setup(x => x.PatientWith(testPatient.Identifier))
-                .Returns(Option.Some(testPatient));
+            patientRepository.Setup(x => x.PatientWithAsync(testPatient.Identifier))
+                .ReturnsAsync(Option.Some(testPatient));
 
             var (response, _) = await linkPatient.LinkPatients(patientReferenceRequest);
 
@@ -127,8 +127,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 TestBuilders.Faker().Random.Hash(), "4", careContexts);
             var patientReferenceRequest = new PatientLinkEnquiry(TestBuilders.Faker().Random.Hash(), 
                 TestBuilders.Faker().Random.Hash(), patient);
-            patientRepository.Setup(e => e.PatientWith(testPatient.Identifier))
-                .Returns(Option.Some(testPatient));
+            patientRepository.Setup(e => e.PatientWithAsync(testPatient.Identifier))
+                .ReturnsAsync(Option.Some(testPatient));
             var expectedError = new ErrorRepresentation(
                 new Error(ErrorCode.CareContextNotFound, ErrorMessage.CareContextNotFound));
 
@@ -213,8 +213,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 .ReturnsAsync((OtpMessage) null);
             linkRepository.Setup(e => e.GetPatientFor(sessionId))
                 .ReturnsAsync(new Tuple<LinkEnquires, Exception>(testLinkRequest, null));
-            patientRepository.Setup(x => x.PatientWith(testPatient.Identifier))
-                .Returns(Option.Some(testPatient));
+            patientRepository.Setup(x => x.PatientWithAsync(testPatient.Identifier))
+                .ReturnsAsync(Option.Some(testPatient));
             linkRepository.Setup(x => x.Save(testLinkRequest.ConsentManagerUserId,
                     testLinkRequest.PatientReferenceNumber,
                     testLinkRequest.LinkReferenceNumber,
@@ -260,8 +260,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
                                                                          patientReferenceRequest.TransactionId,
                                                                          linkReferenceNumber))
                 .ReturnsAsync(Option.None<InitiatedLinkRequest>());
-            patientRepository.Setup(x => x.PatientWith(testPatient.Identifier))
-                .Returns(Option.Some(testPatient));
+            patientRepository.Setup(x => x.PatientWithAsync(testPatient.Identifier))
+                .ReturnsAsync(Option.Some(testPatient));
             var (_, errorRepresentation) = await linkPatient.LinkPatients(patientReferenceRequest);
 
             patientVerification.Verify();
