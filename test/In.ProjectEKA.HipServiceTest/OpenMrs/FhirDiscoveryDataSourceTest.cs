@@ -162,7 +162,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task LoadPatientAsync_ShouldReturnPatient_WhenFound() {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
             var patientId = "95db77c6-cc8a-4208-99cc-c69a207114a3";
             var path = $"{ExpectedDiscoveryPathConstants.OnPatientPath}/{patientId}";
 
@@ -187,7 +187,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task LoadPatientAsync_ShouldReturnError_WhenFound() {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
-            var discoveryDataSource = new DiscoveryDataSource(openmrsClientMock.Object);
+            var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
             var invalidPatientId = "000000000";
             var path = $"{ExpectedDiscoveryPathConstants.OnPatientPath}/{invalidPatientId}";
 
