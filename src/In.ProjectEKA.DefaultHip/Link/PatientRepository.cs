@@ -18,7 +18,7 @@ namespace In.ProjectEKA.DefaultHip.Link
             this.filePath = filePath;
         }
 
-        public Option<Patient> PatientWith(string referenceNumber)
+        public async Task<Option<Patient>> PatientWithAsync(string referenceNumber)
         {
             try
             {
@@ -30,11 +30,6 @@ namespace In.ProjectEKA.DefaultHip.Link
             {
                 return Option.None<Patient>();
             }
-        }
-
-        public Task<Option<Patient>> PatientWithAsync(string referenceNumber)
-        {
-            throw new NotImplementedException();
         }
 
         private IEnumerable<Patient> All()

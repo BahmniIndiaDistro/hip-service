@@ -17,11 +17,6 @@ namespace In.ProjectEKA.HipService.OpenMrs
             _careContextRepository = careContextRepository;
         }
 
-        public Option<Patient> PatientWith(string referenceNumber)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public async Task<Option<Patient>> PatientWithAsync(string referenceNumber)
         {
             var fhirPatient = await _patientDal.LoadPatientAsync(referenceNumber);
