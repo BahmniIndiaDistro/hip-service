@@ -35,6 +35,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
             if (!string.IsNullOrEmpty(uuid))
             {
                 query["patient"] = uuid;
+                query["v"] = "full";
             }
             if (query.ToString() != "")
             {
