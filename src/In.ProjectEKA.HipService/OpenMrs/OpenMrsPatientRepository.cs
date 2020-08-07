@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient;
 using In.ProjectEKA.HipLibrary.Patient.Model;
@@ -20,7 +21,8 @@ namespace In.ProjectEKA.HipService.OpenMrs
         public async Task<Option<Patient>> PatientWithAsync(string referenceNumber)
         {
             var fhirPatient = await _patientDal.LoadPatientAsync(referenceNumber);
-            var hipPatient = fhirPatient.ToHipPatient(fhirPatient.Name[0].Text);
+            var firstName = fhirPatient.Name[0].Given.FirstOrDefault();
+            var hipPatient = fhirPatient.ToHipPatient(firstName);
             hipPatient.CareContexts = await _careContextRepository.GetCareContexts(referenceNumber);
 
             return Option.Some(hipPatient);
