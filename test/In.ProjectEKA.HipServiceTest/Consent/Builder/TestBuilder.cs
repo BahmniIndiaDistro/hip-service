@@ -10,12 +10,13 @@ namespace In.ProjectEKA.HipServiceTest.Consent.Builder
         private static Faker faker = new Faker();
         internal static Faker Faker() => faker ??= new Faker();
 
-        internal static Notification Notification()
+        internal static Notification Notification(
+            ConsentStatus consentStatus = ConsentStatus.GRANTED)
         {
             return new Notification(ConsentArtefact().Generate().Build(),
                                     faker.Random.Hash(),
                                     faker.Random.Hash(),
-                                    ConsentStatus.GRANTED);
+                                    consentStatus);
         }
         
         internal static Notification RevokedNotification(string patientId)
@@ -31,7 +32,8 @@ namespace In.ProjectEKA.HipServiceTest.Consent.Builder
 
         private static Faker<ConsentArtefactBuilder> ConsentArtefact()
         {
-            return new Faker<ConsentArtefactBuilder>();
+            return new Faker<ConsentArtefactBuilder>()
+                .RuleFor(c => c.ConsentManager, () => new OrganizationReference("123"));
         }
 
         internal static Consent Consent()
