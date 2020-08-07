@@ -29,7 +29,11 @@ namespace In.ProjectEKA.HipServiceTest.Link
             patientDal.Setup(e => e.LoadPatientAsync(It.IsAny<string>()))
                 .Returns(Task.FromResult(
                     new OpenMrsPatient() {
-                        Name = new List<OpenMrsPatientName>{ new OpenMrsPatientName {Text = "test"} },
+                        Name = new List<OpenMrsPatientName>{
+                            new OpenMrsPatientName {GivenElement = new List<Hl7.Fhir.Model.FhirString>{
+                                new Hl7.Fhir.Model.FhirString("test")
+                            }}
+                        },
                         Gender = OpenMrsGender.Female,
                         BirthDate = "1981"
                     }
