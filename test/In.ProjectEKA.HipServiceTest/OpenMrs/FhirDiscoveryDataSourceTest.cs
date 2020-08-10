@@ -6,14 +6,16 @@ using Hl7.Fhir.Model;
 using In.ProjectEKA.HipService.OpenMrs;
 using Moq;
 using Xunit;
+using Task = System.Threading.Tasks.Task;
 
 namespace In.ProjectEKA.HipServiceTest.OpenMrs
 {
+     
     [Collection("Fhir Discovery Data Source Tests")]
     public class FhirDiscoveryDataSourceTest
     {
         [Fact]
-        public async System.Threading.Tasks.Task ShouldReturnListOfPatientDto()
+        public async Task ShouldReturnListOfPatientDto()
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
@@ -43,7 +45,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         }
 
         [Fact]
-        public async System.Threading.Tasks.Task ShouldReturnEmptyListIfAllResourcesAreDifferentFromPatient()
+        public async Task ShouldReturnEmptyListIfAllResourcesAreDifferentFromPatient()
         {
             //Given
             var openMrsClientMock = new Mock<IOpenMrsClient>();
@@ -66,7 +68,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         }
 
         [Fact]
-        public async System.Threading.Tasks.Task ShouldReturnEmptyListWhenGotNoRecord()
+        public async Task ShouldReturnEmptyListWhenGotNoRecord()
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
@@ -104,7 +106,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         [InlineData("ws/fhir2/Patient/?name=David&birthdate=1982-05-21", "David", null, "1982-05-21")]
         [InlineData("ws/fhir2/Patient/?name=David&gender=male&birthdate=1982-05-21", "David", AdministrativeGender.Male,
             "1982-05-21")]
-        public async System.Threading.Tasks.Task ShouldQueryDataSourceByNameAccordingToTheFilter(
+        public async Task ShouldQueryDataSourceByNameAccordingToTheFilter(
             string expectedPath, string name, AdministrativeGender? gender, string yearOfBrith)
         {
             //Given
@@ -129,7 +131,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
 
         [Fact(Skip = "Requires AWS access")]
         [Trait("Category", "Infrastructure")]
-        public async System.Threading.Tasks.Task ShouldGetPatientDataRealCallAsync()
+        public async Task ShouldGetPatientDataRealCallAsync()
         {
             //Given
             // Disable SSL verification in test only
