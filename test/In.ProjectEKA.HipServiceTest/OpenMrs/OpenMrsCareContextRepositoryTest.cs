@@ -11,12 +11,6 @@ using System.Collections.Generic;
 
 namespace In.ProjectEKA.HipServiceTest.OpenMrs
 {
-    public static class ExpectedOpenMrsDiscoveryPathConstants
-    {
-        public const string OnProgramEnrollmentPath = "ws/rest/v1/bahmniprogramenrollment";
-        public const string OnVisitPath = "ws/rest/v1/visit";
-    }
-
     [Collection("OpenMrs Care Context Repository Tests")]
     public class OpenMrsCareContextRepositoryTest
     {
@@ -33,7 +27,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnListOfProgramEnrollments()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnProgramEnrollmentPath, ProgramEnrollmentSample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnProgramEnrollmentPath, ProgramEnrollmentSample);
 
             //When
             var programenrollments = await careContextRepository.LoadProgramEnrollments(null);
@@ -48,7 +42,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnEmptyListIfNoProgramEnrollmentsCareContexts()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnProgramEnrollmentPath, EmptySample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnProgramEnrollmentPath, EmptySample);
 
             //When
             var programenrollments = await careContextRepository.LoadProgramEnrollments(null);
@@ -61,7 +55,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnListOfVisits()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnVisitPath, VisitSample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnVisitPath, VisitSample);
 
             //When
             var visits = await careContextRepository.LoadVisits(null);
@@ -75,7 +69,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnListOfVisitsGroupedByType()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnVisitPath, VisitSample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnVisitPath, VisitSample);
 
             //When
             var visits = await careContextRepository.LoadVisits(null);
@@ -93,7 +87,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnEmptyListIfNoVisitCareContexts()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnVisitPath, EmptySample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnVisitPath, EmptySample);
 
             //When
             var visits = await careContextRepository.LoadVisits(null);

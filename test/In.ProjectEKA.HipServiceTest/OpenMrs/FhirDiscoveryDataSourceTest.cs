@@ -9,11 +9,6 @@ using Xunit;
 
 namespace In.ProjectEKA.HipServiceTest.OpenMrs
 {
-    public static class ExpectedDiscoveryPathConstants
-    {
-        public const string OnPatientPath = "ws/fhir2/Patient";
-    }
-
     [Collection("Fhir Discovery Data Source Tests")]
     public class FhirDiscoveryDataSourceTest
     {
@@ -25,7 +20,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
 
             openmrsClientMock
-                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .Setup(x => x.GetAsync(Endpoints.Fhir.OnPatientPath))
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -55,7 +50,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             var discoveryDataSource = new FhirDiscoveryDataSource(openMrsClientMock.Object);
 
             openMrsClientMock
-                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .Setup(x => x.GetAsync(Endpoints.Fhir.OnPatientPath))
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -78,7 +73,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
 
             openmrsClientMock
-                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .Setup(x => x.GetAsync(Endpoints.Fhir.OnPatientPath))
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
