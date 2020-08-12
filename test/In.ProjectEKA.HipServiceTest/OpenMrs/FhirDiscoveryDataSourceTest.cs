@@ -6,26 +6,23 @@ using Hl7.Fhir.Model;
 using In.ProjectEKA.HipService.OpenMrs;
 using Moq;
 using Xunit;
+using Task = System.Threading.Tasks.Task;
 
 namespace In.ProjectEKA.HipServiceTest.OpenMrs
 {
-    public static class ExpectedDiscoveryPathConstants
-    {
-        public const string OnPatientPath = "ws/fhir2/Patient";
-    }
-
+     
     [Collection("Fhir Discovery Data Source Tests")]
     public class FhirDiscoveryDataSourceTest
     {
         [Fact]
-        public async System.Threading.Tasks.Task ShouldReturnListOfPatientDto()
+        public async Task ShouldReturnListOfPatientDto()
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
 
             openmrsClientMock
-                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .Setup(x => x.GetAsync(Endpoints.Fhir.OnPatientPath))
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -48,14 +45,14 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         }
 
         [Fact]
-        public async System.Threading.Tasks.Task ShouldReturnEmptyListIfAllResourcesAreDifferentFromPatient()
+        public async Task ShouldReturnEmptyListIfAllResourcesAreDifferentFromPatient()
         {
             //Given
             var openMrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new FhirDiscoveryDataSource(openMrsClientMock.Object);
 
             openMrsClientMock
-                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .Setup(x => x.GetAsync(Endpoints.Fhir.OnPatientPath))
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -71,14 +68,14 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         }
 
         [Fact]
-        public async System.Threading.Tasks.Task ShouldReturnEmptyListWhenGotNoRecord()
+        public async Task ShouldReturnEmptyListWhenGotNoRecord()
         {
             //Given
             var openmrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
 
             openmrsClientMock
-                .Setup(x => x.GetAsync(ExpectedDiscoveryPathConstants.OnPatientPath))
+                .Setup(x => x.GetAsync(Endpoints.Fhir.OnPatientPath))
                 .ReturnsAsync(new HttpResponseMessage
                 {
                     StatusCode = HttpStatusCode.OK,
@@ -109,7 +106,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         [InlineData("ws/fhir2/Patient/?name=David&birthdate=1982-05-21", "David", null, "1982-05-21")]
         [InlineData("ws/fhir2/Patient/?name=David&gender=male&birthdate=1982-05-21", "David", AdministrativeGender.Male,
             "1982-05-21")]
-        public async System.Threading.Tasks.Task ShouldQueryDataSourceByNameAccordingToTheFilter(
+        public async Task ShouldQueryDataSourceByNameAccordingToTheFilter(
             string expectedPath, string name, AdministrativeGender? gender, string yearOfBrith)
         {
             //Given
@@ -134,7 +131,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
 
         [Fact(Skip = "Requires AWS access")]
         [Trait("Category", "Infrastructure")]
-        public async System.Threading.Tasks.Task ShouldGetPatientDataRealCallAsync()
+        public async Task ShouldGetPatientDataRealCallAsync()
         {
             //Given
             // Disable SSL verification in test only
@@ -164,7 +161,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             var openmrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
             var patientId = "95db77c6-cc8a-4208-99cc-c69a207114a3";
-            var path = $"{ExpectedDiscoveryPathConstants.OnPatientPath}/{patientId}";
+            var path = $"{Endpoints.Fhir.OnPatientPath}/{patientId}";
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(path))
@@ -189,7 +186,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             var openmrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
             var invalidPatientId = "000000000";
-            var path = $"{ExpectedDiscoveryPathConstants.OnPatientPath}/{invalidPatientId}";
+            var path = $"{Endpoints.Fhir.OnPatientPath}/{invalidPatientId}";
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(path))

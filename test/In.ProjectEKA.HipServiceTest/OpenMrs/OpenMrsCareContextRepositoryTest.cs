@@ -11,12 +11,6 @@ using System.Collections.Generic;
 
 namespace In.ProjectEKA.HipServiceTest.OpenMrs
 {
-    public static class ExpectedOpenMrsDiscoveryPathConstants
-    {
-        public const string OnProgramEnrollmentPath = "ws/rest/v1/bahmniprogramenrollment";
-        public const string OnVisitPath = "ws/rest/v1/visit";
-    }
-
     [Collection("OpenMrs Care Context Repository Tests")]
     public class OpenMrsCareContextRepositoryTest
     {
@@ -36,22 +30,22 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnListOfProgramEnrollments()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnProgramEnrollmentPath, ProgramEnrollmentSample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnProgramEnrollmentPath, ProgramEnrollmentSample);
 
             //When
             var programenrollments = await careContextRepository.LoadProgramEnrollments(null);
 
             //Then
             var program = programenrollments[0];
-            program.ReferenceNumber.Should().Be(programReferenceNumber);
-            program.Display.Should().Be(programDisplayName);
+            program.ReferenceNumber.Should().Be("12345");
+            program.Display.Should().Be("HIV Program");
         }
 
         [Fact]
         public async System.Threading.Tasks.Task ShouldReturnEmptyListIfNoProgramEnrollmentsCareContexts()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnProgramEnrollmentPath, EmptySample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnProgramEnrollmentPath, EmptySample);
 
             //When
             var programenrollments = await careContextRepository.LoadProgramEnrollments(null);
@@ -64,7 +58,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnListOfVisits()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnVisitPath, VisitSample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnVisitPath, VisitSample);
 
             //When
             var visits = await careContextRepository.LoadVisits(null);
@@ -78,7 +72,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnListOfVisitsGroupedByType()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnVisitPath, VisitSample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnVisitPath, VisitSample);
 
             //When
             var visits = await careContextRepository.LoadVisits(null);
@@ -96,7 +90,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         public async System.Threading.Tasks.Task ShouldReturnEmptyListIfNoVisitCareContexts()
         {
             //Given
-            openMrsClientReturnsCareContexts(ExpectedOpenMrsDiscoveryPathConstants.OnVisitPath, EmptySample);
+            openMrsClientReturnsCareContexts(Endpoints.OpenMrs.OnVisitPath, EmptySample);
 
             //When
             var visits = await careContextRepository.LoadVisits(null);
@@ -158,7 +152,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         private const string ProgramEnrollmentSample = @"{
             ""results"": [
                 {
-                    ""uuid"": """ + programReferenceNumber + @""",
+                    ""uuid"": ""c1720ca0-8ea3-4ef7-a4fa-a7849ab99d87"",
                     ""patient"": {
                         ""uuid"": ""b5e712bc-9472-41c0-a11f-500deac452d2"",
                         ""display"": ""1234 - John Doe"",
@@ -191,7 +185,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                             ]
                         }
                     },
-                    ""display"": """ + programDisplayName + @""",
+                    ""display"": ""HIV Program"",
                     ""dateEnrolled"": ""2020-07-13T14:00:00.000+0000"",
                     ""dateCompleted"": null,
                     ""location"": null,
