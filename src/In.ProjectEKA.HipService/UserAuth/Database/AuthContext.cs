@@ -14,9 +14,8 @@ namespace In.ProjectEKA.HipService.UserAuth.Database
         {
             modelBuilder.Entity<AuthConfirm>(builder =>
             {
-                builder.HasKey(p => p.TransactionId);
+                builder.HasKey(p => p.HealthId);
                 builder.Property(p => p.HealthId);
-                builder.Property(p => p.TransactionId);
                 builder.Property(p => p.AccessToken);
             });
         }

@@ -19,7 +19,7 @@ namespace In.ProjectEKA.HipService.UserAuth
         {
             try
             {
-                await authContext.AuthConfirm.AddAsync(authConfirm);
+                authContext.AuthConfirm.Update(authConfirm);
                 await authContext.SaveChangesAsync();
                 return Option.Some(authConfirm);
             }

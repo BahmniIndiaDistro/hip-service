@@ -61,7 +61,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             AuthConfirmRequest authConfirmRequest)
         {
             var healthId = authConfirmRequest.healthId;
-            if (!IsValidHealthId(healthId))
+            if (!(IsValidHealthId(healthId) && IsPresentInMap(healthId)))
                 return new Tuple<GatewayAuthConfirmRequestRepresentation, ErrorRepresentation>
                     (null, new ErrorRepresentation(new Error(ErrorCode.InvalidHealthId, "HealthId is invalid")));
             var patientIdSplit = healthId.Split("@");
@@ -81,12 +81,17 @@ namespace In.ProjectEKA.HipService.UserAuth
             return Regex.Match(healthId, pattern).Success;
         }
 
+        private static bool IsPresentInMap(string healthId)
+        {
+            return UserAuthMap.HealthIdToTransactionId.ContainsKey(healthId);
+        }
+
         public async Task<Tuple<AuthConfirm, ErrorRepresentation>> OnAuthConfirmResponse(
             OnAuthConfirmRequest onAuthConfirmRequest)
         {
             var accessToken = onAuthConfirmRequest.auth.accessToken;
             var healthId = onAuthConfirmRequest.auth.patient.id;
-            var authConfirm = new AuthConfirm(healthId, UserAuthMap.HealthIdToTransactionId[healthId], accessToken);
+            var authConfirm = new AuthConfirm(healthId, accessToken);
             var authConfirmResponse = await userAuthRepository.Add(authConfirm)
                 .ConfigureAwait(false);
             if (!authConfirmResponse.HasValue)
