@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace In.ProjectEKA.HipService.UserAuth.Model
 {
     public class AuthConfirmPatient
@@ -7,10 +9,10 @@ namespace In.ProjectEKA.HipService.UserAuth.Model
         public string gender { get; }
         public string yearOfBirth { get; }
         public AuthConfirmAddress address { get; }
-        
-        public Identifiers identifiers { get; }
+        public List<Identifiers> identifiers { get; }
 
-        public AuthConfirmPatient(string id, string name, string gender, string yearOfBirth, AuthConfirmAddress address,  Identifiers identifiers )
+        public AuthConfirmPatient(string id, string name, string gender, string yearOfBirth, AuthConfirmAddress address,
+            List<Identifiers> identifiers)
         {
             this.id = id;
             this.name = name;

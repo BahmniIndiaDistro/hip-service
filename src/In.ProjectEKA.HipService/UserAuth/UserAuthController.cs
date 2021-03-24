@@ -6,7 +6,6 @@ using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link.Model;
-using In.ProjectEKA.HipService.Logger;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
