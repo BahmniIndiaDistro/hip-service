@@ -27,7 +27,8 @@ namespace In.ProjectEKA.HipService.UserAuth
 
         public UserAuthController(IGatewayClient gatewayClient,
             ILogger<UserAuthController> logger,
-            IUserAuthService userAuthService, BahmniConfiguration bahmniConfiguration)
+            IUserAuthService userAuthService,
+            BahmniConfiguration bahmniConfiguration)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
@@ -235,7 +236,7 @@ namespace In.ProjectEKA.HipService.UserAuth
 
         [Authorize]
         [HttpPost(PATH_ON_AUTH_CONFIRM)]
-        public AcceptedResult SetAccessToken(OnAuthConfirmRequest request)
+        public async Task<ActionResult> SetAccessToken(OnAuthConfirmRequest request)
         {
             logger.Log(LogLevel.Information,
                 LogEvents.UserAuth, "Auth on confirm request received." +
@@ -250,8 +251,9 @@ namespace In.ProjectEKA.HipService.UserAuth
             }
             else if (request.auth != null)
             {
-                var accessToken = request.auth.accessToken;
-                UserAuthMap.RequestIdToAccessToken.Add(Guid.Parse(request.resp.RequestId), accessToken);
+                var (response,error) = await userAuthService.OnAuthConfirmResponse(request);
+                if (error != null)
+                    return StatusCode(StatusCodes.Status400BadRequest, error);
             }
 
             logger.Log(LogLevel.Information,
