@@ -61,7 +61,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             AuthConfirmRequest authConfirmRequest)
         {
             var credential = new AuthConfirmCredential(authConfirmRequest.authCode);
-            var transactionId = authConfirmRequest.transactionId;
+            var transactionId = UserAuthMap.HealthIdToTransactionId[authConfirmRequest.healthId];
             var timeStamp = DateTime.Now.ToUniversalTime();
             var requestId = Guid.NewGuid();
             return new Tuple<GatewayAuthConfirmRequestRepresentation, ErrorRepresentation>

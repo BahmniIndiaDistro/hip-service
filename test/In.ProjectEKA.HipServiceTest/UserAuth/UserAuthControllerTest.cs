@@ -178,7 +178,7 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
         [Fact]
         private void ShouldSendAuthConfirmAndOnAuthConfirm()
         {
-            var authConfirmRequest = new AuthConfirmRequest(new Guid().ToString(), "123444");
+            var authConfirmRequest = new AuthConfirmRequest("123444", "hinapatel@sbx");
             AuthConfirmCredential credential = new AuthConfirmCredential(authConfirmRequest.authCode);
             DateTime timeStamp = DateTime.Now.ToUniversalTime();
             var transactionId = TestBuilder.Faker().Random.Hash();
@@ -224,7 +224,7 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
         [Fact]
         private void ShouldSendAuthConfirmAndNotOnAuthConfirm()
         {
-            var authConfirmRequest = new AuthConfirmRequest(new Guid().ToString(), "123444");
+            var authConfirmRequest = new AuthConfirmRequest("123444", "hinapatel@sbx");
             AuthConfirmCredential credential = new AuthConfirmCredential(authConfirmRequest.authCode);
             DateTime timeStamp = DateTime.Now.ToUniversalTime();
             var transactionId = TestBuilder.Faker().Random.Hash();

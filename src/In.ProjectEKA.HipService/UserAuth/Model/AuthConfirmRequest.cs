@@ -2,13 +2,13 @@ namespace In.ProjectEKA.HipService.UserAuth.Model
 {
     public class AuthConfirmRequest
     {
-        public string transactionId { get; }
         public string authCode { get; }
+        public string healthId { get; }
 
-        public AuthConfirmRequest(string transactionId, string authCode)
+        public AuthConfirmRequest(string authCode, string healthId)
         {
-            this.transactionId = transactionId;
             this.authCode = authCode;
+            this.healthId = healthId;
         }
     }
 }

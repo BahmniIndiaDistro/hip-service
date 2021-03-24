@@ -206,7 +206,8 @@ namespace In.ProjectEKA.HipService.UserAuth
                 logger.Log(LogLevel.Information,
                     LogEvents.UserAuth, $"cmSuffix: {{cmSuffix}}, correlationId: {{correlationId}}," +
                                         $" authCode: {{authCode}}, transactionId: {{transactionId}} requestId: {{requestId}}",
-                    cmSuffix, correlationId, authConfirmRequest.authCode, authConfirmRequest.transactionId, requestId);
+                    cmSuffix, correlationId, authConfirmRequest.authCode,
+                    gatewayAuthConfirmRequestRepresentation.transactionId, requestId);
                 await gatewayClient.SendDataToGateway(PATH_AUTH_CONFIRM, gatewayAuthConfirmRequestRepresentation
                     , cmSuffix, correlationId);
                 var i = 0;
@@ -219,7 +220,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                             "Response about to be send for requestId: {RequestId} with accessToken: {AccessToken}",
                             requestId, UserAuthMap.RequestIdToAccessToken[requestId]
                         );
-                        return Ok(UserAuthMap.RequestIdToAccessToken[requestId]);
+                        return Ok(Accepted());
                     }
 
                     i++;
@@ -250,7 +251,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             }
             else if (request.auth != null)
             {
-                var (response,error) = await userAuthService.OnAuthConfirmResponse(request);
+                var (response, error) = await userAuthService.OnAuthConfirmResponse(request);
                 if (error != null)
                     return StatusCode(StatusCodes.Status400BadRequest, error);
             }
