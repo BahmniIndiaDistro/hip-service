@@ -146,7 +146,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                         );
                         UserAuthMap.HealthIdToTransactionId.Add(authInitRequest.healthId,
                             UserAuthMap.RequestIdToTransactionIdMap[requestId]);
-                        return Ok(Accepted());
+                        return Accepted();
                     }
 
                     i++;
@@ -220,7 +220,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                             "Response about to be send for requestId: {RequestId} with accessToken: {AccessToken}",
                             requestId, UserAuthMap.RequestIdToAccessToken[requestId]
                         );
-                        return Ok(Accepted());
+                        return Accepted();
                     }
 
                     i++;
