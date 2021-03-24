@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Gateway;
@@ -16,5 +17,8 @@ namespace In.ProjectEKA.HipService.UserAuth
 
         public Tuple<GatewayAuthConfirmRequestRepresentation, ErrorRepresentation> AuthConfirmResponse(
             AuthConfirmRequest authConfirmRequest);
+
+        public Task<Tuple<AuthConfirm, ErrorRepresentation>> OnAuthConfirmResponse(
+            OnAuthConfirmRequest onAuthConfirmRequest);
     }
 }

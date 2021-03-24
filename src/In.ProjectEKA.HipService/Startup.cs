@@ -1,5 +1,6 @@
 using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.UserAuth;
+using In.ProjectEKA.HipService.UserAuth.Database;
 
 namespace In.ProjectEKA.HipService
 {
@@ -77,6 +78,9 @@ namespace In.ProjectEKA.HipService
                 .AddDbContext<LinkPatientContext>(options =>
                     options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"),
                         x => x.MigrationsAssembly("In.ProjectEKA.HipService")))
+                .AddDbContext<AuthContext>(options =>
+                    options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"),
+                        x => x.MigrationsAssembly("In.ProjectEKA.HipService")))
                 .AddDbContext<DiscoveryContext>(options =>
                     options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"),
                         x => x.MigrationsAssembly("In.ProjectEKA.HipService")))
@@ -131,6 +135,7 @@ namespace In.ProjectEKA.HipService
                     Configuration.GetSection("OpenMrs").Get<OpenMrsConfiguration>()))
                 .AddScoped<IOpenMrsClient, OpenMrsClient>()
                 .AddScoped<IOpenMrsPatientData,OpenMrsPatientData>()
+                .AddScoped<IUserAuthRepository,UserAuthRepository>()
                 .AddSingleton<ICollectHipService,CollectHipService>()
                 .AddScoped<IPatientDal, FhirDiscoveryDataSource>()
                 .AddScoped<IPhoneNumberRepository, OpenMrsPhoneNumberRepository>()
