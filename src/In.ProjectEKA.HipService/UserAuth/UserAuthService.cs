@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.UserAuth.Model;
+using Optional;
 using static In.ProjectEKA.HipService.Common.Constants;
 
 namespace In.ProjectEKA.HipService.UserAuth
@@ -92,15 +93,21 @@ namespace In.ProjectEKA.HipService.UserAuth
             var accessToken = onAuthConfirmRequest.auth.accessToken;
             var healthId = onAuthConfirmRequest.auth.patient.id;
             var authConfirm = new AuthConfirm(healthId, accessToken);
-            var authConfirmResponse = await userAuthRepository.Add(authConfirm)
-                .ConfigureAwait(false);
-            if (!authConfirmResponse.HasValue)
+            var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
+            if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
             {
-                return new Tuple<AuthConfirm, ErrorRepresentation>(null,
-                    new ErrorRepresentation(new Error(ErrorCode.DuplicateAuthConfirmRequest,
-                        "Auth confirm request already exists")));
+                var authConfirmResponse = await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
+                if (!authConfirmResponse.HasValue)
+                {
+                    return new Tuple<AuthConfirm, ErrorRepresentation>(null,
+                        new ErrorRepresentation(new Error(ErrorCode.DuplicateAuthConfirmRequest,
+                            "Auth confirm request already exists")));
+                }
             }
-
+            else
+            {
+                 userAuthRepository.Update(authConfirm);
+            }
             UserAuthMap.HealthIdToTransactionId.Remove(healthId);
             UserAuthMap.RequestIdToAccessToken.Add(Guid.Parse(onAuthConfirmRequest.resp.RequestId), accessToken);
             return new Tuple<AuthConfirm, ErrorRepresentation>(authConfirm, null);

@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace In.ProjectEKA.HipService.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20210323072036_AuthConfirm")]
+    [Migration("20210324104846_AuthConfirm")]
     partial class AuthConfirm
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -22,16 +22,13 @@ namespace In.ProjectEKA.HipService.Migrations
 
             modelBuilder.Entity("In.ProjectEKA.HipService.UserAuth.AuthConfirm", b =>
                 {
-                    b.Property<string>("TransactionId")
+                    b.Property<string>("HealthId")
                         .HasColumnType("text");
 
                     b.Property<string>("AccessToken")
                         .HasColumnType("text");
 
-                    b.Property<string>("HealthId")
-                        .HasColumnType("text");
-
-                    b.HasKey("TransactionId");
+                    b.HasKey("HealthId");
 
                     b.ToTable("AuthConfirm");
                 });

@@ -10,13 +10,12 @@ namespace In.ProjectEKA.HipService.Migrations
                 name: "AuthConfirm",
                 columns: table => new
                 {
-                    TransactionId = table.Column<string>(nullable: false),
-                    AccessToken = table.Column<string>(nullable: true),
-                    HealthId = table.Column<string>(nullable: true)
+                    HealthId = table.Column<string>(nullable: false),
+                    AccessToken = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AuthConfirm", x => x.TransactionId);
+                    table.PrimaryKey("PK_AuthConfirm", x => x.HealthId);
                 });
         }
 

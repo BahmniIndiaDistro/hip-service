@@ -27,8 +27,8 @@ namespace In.ProjectEKA.HipService
     using Hangfire.MemoryStorage;
     using HipLibrary.Matcher;
     using HipLibrary.Patient;
-    using In.ProjectEKA.HipService.OpenMrs.HealthCheck;
-    using In.ProjectEKA.HipService.OpenMrs;
+    using OpenMrs.HealthCheck;
+    using OpenMrs;
     using Link;
     using Link.Database;
     using MessagingQueue;
