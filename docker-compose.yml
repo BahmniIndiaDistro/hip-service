@@ -11,7 +11,7 @@ services:
     environment: 
       - HEALTH_CHECK_DURATION=5000
       - Gateway:clientSecret=93ef283e-1968-46ab-8731-cfccda83680a
-      - OpenMrs:url=$BAHMNI_URL #example: https://192.168.33.10/openmrs/
+      - OpenMrs:url=https://192.168.33.10/openmrs/ #example: https://192.168.33.10/openmrs/
   otp:
     image: "ganesan92/otp-service"
     depends_on:

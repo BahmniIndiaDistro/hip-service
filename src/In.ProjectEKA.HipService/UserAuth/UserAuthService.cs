@@ -1,9 +1,11 @@
 using System;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.UserAuth.Model;
+using Microsoft.Extensions.Logging;
 using Optional;
 using static In.ProjectEKA.HipService.Common.Constants;
 
@@ -94,6 +96,13 @@ namespace In.ProjectEKA.HipService.UserAuth
         private static bool IsPresentInMap(string healthId)
         {
             return UserAuthMap.HealthIdToTransactionId.ContainsKey(healthId);
+        }
+
+        public static string getDecodedOtp(AuthConfirmRequest authConfirmRequest)
+        {
+            var decodedOtp = Convert.FromBase64String(authConfirmRequest.authCode);
+            var otp = Encoding.UTF8.GetString(decodedOtp);
+            return otp;
         }
 
         public async Task<Tuple<AuthConfirm, ErrorRepresentation>> OnAuthConfirmResponse(

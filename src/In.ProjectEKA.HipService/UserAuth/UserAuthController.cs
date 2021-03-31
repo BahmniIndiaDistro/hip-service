@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipService.Common;
@@ -71,7 +72,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                             requestId, UserAuthMap.RequestIdToAuthModes[requestId]
                         );
                         List<Mode> authModes = UserAuthMap.RequestIdToAuthModes[requestId];
-                        FetchModeResponse fetchModeResponse = new FetchModeResponse( authModes);
+                        FetchModeResponse fetchModeResponse = new FetchModeResponse(authModes);
                         return Json(fetchModeResponse);
                     }
 
@@ -200,6 +201,12 @@ namespace In.ProjectEKA.HipService.UserAuth
             if (error != null)
                 return StatusCode(StatusCodes.Status400BadRequest, error);
             var requestId = gatewayAuthConfirmRequestRepresentation.requestId;
+            var cmSuffix = gatewayAuthConfirmRequestRepresentation.cmSuffix;
+
+            var otp = UserAuthService.getDecodedOtp(authConfirmRequest);
+            logger.Log(LogLevel.Information, "Decoded otp:{Otp}", otp);
+            gatewayAuthConfirmRequestRepresentation.credential.authCode = otp;
+
             var cmSuffix = userAuthService.GetCmSuffix(authConfirmRequest.healthId);
             try
             {
