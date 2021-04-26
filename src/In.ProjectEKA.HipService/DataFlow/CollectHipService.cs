@@ -31,7 +31,6 @@ namespace In.ProjectEKA.HipService.DataFlow
             {
                 foreach (var result in patientData.GetOrDefault(careContextReference))
                 {
-                    Log.Information($"Returning file: {result}");
                     var bundle = new FhirJsonParser().Parse<Bundle>(result);
                     bundles.Add(new CareBundle(careContextReference, bundle));
                 }
