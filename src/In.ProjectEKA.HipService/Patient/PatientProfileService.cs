@@ -89,6 +89,7 @@ namespace In.ProjectEKA.HipService.Patient
         {
             var dob = new Date(patientDemographics.YearOfBirth, patientDemographics.MonthOfBirth ?? 1,
                 patientDemographics.DayOfBirth ?? 1).ToString();
+            Log.Information("dob ---------------> " + dob);
             var ndhmDemograhics = new NdhmDemographics(patientDemographics.HealthId, patientDemographics.Name,
                 patientDemographics.Gender,
                 dob, patientDemographics.Identifiers[0].Value);
