@@ -12,25 +12,27 @@ namespace In.ProjectEKA.HipService.Common
     public static class HttpRequestHelper
     {
         public static HttpRequestMessage CreateHttpRequest<T>(
+            HttpMethod method,
             string url,
             T content,
             string token,
             string cmSuffix,
             string correlationId)
         {
-            var json = JsonConvert.SerializeObject(content, new JsonSerializerSettings
+            var httpRequestMessage = new HttpRequestMessage(method, new Uri($"{url}"));
+            if (content != null)
             {
-                NullValueHandling = NullValueHandling.Ignore,
-                ContractResolver = new DefaultContractResolver
+                var json = JsonConvert.SerializeObject(content, new JsonSerializerSettings
                 {
-                    NamingStrategy = new CamelCaseNamingStrategy()
-                }
-            });
-
-            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{url}"))
-            {
-                Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json)
-            };
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy()
+                    }
+                });
+                httpRequestMessage.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
+            }
+            
             if (token != null)
                 httpRequestMessage.Headers.Add(HeaderNames.Authorization, token);
             if (cmSuffix != null)
@@ -40,10 +42,10 @@ namespace In.ProjectEKA.HipService.Common
             return httpRequestMessage;
         }
 
-        public static HttpRequestMessage CreateHttpRequest<T>(string url, T content, String correlationId)
+        public static HttpRequestMessage CreateHttpRequest<T>(HttpMethod method,string url, T content, String correlationId)
         {
             // ReSharper disable once IntroduceOptionalParameters.Global
-            return CreateHttpRequest(url, content, null, null, correlationId);
+            return CreateHttpRequest(method,url, content, null, null, correlationId);
         }
     }
 }

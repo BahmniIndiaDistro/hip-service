@@ -6,7 +6,7 @@ namespace In.ProjectEKA.HipService.Gateway
     using System.Text;
     using System.Threading.Tasks;
     using Common;
-    using In.ProjectEKA.HipService.Gateway.Model;
+    using Model;
     using Logger;
     using static Common.HttpRequestHelper;
     using Newtonsoft.Json;
@@ -16,6 +16,7 @@ namespace In.ProjectEKA.HipService.Gateway
     public interface IGatewayClient
     {
         Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix,string correlationId);
+        Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method,string urlPath, T response,string correlationId);
     }
     
     public class GatewayClient: IGatewayClient
@@ -80,17 +81,39 @@ namespace In.ProjectEKA.HipService.Gateway
             await PostTo(configuration.Url + urlPath, response, cmSuffix, correlationId).ConfigureAwait(false);
         }
 
+        public virtual async Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method,string urlPath, T representation, string correlationId)
+        {
+            var token = await Authenticate(correlationId).ConfigureAwait(false);
+            HttpResponseMessage response = null;
+            if (token.HasValue)
+            {
+                try
+                {
+                    response = await httpClient
+                        .SendAsync(CreateHttpRequest(method, configuration.AbhaServiceUrl + urlPath, representation, token.ValueOr(String.Empty),
+                            null, correlationId))
+                        .ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception, exception.StackTrace);
+                }
+            }
+            return response;
+        }
+
         private async Task PostTo<T>(string gatewayUrl, T representation, string cmSuffix, string correlationId)
         {
             try
             {
                 var token = await Authenticate(correlationId).ConfigureAwait(false);
+                HttpResponseMessage response = null;
                 token.MatchSome(async accessToken =>
                 {
                     try
                     {
-                        await httpClient
-                            .SendAsync(CreateHttpRequest(gatewayUrl, representation, accessToken,
+                        response = await httpClient
+                            .SendAsync(CreateHttpRequest(HttpMethod.Post,gatewayUrl, representation, accessToken,
                                 cmSuffix, correlationId))
                             .ConfigureAwait(false);
                     }
