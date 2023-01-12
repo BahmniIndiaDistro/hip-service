@@ -13,5 +13,7 @@ namespace In.ProjectEKA.HipService.Creation
         public AadhaarOTPVerifyResponse AadhaarOTPVerifyResponse(string response);
         
         public MobileOTPGenerationResponse MobileOTPGenerationResponse(string response);
+
+        public void MobileOTPVerifyResponse(string response);
     }
 }

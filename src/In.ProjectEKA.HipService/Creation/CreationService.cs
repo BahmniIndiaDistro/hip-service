@@ -49,6 +49,13 @@ namespace In.ProjectEKA.HipService.Creation
             creation.txnId = generationResponse.txnId;
             return new MobileOTPGenerationResponse(generationResponse.mobileLinked);
         }
+        
+        public void MobileOTPVerifyResponse(string response)
+        {
+            var generationResponse = JsonConvert.DeserializeObject<TransactionResponse>(response);
+            creation.txnId = generationResponse.txnId;
+        }
+
 
         public async Task<string> EncryptText(string text)
         {
