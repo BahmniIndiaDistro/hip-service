@@ -140,7 +140,54 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError,responseContent);
             
         }
+
+        [Route(CHECK_GENERATE_MOBILE_OTP)]
+        public async Task<ActionResult> CheckAndGenerateMobileOTP(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromParameter("mobileNumber")] string mobileNumber)
+        {
+            HttpResponseMessage response = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    string sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
         
+            var txnId = creationService.getTransactionId();
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, $"Request for generate-mobile-otp to gateway: correlationId: {{correlationId}}," +
+                                        $" mobile: {{mobile}}",
+                    correlationId, mobileNumber);
+                response = await gatewayClient.CallABHAService(HttpMethod.Post,CHECK_GENERATE_MOBILE_OTP, new MobileOTPGenerationRequest(txnId,mobileNumber), correlationId);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
+                                                               " generate-mobile-otp", txnId);
+                
+            }
+        
+            var responseContent = await response?.Content.ReadAsStringAsync();
+            if (response != null && response.IsSuccessStatusCode)
+            {
+                return Accepted(creationService.MobileOTPGenerationResponse(responseContent));
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError,responseContent);
+        }
+
         [NonAction]
         private async Task<StatusCodeResult> IsAuthorised(String sessionId)
         {

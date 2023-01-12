@@ -42,6 +42,13 @@ namespace In.ProjectEKA.HipService.Creation
             responseObj.jwtResponse = null;
             return responseObj;
         }
+        
+        public MobileOTPGenerationResponse MobileOTPGenerationResponse(string response)
+        {
+            var generationResponse = JsonConvert.DeserializeObject<MobileOTPGenerationResponse>(response);
+            creation.txnId = generationResponse.txnId;
+            return new MobileOTPGenerationResponse(generationResponse.mobileLinked);
+        }
 
         public async Task<string> EncryptText(string text)
         {

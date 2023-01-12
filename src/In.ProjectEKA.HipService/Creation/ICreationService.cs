@@ -11,5 +11,7 @@ namespace In.ProjectEKA.HipService.Creation
         public string getTransactionId();
 
         public AadhaarOTPVerifyResponse AadhaarOTPVerifyResponse(string response);
+        
+        public MobileOTPGenerationResponse MobileOTPGenerationResponse(string response);
     }
 }
