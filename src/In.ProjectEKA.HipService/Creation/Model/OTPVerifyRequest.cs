@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace In.ProjectEKA.HipService.Creation.Model
 {
     public class OTPVerifyRequest
@@ -7,6 +9,11 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public OTPVerifyRequest(string txnId,string otp)
         {
             this.txnId = txnId;
+            this.otp = otp;
+        }
+        [JsonConstructor]
+        public OTPVerifyRequest(string otp)
+        {
             this.otp = otp;
         }
     }

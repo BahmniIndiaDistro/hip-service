@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace In.ProjectEKA.HipService.Creation.Model
 {
     public class MobileOTPGenerationRequest
@@ -8,6 +10,12 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public MobileOTPGenerationRequest(string txnId,string mobile)
         {
             this.txnId = txnId;
+            this.mobile = mobile;
+        }
+        
+        [JsonConstructor]
+        public MobileOTPGenerationRequest(string mobile)
+        {
             this.mobile = mobile;
         }
     }
