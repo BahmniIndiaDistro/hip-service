@@ -90,6 +90,57 @@ namespace In.ProjectEKA.HipService.Creation
             
         }
         
+        [Route(AADHAAR_VERIFY_OTP)]
+        public async Task<ActionResult> VerifyAadhaarOtp(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromParameter("otp")] string otp )
+        {
+            HttpResponseMessage response = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    string sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+
+            var txnId = creationService.getTransactionId();
+            try
+            {
+                string encryptedOTP = await creationService.EncryptText(otp);
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, $"Request for verify-aadhaar-otp to gateway:  correlationId: {{correlationId}}," +
+                                        $"txnId: {{txnId}}",
+                     correlationId,txnId);
+                Log.Information("transId " + creationService.getTransactionId());
+                
+                response = await gatewayClient.CallABHAService(HttpMethod.Post,AADHAAR_VERIFY_OTP, new OTPVerifyRequest(txnId,encryptedOTP), correlationId);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
+                                                               " verify-aadhaar-otp", txnId);
+                
+            }
+
+            var responseContent = await response?.Content.ReadAsStringAsync();
+            if (response != null && response.IsSuccessStatusCode)
+            {
+                return Accepted(creationService.AadhaarOTPVerifyResponse(responseContent));
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError,responseContent);
+            
+        }
+        
         [NonAction]
         private async Task<StatusCodeResult> IsAuthorised(String sessionId)
         {

@@ -35,6 +35,13 @@ namespace In.ProjectEKA.HipService.Creation
             creation.txnId = generationResponse.txnId;
             return new AadhaarOTPGenerationResponse(generationResponse.mobileNumber);
         }
+        
+        public AadhaarOTPVerifyResponse AadhaarOTPVerifyResponse(string response)
+        {
+            var responseObj = JsonConvert.DeserializeObject<AadhaarOTPVerifyResponse>(response);
+            responseObj.jwtResponse = null;
+            return responseObj;
+        }
 
         public async Task<string> EncryptText(string text)
         {
