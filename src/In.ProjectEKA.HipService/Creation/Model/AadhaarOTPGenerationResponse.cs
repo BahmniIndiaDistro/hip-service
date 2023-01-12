@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace In.ProjectEKA.HipService.Creation.Model
 {
     public class AadhaarOTPGenerationResponse

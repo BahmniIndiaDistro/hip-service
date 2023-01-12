@@ -121,8 +121,7 @@ namespace In.ProjectEKA.HipService.Creation
                     LogEvents.Creation, $"Request for verify-aadhaar-otp to gateway:  correlationId: {{correlationId}}," +
                                         $"txnId: {{txnId}}",
                      correlationId,txnId);
-                Log.Information("transId " + creationService.getTransactionId());
-                
+
                 response = await gatewayClient.CallABHAService(HttpMethod.Post,AADHAAR_VERIFY_OTP, new OTPVerifyRequest(txnId,encryptedOTP), correlationId);
             }
             catch (Exception exception)
@@ -234,6 +233,53 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 creationService.MobileOTPVerifyResponse(responseContent);
                 return Accepted();
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError,responseContent);
+        }
+        
+        [Route(Constants.CREATE_ABHA_ID)]
+        public async Task<ActionResult> CreateABHAId(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId)
+        {
+            HttpResponseMessage response = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    string sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+        
+            var txnId = creationService.getTransactionId();
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, $"Request for create-ABHA to gateway:  correlationId: {{correlationId}}," +
+                                        $"txnId: {{txnId}}",
+                    correlationId,txnId);
+                response = await gatewayClient.CallABHAService(HttpMethod.Post,CREATE_ABHA_ID, new TransactionResponse(txnId), correlationId);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
+                                                               " create-ABHA", txnId);
+                
+            }
+        
+            var responseContent = await response?.Content.ReadAsStringAsync();
+            if (response != null && response.IsSuccessStatusCode)
+            {
+                return Accepted(creationService.CreateAbhaResponse(responseContent));
             }
             return StatusCode(StatusCodes.Status500InternalServerError,responseContent);
         }

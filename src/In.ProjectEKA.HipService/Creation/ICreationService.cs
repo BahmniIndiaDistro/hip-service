@@ -15,5 +15,7 @@ namespace In.ProjectEKA.HipService.Creation
         public MobileOTPGenerationResponse MobileOTPGenerationResponse(string response);
 
         public void MobileOTPVerifyResponse(string response);
+        
+        public CreateABHAResponse CreateAbhaResponse(string response);
     }
 }

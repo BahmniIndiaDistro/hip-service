@@ -55,6 +55,14 @@ namespace In.ProjectEKA.HipService.Creation
             var generationResponse = JsonConvert.DeserializeObject<TransactionResponse>(response);
             creation.txnId = generationResponse.txnId;
         }
+        
+        public CreateABHAResponse CreateAbhaResponse(string response)
+        {
+            var generationResponse = JsonConvert.DeserializeObject<CreateABHAResponse>(response);
+            generationResponse.token = null;
+            generationResponse.refreshToken = null;
+            return generationResponse;
+        }
 
 
         public async Task<string> EncryptText(string text)
