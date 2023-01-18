@@ -78,7 +78,8 @@ namespace In.ProjectEKA.HipService.Common
         public const string AADHAAR_VERIFY_OTP = "/" + VERSION_V2 + "/registration/aadhaar/verifyOTP";  
         public const string CHECK_GENERATE_MOBILE_OTP = "/" + VERSION_V2 + "/registration/aadhaar/checkAndGenerateMobileOTP";
         public const string VERIFY_MOBILE_OTP = "/" + VERSION_V2 + "/registration/aadhaar/verifyMobileOTP";
-        public const string CREATE_ABHA_ID = "/" + VERSION_V2 + "/registration/aadhaar/createHealthIdByAdhaar";
+        public const string CREATE_ABHA_ID = "/v1/registration/aadhaar/createHealthIdWithPreVerified";
+        public const string GET_ABHA_CARD =  "/" + VERSION_V2 + "/account/getPngCard";
 
     }
 }

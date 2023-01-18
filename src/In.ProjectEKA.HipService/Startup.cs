@@ -166,7 +166,7 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton<ICollectHipService, CollectHipService>()
                 .AddScoped<IPatientDal, FhirDiscoveryDataSource>()
                 .AddScoped<IPhoneNumberRepository, OpenMrsPhoneNumberRepository>()
-                .AddSingleton<Creation.ABHACreation>()
+                .AddSingleton<Creation.CreationRepository>()
                 .AddTransient<IDataFlow, DataFlow.DataFlow>()
                 .AddRouting(options => options.LowercaseUrls = true)
                 .AddHttpContextAccessor()

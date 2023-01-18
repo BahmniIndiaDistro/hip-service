@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,18 +24,18 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly ILogger<CreationController> logger;
         private readonly HttpClient httpClient;
         private readonly OpenMrsConfiguration openMrsConfiguration;
-        private ABHACreation abhaCreation;
+        private CreationRepository repository;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
             HttpClient httpClient,
-            OpenMrsConfiguration openMrsConfiguration, ABHACreation abhaCreation)
+            OpenMrsConfiguration openMrsConfiguration, CreationRepository repository)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
             this.httpClient = httpClient;
             this.openMrsConfiguration = openMrsConfiguration;
-            this.abhaCreation = abhaCreation;
+            this.repository = repository;
         }
 
         [Route(AADHAAR_GENERATE_OTP)]
@@ -77,7 +78,7 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var generationResponse =
                             JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
-                        abhaCreation.txnId = generationResponse?.txnId;
+                        repository.txnId = generationResponse?.txnId;
                         return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.mobileNumber));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -117,7 +118,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = abhaCreation.txnId;
+            var txnId = repository.txnId;
             try
             {
                 string encryptedOTP = await EncryptText(otpVerifyRequest.otp);
@@ -133,7 +134,6 @@ namespace In.ProjectEKA.HipService.Creation
                     if (response.IsSuccessStatusCode)
                     {
                         var otpResponse = JsonConvert.DeserializeObject<AadhaarOTPVerifyResponse>(responseContent);
-                        otpResponse.jwtResponse = null;
                         return Accepted(otpResponse);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -171,7 +171,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = abhaCreation.txnId;
+            var txnId = repository.txnId;
             var mobileNumber = mobileOtpGenerationRequest.mobile;
             try
             {
@@ -186,7 +186,7 @@ namespace In.ProjectEKA.HipService.Creation
                     if (response.IsSuccessStatusCode)
                     {
                         var generationResponse = JsonConvert.DeserializeObject<MobileOTPGenerationResponse>(responseContent);
-                        abhaCreation.txnId = generationResponse?.txnId;
+                        repository.txnId = generationResponse?.txnId;
                         return Accepted(new MobileOTPGenerationResponse(generationResponse?.mobileLinked));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -225,7 +225,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = abhaCreation.txnId;
+            var txnId = repository.txnId;
             try
             {
                 string encryptedOTP = await EncryptText(otpVerifyRequest.otp);
@@ -241,7 +241,7 @@ namespace In.ProjectEKA.HipService.Creation
                     if (response.IsSuccessStatusCode)
                     {
                         var otpResponse = JsonConvert.DeserializeObject<TransactionResponse>(responseContent);
-                        abhaCreation.txnId = otpResponse?.txnId;
+                        repository.txnId = otpResponse?.txnId;
                         return Accepted();
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -259,7 +259,7 @@ namespace In.ProjectEKA.HipService.Creation
         
         [Route(Constants.CREATE_ABHA_ID)]
         public async Task<ActionResult> CreateABHAId(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId,CreateABHARequest createAbhaRequest)
         {
             if (Request != null)
             {
@@ -279,7 +279,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
         
-            var txnId = abhaCreation.txnId;
+            var txnId = repository.txnId;
             try
             {
                 logger.Log(LogLevel.Information,
@@ -287,15 +287,13 @@ namespace In.ProjectEKA.HipService.Creation
                                         $"txnId: {{txnId}}",
                     correlationId,txnId);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, CREATE_ABHA_ID,
-                    new TransactionResponse(txnId), correlationId))
+                    new CreateABHARequest(createAbhaRequest.healthId,txnId), correlationId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
 
                     if (response.IsSuccessStatusCode)
                     {
                         var createAbhaResponse = JsonConvert.DeserializeObject<CreateABHAResponse>(responseContent);
-                        createAbhaResponse.token = null;
-                        createAbhaResponse.refreshToken = null;
                         return Accepted(createAbhaResponse);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -309,6 +307,49 @@ namespace In.ProjectEKA.HipService.Creation
             }
             
             return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [Route(GET_ABHA_CARD)]
+        public async Task<Tuple<ActionResult,Stream>> getPngCard(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, ABHACardRequest abhaCardRequest)
+        {
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    string sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return  new Tuple<ActionResult, Stream>(statusCodeResult.Result, null);
+                    }
+                }
+                else
+                {
+                    return new Tuple<ActionResult, Stream>(StatusCode(StatusCodes.Status401Unauthorized), null);
+                       
+                }
+            }
+            
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, $"Request for abha-card to gateway:  correlationId: {{correlationId}}",
+                    correlationId);
+
+                var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, GET_ABHA_CARD,
+                    null, correlationId, $"{abhaCardRequest.tokenType} {abhaCardRequest.token}");
+                var stream = await response.Content.ReadAsStreamAsync();
+                return new Tuple<ActionResult, Stream>(StatusCode(StatusCodes.Status202Accepted),stream);
+                
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for Abha-card generation");
+                
+            }
+            return new Tuple<ActionResult, Stream>(StatusCode(StatusCodes.Status500InternalServerError), null);;
         }
         
         [NonAction]
@@ -328,11 +369,14 @@ namespace In.ProjectEKA.HipService.Creation
         
         private async Task<string> EncryptText(string text)
         {
-            HttpResponseMessage response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,CERT, null,null);
-            string key = await response.Content.ReadAsStringAsync();
-            byte[] byteData = Encoding.UTF8.GetBytes(text);
             var rsaPublicKey = RSA.Create();
-            rsaPublicKey.ImportFromPem(key);
+            if (repository.public_key == null)
+            {
+                HttpResponseMessage response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,CERT, null,null);
+                repository.public_key = await response.Content.ReadAsStringAsync();
+            }
+            byte[] byteData = Encoding.UTF8.GetBytes(text);
+            rsaPublicKey.ImportFromPem(repository.public_key);
             byte[] bytesEncrypted = rsaPublicKey.Encrypt(byteData, RSAEncryptionPadding.Pkcs1);
             return await Task.FromResult(Convert.ToBase64String(bytesEncrypted));
         }

@@ -59,8 +59,8 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public string mobile { get;  }
         public string aadhaar { get; }
         public List<string> authMethods { get; }
-        public string token { get; set; }
-        public string refreshToken { get; set; }
+        public string token { get; }
+        public string refreshToken { get; }
         public object tags { get; }
     }
 }

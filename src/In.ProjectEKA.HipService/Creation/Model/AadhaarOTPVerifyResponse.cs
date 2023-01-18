@@ -49,6 +49,6 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public string phone { get;  }
         public string aadhaar { get; }
         public string healthIdNumber { get;  }
-        public object jwtResponse { get; set; }
+        public object jwtResponse { get; }
     }
 }

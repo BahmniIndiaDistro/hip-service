@@ -17,7 +17,8 @@ namespace In.ProjectEKA.HipService.Common
             T content,
             string token,
             string cmSuffix,
-            string correlationId)
+            string correlationId,
+            string xtoken = null)
         {
             var httpRequestMessage = new HttpRequestMessage(method, new Uri($"{url}"));
             if (content != null)
@@ -35,6 +36,8 @@ namespace In.ProjectEKA.HipService.Common
             
             if (token != null)
                 httpRequestMessage.Headers.Add(HeaderNames.Authorization, token);
+            if(xtoken != null)
+                httpRequestMessage.Headers.Add("X-Token", xtoken);
             if (cmSuffix != null)
                 httpRequestMessage.Headers.Add("X-CM-ID", cmSuffix);
             if (correlationId != null)
