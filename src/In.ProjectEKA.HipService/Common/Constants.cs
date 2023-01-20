@@ -4,6 +4,7 @@ namespace In.ProjectEKA.HipService.Common
     {
         public const string CURRENT_VERSION = "v0.5";
         public const string UPDATED_VERSION = "v1.0";
+        public const string VERSION_V1 = "v1";
         public const string VERSION_V2 = "v2";
         public const string PATH_SESSIONS = CURRENT_VERSION + "/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = CURRENT_VERSION + "/care-contexts/discover";
@@ -78,7 +79,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string AADHAAR_VERIFY_OTP = "/" + VERSION_V2 + "/registration/aadhaar/verifyOTP";  
         public const string CHECK_GENERATE_MOBILE_OTP = "/" + VERSION_V2 + "/registration/aadhaar/checkAndGenerateMobileOTP";
         public const string VERIFY_MOBILE_OTP = "/" + VERSION_V2 + "/registration/aadhaar/verifyMobileOTP";
-        public const string CREATE_ABHA_ID = "/v1/registration/aadhaar/createHealthIdWithPreVerified";
+        public const string CREATE_ABHA_ID = "/" + VERSION_V1 +"/registration/aadhaar/createHealthIdWithPreVerified";
         public const string GET_ABHA_CARD =  "/" + VERSION_V2 + "/account/getPngCard";
 
     }

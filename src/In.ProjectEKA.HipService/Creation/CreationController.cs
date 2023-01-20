@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using static In.ProjectEKA.HipService.Creation.CreationMap;
 
 namespace In.ProjectEKA.HipService.Creation
 {
@@ -24,29 +25,31 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly ILogger<CreationController> logger;
         private readonly HttpClient httpClient;
         private readonly OpenMrsConfiguration openMrsConfiguration;
-        private CreationRepository repository;
+        private readonly GatewayConfiguration gatewayConfiguration;
+        public static string public_key;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
             HttpClient httpClient,
-            OpenMrsConfiguration openMrsConfiguration, CreationRepository repository)
+            OpenMrsConfiguration openMrsConfiguration, GatewayConfiguration gatewayConfiguration)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
             this.httpClient = httpClient;
             this.openMrsConfiguration = openMrsConfiguration;
-            this.repository = repository;
+            this.gatewayConfiguration = gatewayConfiguration;
         }
 
         [Route(AADHAAR_GENERATE_OTP)]
         public async Task<ActionResult> GenerateAadhaarOtp(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AadhaarOTPGenerationRequest aadhaarOtpGenerationRequest)
         {
+            string sessionId = null;
             if (Request != null)
             {
                 if (Request.Cookies.ContainsKey(REPORTING_SESSION))
                 {
-                    string sessionId = Request.Cookies[REPORTING_SESSION];
+                    sessionId = Request.Cookies[REPORTING_SESSION];
             
                     Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
                     if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
@@ -71,14 +74,14 @@ namespace In.ProjectEKA.HipService.Creation
                                         $" aadhaar: {{aadhaar}}",
                      correlationId, aadhaarOtpGenerationRequest.aadhaar);
                 string text = await EncryptText(aadhaarOtpGenerationRequest.aadhaar);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,AADHAAR_GENERATE_OTP, new AadhaarOTPGenerationRequest(text), correlationId))
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, AADHAAR_GENERATE_OTP, new AadhaarOTPGenerationRequest(text), correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
                         var generationResponse =
                             JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
-                        repository.txnId = generationResponse?.txnId;
+                        TxnDictionary.Add(sessionId, generationResponse?.txnId);
                         return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.mobileNumber));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -100,11 +103,12 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> VerifyAadhaarOtp(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
         {
+            string sessionId = null;
             if (Request != null)
             {
                 if (Request.Cookies.ContainsKey(REPORTING_SESSION))
                 {
-                    string sessionId = Request.Cookies[REPORTING_SESSION];
+                    sessionId = Request.Cookies[REPORTING_SESSION];
             
                     Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
                     if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
@@ -118,7 +122,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = repository.txnId;
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
                 string encryptedOTP = await EncryptText(otpVerifyRequest.otp);
@@ -127,13 +131,14 @@ namespace In.ProjectEKA.HipService.Creation
                                         $"txnId: {{txnId}}",
                      correlationId,txnId);
 
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, AADHAAR_VERIFY_OTP,
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, gatewayConfiguration.AbhaNumberServiceUrl,AADHAAR_VERIFY_OTP,
                     new OTPVerifyRequest(txnId, encryptedOTP), correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
                         var otpResponse = JsonConvert.DeserializeObject<AadhaarOTPVerifyResponse>(responseContent);
+                        TxnDictionary[sessionId] = otpResponse?.txnId;
                         return Accepted(otpResponse);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -153,11 +158,12 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> CheckAndGenerateMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, MobileOTPGenerationRequest mobileOtpGenerationRequest)
         {
+            string sessionId = null;
             if (Request != null)
             {
                 if (Request.Cookies.ContainsKey(REPORTING_SESSION))
                 {
-                    string sessionId = Request.Cookies[REPORTING_SESSION];
+                    sessionId = Request.Cookies[REPORTING_SESSION];
             
                     Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
                     if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
@@ -171,7 +177,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = repository.txnId;
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             var mobileNumber = mobileOtpGenerationRequest.mobile;
             try
             {
@@ -179,14 +185,14 @@ namespace In.ProjectEKA.HipService.Creation
                     LogEvents.Creation, $"Request for generate-mobile-otp to gateway: correlationId: {{correlationId}}," +
                                         $" mobile: {{mobile}}",
                     correlationId,mobileNumber);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, CHECK_GENERATE_MOBILE_OTP,
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, gatewayConfiguration.AbhaNumberServiceUrl, CHECK_GENERATE_MOBILE_OTP,
                     new MobileOTPGenerationRequest(txnId, mobileNumber), correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
                         var generationResponse = JsonConvert.DeserializeObject<MobileOTPGenerationResponse>(responseContent);
-                        repository.txnId = generationResponse?.txnId;
+                        TxnDictionary[sessionId] = generationResponse?.txnId;
                         return Accepted(new MobileOTPGenerationResponse(generationResponse?.mobileLinked));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -207,11 +213,12 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> VerifyMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
         {
+            string sessionId = null;
             if (Request != null)
             {
                 if (Request.Cookies.ContainsKey(REPORTING_SESSION))
                 {
-                    string sessionId = Request.Cookies[REPORTING_SESSION];
+                    sessionId = Request.Cookies[REPORTING_SESSION];
             
                     Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
                     if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
@@ -225,7 +232,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = repository.txnId;
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
                 string encryptedOTP = await EncryptText(otpVerifyRequest.otp);
@@ -234,14 +241,14 @@ namespace In.ProjectEKA.HipService.Creation
                                         $"txnId: {{txnId}}",
                     correlationId,txnId);
 
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, VERIFY_MOBILE_OTP,
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, gatewayConfiguration.AbhaNumberServiceUrl,VERIFY_MOBILE_OTP,
                     new OTPVerifyRequest(txnId, encryptedOTP), correlationId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
                         var otpResponse = JsonConvert.DeserializeObject<TransactionResponse>(responseContent);
-                        repository.txnId = otpResponse?.txnId;
+                        TxnDictionary[sessionId] = otpResponse?.txnId;
                         return Accepted();
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -261,11 +268,12 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> CreateABHAId(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,CreateABHARequest createAbhaRequest)
         {
+            string sessionId = null;
             if (Request != null)
             {
                 if (Request.Cookies.ContainsKey(REPORTING_SESSION))
                 {
-                    string sessionId = Request.Cookies[REPORTING_SESSION];
+                    sessionId = Request.Cookies[REPORTING_SESSION];
             
                     Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
                     if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
@@ -279,14 +287,14 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
         
-            var txnId = repository.txnId;
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation, $"Request for create-ABHA to gateway:  correlationId: {{correlationId}}," +
                                         $"txnId: {{txnId}}",
                     correlationId,txnId);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, CREATE_ABHA_ID,
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ID,
                     new CreateABHARequest(createAbhaRequest.healthId,txnId), correlationId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
@@ -310,7 +318,7 @@ namespace In.ProjectEKA.HipService.Creation
         }
         
         [Route(GET_ABHA_CARD)]
-        public async Task<Tuple<ActionResult,Stream>> getPngCard(
+        public async Task<IActionResult> getPngCard(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, ABHACardRequest abhaCardRequest)
         {
             if (Request != null)
@@ -322,12 +330,12 @@ namespace In.ProjectEKA.HipService.Creation
                     Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
                     if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
                     {
-                        return  new Tuple<ActionResult, Stream>(statusCodeResult.Result, null);
+                        return statusCodeResult.Result;
                     }
                 }
                 else
                 {
-                    return new Tuple<ActionResult, Stream>(StatusCode(StatusCodes.Status401Unauthorized), null);
+                    return StatusCode(StatusCodes.Status401Unauthorized);
                        
                 }
             }
@@ -341,7 +349,7 @@ namespace In.ProjectEKA.HipService.Creation
                 var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, GET_ABHA_CARD,
                     null, correlationId, $"{abhaCardRequest.tokenType} {abhaCardRequest.token}");
                 var stream = await response.Content.ReadAsStreamAsync();
-                return new Tuple<ActionResult, Stream>(StatusCode(StatusCodes.Status202Accepted),stream);
+                return File(stream,"image/png");
                 
             }
             catch (Exception exception)
@@ -349,7 +357,7 @@ namespace In.ProjectEKA.HipService.Creation
                 logger.LogError(LogEvents.Creation, exception, "Error happened for Abha-card generation");
                 
             }
-            return new Tuple<ActionResult, Stream>(StatusCode(StatusCodes.Status500InternalServerError), null);;
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
         
         [NonAction]
@@ -370,13 +378,13 @@ namespace In.ProjectEKA.HipService.Creation
         private async Task<string> EncryptText(string text)
         {
             var rsaPublicKey = RSA.Create();
-            if (repository.public_key == null)
+            if (public_key == null)
             {
-                HttpResponseMessage response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,CERT, null,null);
-                repository.public_key = await response.Content.ReadAsStringAsync();
+                HttpResponseMessage response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,gatewayConfiguration.AbhaNumberServiceUrl,CERT, null,null);
+                public_key = await response.Content.ReadAsStringAsync();
             }
             byte[] byteData = Encoding.UTF8.GetBytes(text);
-            rsaPublicKey.ImportFromPem(repository.public_key);
+            rsaPublicKey.ImportFromPem(public_key);
             byte[] bytesEncrypted = rsaPublicKey.Encrypt(byteData, RSAEncryptionPadding.Pkcs1);
             return await Task.FromResult(Convert.ToBase64String(bytesEncrypted));
         }

@@ -5,7 +5,7 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public AadhaarOTPVerifyResponse(string photo, string name, string gender, string birthdate, string careOf,
             string house, string street, string landmark, string locality, string villageTownCity, string subDist,
             string district, string state, string pincode, string postOffice, string email, string phone, string aadhaar,
-            string healthIdNumber, object jwtResponse)
+            string healthIdNumber, object jwtResponse, string txnId)
         {
             this.photo = photo;
             this.name = name;
@@ -27,10 +27,11 @@ namespace In.ProjectEKA.HipService.Creation.Model
             this.aadhaar = aadhaar;
             this.healthIdNumber = healthIdNumber;
             this.jwtResponse = jwtResponse;
+            this.txnId = txnId;
         }
 
+        public string txnId { get; }
         public string photo { get; }
-        
         public string name { get;  }
         public string gender { get; }
         public string birthdate { get; }
