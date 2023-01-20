@@ -16,7 +16,7 @@ namespace In.ProjectEKA.HipService.Gateway
     public interface IGatewayClient
     {
         Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix,string correlationId);
-        Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string urlPath, T response,
+        Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string baseUrl, string urlPath, T response,
             string correlationId, string xtoken = null);
     }
     
@@ -83,7 +83,7 @@ namespace In.ProjectEKA.HipService.Gateway
             await PostTo(configuration.Url + urlPath, response, cmSuffix, correlationId).ConfigureAwait(false);
         }
 
-        public virtual async Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string urlPath,
+        public virtual async Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string baseUrl,string urlPath,
             T representation, string correlationId, string xtoken = null)
         {
             var token = await Authenticate(correlationId).ConfigureAwait(false);
@@ -93,7 +93,7 @@ namespace In.ProjectEKA.HipService.Gateway
                 try
                 {
                     response = await httpClient
-                        .SendAsync(CreateHttpRequest(method, configuration.AbhaServiceUrl + urlPath, representation, token.ValueOr(String.Empty),
+                        .SendAsync(CreateHttpRequest(method, baseUrl + urlPath, representation, token.ValueOr(String.Empty),
                             null, correlationId,xtoken))
                         .ConfigureAwait(false);
                 }
@@ -110,12 +110,11 @@ namespace In.ProjectEKA.HipService.Gateway
             try
             {
                 var token = await Authenticate(correlationId).ConfigureAwait(false);
-                HttpResponseMessage response = null;
                 token.MatchSome(async accessToken =>
                 {
                     try
                     {
-                        response = await httpClient
+                        await httpClient
                             .SendAsync(CreateHttpRequest(HttpMethod.Post,gatewayUrl, representation, accessToken,
                                 cmSuffix, correlationId))
                             .ConfigureAwait(false);

@@ -20,20 +20,20 @@ namespace In.ProjectEKA.HipService.Common
             string correlationId,
             string xtoken = null)
         {
-            var httpRequestMessage = new HttpRequestMessage(method, new Uri($"{url}"));
-            if (content != null)
+            var json = JsonConvert.SerializeObject(content, new JsonSerializerSettings
             {
-                var json = JsonConvert.SerializeObject(content, new JsonSerializerSettings
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new DefaultContractResolver
                 {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    ContractResolver = new DefaultContractResolver
-                    {
-                        NamingStrategy = new CamelCaseNamingStrategy()
-                    }
-                });
-                httpRequestMessage.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
-            }
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                }
+            });
             
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{url}"))
+            {
+                Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json)
+            };
+
             if (token != null)
                 httpRequestMessage.Headers.Add(HeaderNames.Authorization, token);
             if(xtoken != null)

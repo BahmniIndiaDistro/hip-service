@@ -13,6 +13,6 @@ namespace In.ProjectEKA.HipService.Gateway
 
         public string CmSuffix { get; set; }
         
-        public string AbhaServiceUrl { get; set; }
+        public string AbhaNumberServiceUrl { get; set; }
     }
 }
