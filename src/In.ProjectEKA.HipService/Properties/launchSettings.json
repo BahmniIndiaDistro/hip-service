@@ -21,7 +21,7 @@
       "commandName": "Project",
       "launchBrowser": false,
       "environmentVariables": {
-        "HEALTH_CHECK_DURATION": "5000",
+        "HEALTH_CHECK_DURATION": "30000",
         "ASPNETCORE_ENVIRONMENT": "LOCAL"
       },
       "applicationUrl": "http://localhost:9052"

@@ -32,8 +32,8 @@ namespace In.ProjectEKA.HipService.Common
 
         public static readonly string PATH_AUTH_CONFIRM = "/" + CURRENT_VERSION + "/users/auth/confirm";
 
-        public static readonly string PATH_OPENMRS_FHIR = "ws/fhir2/R4/Patient";
-        public static readonly string PATH_OPENMRS_REST = "ws/rest/v1/visit";
+        public static readonly string PATH_OPENMRS_FHIR = "ws/fhir2/R4/metadata";
+        public static readonly string PATH_OPENMRS_REST = "images/openmrs-favicon.ico";
         public static readonly string PATH_OPENMRS_HITYPE = "ws/rest/v1/hip/";
         public static readonly string CONFIG_KEY = "OpenMrs";
 
