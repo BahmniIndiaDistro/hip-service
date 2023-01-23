@@ -82,5 +82,8 @@ namespace In.ProjectEKA.HipService.Common
         public const string CREATE_ABHA_ID = "/" + VERSION_V1 +"/registration/aadhaar/createHealthIdWithPreVerified";
         public const string GET_ABHA_CARD =  "/" + VERSION_V2 + "/account/getPngCard";
 
+        public const string PUBLIC_CERT = "/" + VERSION_V1 + "/phr/public/certificate";
+        public const string MOBILE_EMAIL_INIT = "/" + VERSION_V1 + "/phr/login/mobileEmail/init";
+
     }
 }
