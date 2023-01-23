@@ -13,6 +13,7 @@ using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.Extensions.Logging;
 using Optional;
+using Serilog;
 using static In.ProjectEKA.HipService.Common.Constants;
 using Error = In.ProjectEKA.HipLibrary.Patient.Model.Error;
 
@@ -115,6 +116,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                 logger.LogError(LogEvents.UserAuth, exception, "Error happened for requestId: {RequestId} for" +
                                                                " auth-init request", requestId);
             }
+            Log.Information("Gateway issue");
             return new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway timed out"));
         }
 
