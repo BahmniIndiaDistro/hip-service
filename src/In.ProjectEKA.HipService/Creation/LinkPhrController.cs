@@ -74,7 +74,8 @@ namespace In.ProjectEKA.HipService.Creation
                                         $" mobile/email: {{input}}",
                      correlationId, phrSearchInitRequest.input);
                 string text = await EncryptText(phrSearchInitRequest.input);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl, MOBILE_EMAIL_INIT, new MobileEmailPhrSearchInitRequest(text), correlationId))
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl, 
+                    MOBILE_EMAIL_INIT, new MobileEmailPhrSearchInitRequest(text), correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
@@ -91,6 +92,59 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 logger.LogError(LogEvents.LinkingPhr, exception, "Error happened for " +
                                                                "phr-address search init" + exception.StackTrace);
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [Route(MOBILE_EMAIL_PRE_VERIFICATION)]
+        public async Task<ActionResult> MobileEmailPhrPreVerify(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] OTPVerifyRequest otpVerifyRequest)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.LinkingPhr,
+                    "Request for phr-address otp pre-verification to gateway: {@GatewayResponse}",
+                    otpVerifyRequest);
+                string text = await EncryptText(otpVerifyRequest.otp);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
+                    MOBILE_EMAIL_PRE_VERIFICATION, new MobileEmailPhrPreVerificationRequest(txnId,text), correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var generationResponse =
+                            JsonConvert.DeserializeObject<MobileEmailPhrPreVerificationResponse>(responseContent);
+                        TxnDictionary.Add(sessionId, generationResponse?.transactionId);
+                        return Accepted(new MobileEmailPhrPreVerificationResponse(generationResponse.mobileEmail, generationResponse.mappedPhrAddress));
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.LinkingPhr, exception, "Error happened for " +
+                                                               "phr-address pre verification" + exception.StackTrace);
             }
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
