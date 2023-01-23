@@ -149,6 +149,58 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
         
+         [Route(MOBILE_EMAIL_GET_USERTOKEN)]
+        public async Task<ActionResult> GetUserTokenForMobileEmailPhr(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] MobileEmailPhrGetUserTokenRequest userTokenRequest)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.LinkingPhr,
+                    "Request for phr-address user token to gateway: {@GatewayResponse}",
+                    userTokenRequest);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
+                    MOBILE_EMAIL_GET_USERTOKEN, new MobileEmailPhrGetUserTokenRequest(userTokenRequest.phrAddress,txnId), correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var generationResponse =
+                            JsonConvert.DeserializeObject<MobileEmailPhrGetUserTokenResponse>(responseContent);
+                        HealthIdTokenDictionary.Add(sessionId, generationResponse?.token);
+                        return Accepted();
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.LinkingPhr, exception, "Error happened for " +
+                                                               "phr-address user token to gateway" + exception.StackTrace);
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
        
         
         [NonAction]

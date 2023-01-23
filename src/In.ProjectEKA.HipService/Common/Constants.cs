@@ -85,5 +85,6 @@ namespace In.ProjectEKA.HipService.Common
         public const string PUBLIC_CERT = "/" + VERSION_V1 + "/phr/public/certificate";
         public const string MOBILE_EMAIL_INIT = "/" + VERSION_V1 + "/phr/login/mobileEmail/init";
         public const string MOBILE_EMAIL_PRE_VERIFICATION = "/" + VERSION_V1 + "/phr/login/mobileEmail/preVerification";
+        public const string MOBILE_EMAIL_GET_USERTOKEN = "/" + VERSION_V1 + "/phr/login/mobileEmail/getUserToken";
     }
 }
