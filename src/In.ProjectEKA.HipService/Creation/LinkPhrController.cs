@@ -149,7 +149,7 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
         
-         [Route(MOBILE_EMAIL_GET_USERTOKEN)]
+        [Route(MOBILE_EMAIL_GET_USERTOKEN)]
         public async Task<ActionResult> GetUserTokenForMobileEmailPhr(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] MobileEmailPhrGetUserTokenRequest userTokenRequest)
         {
@@ -197,6 +197,58 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 logger.LogError(LogEvents.LinkingPhr, exception, "Error happened for " +
                                                                "phr-address user token to gateway" + exception.StackTrace);
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [Route(LINK_ABHA_ADDRESS)]
+        public async Task<ActionResult> LinkABHAAddress(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] PhrAddressLinkRequest phrAddressLinkRequest)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+
+            var txnId = HealthIdNumberTokenDictionary.ContainsKey(sessionId) ? HealthIdNumberTokenDictionary[sessionId] : null;
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.LinkingPhr,
+                    "Request for link phr-address to gateway: {@GatewayResponse}",
+                    phrAddressLinkRequest);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
+                    LINK_ABHA_ADDRESS, new PhrAddressLinkRequest(phrAddressLinkRequest.action,txnId), correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var linkResponse =
+                            JsonConvert.DeserializeObject<PhrAddressLinkResponse>(responseContent);
+                        if(linkResponse?.success == "true")
+                            return Accepted();
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.LinkingPhr, exception, "Error happened for " +
+                                                               "link phr-address to gateway" + exception.StackTrace);
             }
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
