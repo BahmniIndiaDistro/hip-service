@@ -81,6 +81,10 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var generationResponse =
                             JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
+                        if (TxnDictionary.ContainsKey(sessionId))
+                        {
+                            TxnDictionary[sessionId] = generationResponse?.txnId;
+                        }
                         TxnDictionary.Add(sessionId, generationResponse?.txnId);
                         return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.mobileNumber));
                     }
