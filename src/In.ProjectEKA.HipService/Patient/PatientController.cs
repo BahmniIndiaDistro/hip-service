@@ -68,10 +68,14 @@ namespace In.ProjectEKA.HipService.Patient
                 DateTime.Now.ToUniversalTime(),
                 new ProfileShareAcknowledgement(status.ToString(),shareProfileRequest.Profile.PatientDemographics.HealthId,token.ToString()), error,
                 new Resp(shareProfileRequest.RequestId));
-            await _gatewayClient.SendDataToGateway(PATH_PROFILE_ON_SHARE,
-                gatewayResponse,
-                cmSuffix,
-                correlationId);
+            Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(_gatewayConfiguration.TimeOut));
+                await _gatewayClient.SendDataToGateway(PATH_PROFILE_ON_SHARE,
+                    gatewayResponse,
+                    cmSuffix,
+                    correlationId);
+            });
             if (error == null)
             {
                 await _patientProfileService.linkToken(shareProfileRequest.Profile.PatientDemographics);
