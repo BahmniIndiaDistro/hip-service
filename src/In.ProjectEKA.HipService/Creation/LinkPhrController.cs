@@ -81,8 +81,15 @@ namespace In.ProjectEKA.HipService.Creation
                     if (response.IsSuccessStatusCode)
                     {
                         var generationResponse =
-                            JsonConvert.DeserializeObject<MobileEmailPhrSearchInitResponse>(responseContent);
-                        TxnDictionary.Add(sessionId, generationResponse?.transactionId);
+                            JsonConvert.DeserializeObject<TransactionInitResponse>(responseContent);
+                        if (TxnDictionary.ContainsKey(sessionId))
+                        {
+                            TxnDictionary[sessionId] = generationResponse?.transactionId;
+                        }
+                        else
+                        {
+                            TxnDictionary.Add(sessionId, generationResponse?.transactionId);
+                        }
                         return Accepted();
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -98,7 +105,7 @@ namespace In.ProjectEKA.HipService.Creation
         
         [Route(MOBILE_EMAIL_PRE_VERIFICATION)]
         public async Task<ActionResult> MobileEmailPhrPreVerify(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] OTPVerifyRequest otpVerifyRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] MobileEmailPhrPreVerificationRequest otpVerifyRequest)
         {
             string sessionId = null;
             if (Request != null)
@@ -187,7 +194,7 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var generationResponse =
                             JsonConvert.DeserializeObject<MobileEmailPhrGetUserTokenResponse>(responseContent);
-                        HealthIdTokenDictionary.Add(sessionId, generationResponse?.token);
+                        HealthIdTokenDictionary.Add(sessionId,  $"{X_TOKEN_TYPE} {generationResponse?.token}");
                         return Accepted();
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -201,7 +208,7 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
         
-        [Route(LINK_ABHA_ADDRESS)]
+        [Route(LINK_PHR_ADDRESS)]
         public async Task<ActionResult> LinkABHAAddress(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] PhrAddressLinkRequest phrAddressLinkRequest)
         {
@@ -224,7 +231,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = HealthIdNumberTokenDictionary.ContainsKey(sessionId) ? HealthIdNumberTokenDictionary[sessionId] : null;
+            var txnId = HealthIdNumberDictionary.ContainsKey(sessionId) ? HealthIdNumberDictionary[sessionId] : null;
             try
             {
                 logger.Log(LogLevel.Information,
@@ -232,7 +239,7 @@ namespace In.ProjectEKA.HipService.Creation
                     "Request for link phr-address to gateway: {@GatewayResponse}",
                     phrAddressLinkRequest);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
-                    LINK_ABHA_ADDRESS, new PhrAddressLinkRequest(phrAddressLinkRequest.action,txnId), correlationId))
+                    LINK_PHR_ADDRESS, new PhrAddressLinkRequest(phrAddressLinkRequest.action,txnId), correlationId, HealthIdTokenDictionary[sessionId]))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
@@ -252,6 +259,115 @@ namespace In.ProjectEKA.HipService.Creation
             }
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+        
+        [Route(AUTH_MODE_FOR_HEALTH_ID)]
+        public async Task<ActionResult> GetAuthModeForHealthId(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] HealthIdNumberRequest idNumberRequest)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+            
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.LinkingPhr,
+                    "Request for health id auth-modes to gateway: {@GatewayResponse}",
+                    idNumberRequest);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
+                    AUTH_MODE_FOR_HEALTH_ID, new HealthIdNumberRequest(idNumberRequest.healhtIdNumber), correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var authModeResponse =
+                            JsonConvert.DeserializeObject<HealthIdAuthModeResponse>(responseContent);
+                        if (HealthIdNumberDictionary.ContainsKey(sessionId))
+                        {
+                            HealthIdNumberDictionary[sessionId] = authModeResponse?.healthIdNumber;
+                        }
+                        else
+                        {
+                            HealthIdNumberDictionary.Add(sessionId, authModeResponse?.healthIdNumber);
+                        }
+                        return Accepted();
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.LinkingPhr, exception, "Error happened for " +
+                                                               "health id auth-modes to gateway" + exception.StackTrace);
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [Route(TRANSACTION_INIT)]
+        public async Task<ActionResult> GetAuthModeForHealthId(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromQuery(Name = "authMode")] string authMode)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+            
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.LinkingPhr,
+                    "Request for health id transaction to gateway with auth-mode: {@GatewayResponse}", authMode);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
+                    TRANSACTION_INIT, new HealthIdNumberRequest(authMode,HealthIdNumberDictionary[sessionId]), correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var txnResponse =
+                            JsonConvert.DeserializeObject<TransactionInitResponse>(responseContent);
+                        TxnDictionary[sessionId] = txnResponse.transactionId;
+                        return Accepted();
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.LinkingPhr, exception, "Error happened for " +
+                                                               "health id auth-modes to gateway" + exception.StackTrace);
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
         
        
         

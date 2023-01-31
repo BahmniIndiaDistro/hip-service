@@ -86,6 +86,9 @@ namespace In.ProjectEKA.HipService.Common
         public const string MOBILE_EMAIL_INIT = "/" + VERSION_V1 + "/phr/login/mobileEmail/init";
         public const string MOBILE_EMAIL_PRE_VERIFICATION = "/" + VERSION_V1 + "/phr/login/mobileEmail/preVerification";
         public const string MOBILE_EMAIL_GET_USERTOKEN = "/" + VERSION_V1 + "/phr/login/mobileEmail/getUserToken";
-        public const string LINK_ABHA_ADDRESS = "/" + VERSION_V1 + "/phr/profile/link/hid";
+        public const string LINK_PHR_ADDRESS = "/" + VERSION_V1 + "/phr/profile/link/hid";
+        public const string AUTH_MODE_FOR_HEALTH_ID = "/" + VERSION_V1 + "/phr/registration/hid/search/auth-methods";
+        public const string TRANSACTION_INIT = "/" + VERSION_V1 + "/phr/login/init/transaction";
+        public const string X_TOKEN_TYPE = "Bearer";
     }
 }

@@ -1,10 +1,10 @@
 namespace In.ProjectEKA.HipService.Creation.Model
 {
-    public class MobileEmailPhrSearchInitResponse
+    public class TransactionInitResponse
     {
         public string transactionId;
 
-        public MobileEmailPhrSearchInitResponse(string transactionId)
+        public TransactionInitResponse(string transactionId)
         {
             this.transactionId = transactionId;
         }
