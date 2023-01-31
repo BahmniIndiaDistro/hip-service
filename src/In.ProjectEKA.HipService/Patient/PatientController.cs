@@ -1,3 +1,5 @@
+using Serilog;
+
 namespace In.ProjectEKA.HipService.Patient
 {
     using System;
@@ -70,15 +72,16 @@ namespace In.ProjectEKA.HipService.Patient
                 new Resp(shareProfileRequest.RequestId));
             Task.Run(async () =>
             {
-                await Task.Delay(TimeSpan.FromSeconds(_gatewayConfiguration.TimeOut));
+                await Task.Delay(500);
                 await _gatewayClient.SendDataToGateway(PATH_PROFILE_ON_SHARE,
                     gatewayResponse,
                     cmSuffix,
                     correlationId);
+                if(error == null)
+                    await _patientProfileService.linkToken(shareProfileRequest.Profile.PatientDemographics);
             });
             if (error == null)
             {
-                await _patientProfileService.linkToken(shareProfileRequest.Profile.PatientDemographics);
                 return Accepted();
             }
             return BadRequest();
