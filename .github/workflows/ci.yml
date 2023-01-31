@@ -3,8 +3,9 @@ name: CI action
 on:
   push:
     branches:
-      - master
-      - 'release-*'
+      - BAH-2505
+      # - master
+      # - 'release-*'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
 jobs:
@@ -31,18 +32,18 @@ jobs:
           rm setArtifactVersion.sh
       - name: Test coverage
         run: dotnet test test/In.ProjectEKA.HipServiceTest/In.ProjectEKA.HipServiceTest.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-      - name: Docker Registry
-        env:
-          DOCKER_REGISTRY_URL: docker.io
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: |
-          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY_URL
+      # - name: Docker Registry
+      #   env:
+      #     DOCKER_REGISTRY_URL: docker.io
+      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      #   run: |
+      #     docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY_URL
       - name: Build docker image
         env:
           CONTAINER_REPO_NAME: hip
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: docker build -f package/docker/Dockerfile -t $DOCKER_USERNAME/$CONTAINER_REPO_NAME:$ARTIFACT_VERSION .
+        run: docker build -f package/docker/Dockerfile -t $DOCKER_USERNAME/$CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
       - name: Push Docker Container to Registry
         env:
           CONTAINER_REPO_NAME: hip
