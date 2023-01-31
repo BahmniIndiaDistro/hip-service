@@ -1,5 +1,3 @@
-using Serilog;
-
 namespace In.ProjectEKA.HipService.Patient
 {
     using System;
