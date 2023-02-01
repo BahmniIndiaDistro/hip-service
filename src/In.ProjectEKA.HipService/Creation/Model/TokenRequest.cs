@@ -1,12 +1,12 @@
 namespace In.ProjectEKA.HipService.Creation.Model
 {
-    public class ABHACardRequest
+    public class TokenRequest
     {
         public string token;
 
         public string tokenType = "Bearer";
 
-        public ABHACardRequest(string token)
+        public TokenRequest(string token)
         {
             this.token = token;
         }

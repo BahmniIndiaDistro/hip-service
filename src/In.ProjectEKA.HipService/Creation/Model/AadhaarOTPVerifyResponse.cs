@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace In.ProjectEKA.HipService.Creation.Model
 {
     public class AadhaarOTPVerifyResponse
@@ -5,7 +7,7 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public AadhaarOTPVerifyResponse(string photo, string name, string gender, string birthdate, string careOf,
             string house, string street, string landmark, string locality, string villageTownCity, string subDist,
             string district, string state, string pincode, string postOffice, string email, string phone, string aadhaar,
-            string healthIdNumber, object jwtResponse, string txnId)
+            string healthIdNumber, JwtToken jwtResponse, string txnId)
         {
             this.photo = photo;
             this.name = name;
@@ -50,6 +52,17 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public string phone { get;  }
         public string aadhaar { get; }
         public string healthIdNumber { get;  }
-        public object jwtResponse { get; }
+        public JwtToken jwtResponse { get; }
+        public List<string> phrAddress { get; set; }
+    }
+
+    public class JwtToken
+    {
+        public string token;
+
+        public JwtToken(string token)
+        {
+            this.token = token;
+        }
     }
 }
