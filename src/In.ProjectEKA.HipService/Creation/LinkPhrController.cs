@@ -195,7 +195,8 @@ namespace In.ProjectEKA.HipService.Creation
                         var generationResponse =
                             JsonConvert.DeserializeObject<MobileEmailPhrGetUserTokenResponse>(responseContent);
                         HealthIdTokenDictionary.Add(sessionId,  $"{X_TOKEN_TYPE} {generationResponse?.token}");
-                        return Accepted();
+                        var healthIdNumber = await getABHAAddressProfile(new TokenRequest(generationResponse?.token));
+                        return Accepted(healthIdNumber);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
                 }
@@ -246,8 +247,7 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var linkResponse =
                             JsonConvert.DeserializeObject<PhrAddressLinkResponse>(responseContent);
-                        if(linkResponse?.success == "true")
-                            return Accepted();
+                        return Accepted(linkResponse);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
                 }
@@ -305,7 +305,7 @@ namespace In.ProjectEKA.HipService.Creation
                         {
                             HealthIdNumberDictionary.Add(sessionId, authModeResponse?.healthIdNumber);
                         }
-                        return Accepted();
+                        return Accepted(authModeResponse);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
                 }
@@ -366,6 +366,35 @@ namespace In.ProjectEKA.HipService.Creation
                                                                "health id auth-modes to gateway" + exception.StackTrace);
             }
             return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        private async Task<ABHAAddressProfile> getABHAAddressProfile(TokenRequest tokenRequest)
+        {
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, "Request for ABHA-Addres patient-profile to gateway");
+                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, gatewayConfiguration.AbhaAddressServiceUrl,ABHA_ADDRESS_PROFILE,
+                    null, null,$"{tokenRequest.tokenType} {tokenRequest.token}" ))
+                {
+                    var responseContent = await response?.Content.ReadAsStringAsync();
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var profile = JsonConvert.DeserializeObject<ABHAAddressProfile>(responseContent);
+                        return profile;
+                    }
+                    logger.LogError(LogEvents.Creation, "Error happened for ABHA Address patient profile with error response" + responseContent);
+                    return null;
+                }
+                
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for ABHA Address patient profile");
+                
+            }
+            return null;
         }
         
         

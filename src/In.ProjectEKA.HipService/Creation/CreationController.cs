@@ -142,8 +142,11 @@ namespace In.ProjectEKA.HipService.Creation
                         if (otpResponse.healthIdNumber != null)
                         {
                             var profile = await getABHAProfile(sessionId,new TokenRequest(otpResponse.jwtResponse.token));
-                            if(profile == null)
-                                return StatusCode(StatusCodes.Status500InternalServerError);
+                            if (profile != null)
+                            {
+                                otpResponse.phrAddress = profile.phrAddress;
+                                otpResponse.phone = profile.mobile;
+                            }
                             return Accepted(profile);
                         }
                         return Accepted(otpResponse);
@@ -321,6 +324,54 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
                                                                " create-ABHA", txnId);
+                
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [Route(Constants.CREATE_PHR)]
+        public async Task<ActionResult> CreateABHAAddress(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, CreateABHAAddressRequest createAbhaRequest)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+            
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, $"Request for create ABHA-Address to gateway:  correlationId: {{correlationId}}",
+                    correlationId);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_PHR,
+                    createAbhaRequest, correlationId, $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return Accepted();
+                    }
+                    var responseContent = await response?.Content.ReadAsStringAsync();
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for create ABHA Address");
                 
             }
             

@@ -49,7 +49,7 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public string pincode { get;  }
         public string postOffice { get; }
         public string email { get; }
-        public string phone { get;  }
+        public string phone { get; set; }
         public string aadhaar { get; }
         public string healthIdNumber { get;  }
         public JwtToken jwtResponse { get; }
