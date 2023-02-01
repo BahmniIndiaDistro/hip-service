@@ -32,6 +32,10 @@ jobs:
           rm setArtifactVersion.sh
       - name: Test coverage
         run: dotnet test test/In.ProjectEKA.HipServiceTest/In.ProjectEKA.HipServiceTest.csproj /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       # - name: Docker Registry
       #   env:
       #     DOCKER_REGISTRY_URL: docker.io
@@ -43,7 +47,8 @@ jobs:
         env:
           CONTAINER_REPO_NAME: hip
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: docker build -f package/docker/Dockerfile -t $CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
+        # run: docker build -f package/docker/Dockerfile -t $CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
+        run: docker buildx build -f package/docker/Dockerfile -t $CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
       - name: Push Docker Container to Registry
         env:
           CONTAINER_REPO_NAME: hip
