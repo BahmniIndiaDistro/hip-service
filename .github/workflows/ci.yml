@@ -3,9 +3,8 @@ name: CI action
 on:
   push:
     branches:
-      - BAH-2505
-      # - master
-      # - 'release-*'
+      - master
+      - 'release-*'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
 jobs:
@@ -36,18 +35,17 @@ jobs:
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      # - name: Docker Registry
-      #   env:
-      #     DOCKER_REGISTRY_URL: docker.io
-      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      #   run: |
-      #     docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY_URL
+      - name: Docker Registry
+        env:
+          DOCKER_REGISTRY_URL: docker.io
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY_URL
       - name: Build docker image
         env:
           CONTAINER_REPO_NAME: hip
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        # run: docker build -f package/docker/Dockerfile -t $CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
         run: docker buildx build -f package/docker/Dockerfile -t $CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
       - name: Push Docker Container to Registry
         env:
