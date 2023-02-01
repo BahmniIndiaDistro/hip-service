@@ -43,7 +43,7 @@ jobs:
         env:
           CONTAINER_REPO_NAME: hip
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: docker build -f package/docker/Dockerfile -t $DOCKER_USERNAME/$CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
+        run: docker build -f package/docker/Dockerfile -t $CONTAINER_REPO_NAME:$ARTIFACT_VERSION --platform=linux/amd64,linux/arm64 .
       - name: Push Docker Container to Registry
         env:
           CONTAINER_REPO_NAME: hip
