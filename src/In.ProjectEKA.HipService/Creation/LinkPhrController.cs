@@ -140,10 +140,10 @@ namespace In.ProjectEKA.HipService.Creation
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        var generationResponse =
+                        var verificationResponse =
                             JsonConvert.DeserializeObject<MobileEmailPhrPreVerificationResponse>(responseContent);
-                        TxnDictionary.Add(sessionId, generationResponse?.transactionId);
-                        return Accepted(new MobileEmailPhrPreVerificationResponse(generationResponse.mobileEmail, generationResponse.mappedPhrAddress));
+                        TxnDictionary[sessionId] = verificationResponse?.transactionId;
+                        return Accepted(new MobileEmailPhrPreVerificationResponse(verificationResponse.mobileEmail, verificationResponse.mappedPhrAddress));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
                 }
@@ -192,10 +192,17 @@ namespace In.ProjectEKA.HipService.Creation
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        var generationResponse =
+                        var tokenResponse =
                             JsonConvert.DeserializeObject<MobileEmailPhrGetUserTokenResponse>(responseContent);
-                        HealthIdTokenDictionary.Add(sessionId,  $"{X_TOKEN_TYPE} {generationResponse?.token}");
-                        var healthIdNumber = await getABHAAddressProfile(new TokenRequest(generationResponse?.token));
+                        if (HealthIdTokenDictionary.ContainsKey(sessionId))
+                        {
+                            HealthIdTokenDictionary[sessionId] = $"{X_TOKEN_TYPE} {tokenResponse?.token}";
+                        }
+                        else
+                        {
+                            HealthIdTokenDictionary.Add(sessionId, $"{X_TOKEN_TYPE} {tokenResponse?.token}");
+                        }
+                        var healthIdNumber = await getABHAAddressProfile(new TokenRequest(tokenResponse?.token));
                         return Accepted(healthIdNumber);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -232,7 +239,7 @@ namespace In.ProjectEKA.HipService.Creation
                 }
             }
 
-            var txnId = HealthIdNumberDictionary.ContainsKey(sessionId) ? HealthIdNumberDictionary[sessionId] : null;
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
                 logger.Log(LogLevel.Information,

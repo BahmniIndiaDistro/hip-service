@@ -81,7 +81,14 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var generationResponse =
                             JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
-                        TxnDictionary.Add(sessionId, generationResponse?.txnId);
+                        if (TxnDictionary.ContainsKey(sessionId))
+                        {
+                            TxnDictionary[sessionId] = generationResponse?.txnId;
+                        }
+                        else
+                        {
+                            TxnDictionary.Add(sessionId, generationResponse?.txnId);
+                        }
                         return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.mobileNumber));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -147,7 +154,6 @@ namespace In.ProjectEKA.HipService.Creation
                                 otpResponse.phrAddress = profile.phrAddress;
                                 otpResponse.phone = profile.mobile;
                             }
-                            return Accepted(profile);
                         }
                         return Accepted(otpResponse);
                     }
@@ -305,7 +311,7 @@ namespace In.ProjectEKA.HipService.Creation
                                         $"txnId: {{txnId}}",
                     correlationId,txnId);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ID,
-                    new CreateABHARequest(createAbhaRequest.healthId,txnId), correlationId))
+                    new CreateABHARequest(txnId), correlationId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
 
@@ -408,7 +414,7 @@ namespace In.ProjectEKA.HipService.Creation
                     LogEvents.Creation, $"Request for abha-card to gateway:  correlationId: {{correlationId}}",
                     correlationId);
 
-                var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, GET_ABHA_CARD,
+                var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_CARD,
                     null, correlationId, $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}");
                 var stream = await response.Content.ReadAsStreamAsync();
                 return File(stream,"image/png");
