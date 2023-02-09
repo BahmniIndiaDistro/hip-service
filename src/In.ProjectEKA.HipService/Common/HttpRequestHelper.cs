@@ -1,3 +1,5 @@
+using Serilog;
+
 namespace In.ProjectEKA.HipService.Common
 {
     using System;
@@ -42,6 +44,7 @@ namespace In.ProjectEKA.HipService.Common
                 httpRequestMessage.Headers.Add("X-CM-ID", cmSuffix);
             if (correlationId != null)
                 httpRequestMessage.Headers.Add(CORRELATION_ID, correlationId);
+            Log.Information(httpRequestMessage.ToString());
             return httpRequestMessage;
         }
 

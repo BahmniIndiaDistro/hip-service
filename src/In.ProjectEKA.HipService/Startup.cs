@@ -64,7 +64,7 @@ namespace In.ProjectEKA.HipService
             };
             HttpClient = new HttpClient(clientHandler)
             {
-                Timeout = TimeSpan.FromSeconds(Configuration.GetSection("Gateway:timeout").Get<int>())
+                Timeout = TimeSpan.FromSeconds(10000)
             };
             // Create new connection everytime
             HttpClient.DefaultRequestHeaders.Add("Connection", "close");

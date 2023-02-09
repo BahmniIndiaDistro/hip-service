@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog;
 using static In.ProjectEKA.HipService.Creation.CreationMap;
 
 namespace In.ProjectEKA.HipService.Creation
@@ -27,6 +28,9 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
         public static string public_key;
+        public static string txnId;
+        public static string token;
+        public static string healthId;
 
         public LinkController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
@@ -44,24 +48,24 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> MobileEmailPhrSearchInit(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] MobileEmailPhrSearchInitRequest phrSearchInitRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             try
             {
@@ -82,14 +86,8 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var generationResponse =
                             JsonConvert.DeserializeObject<TransactionInitResponse>(responseContent);
-                        if (TxnDictionary.ContainsKey(sessionId))
-                        {
-                            TxnDictionary[sessionId] = generationResponse?.transactionId;
-                        }
-                        else
-                        {
-                            TxnDictionary.Add(sessionId, generationResponse?.transactionId);
-                        }
+                        // TxnDictionary.Add(sessionId, generationResponse?.transactionId);
+                        txnId = generationResponse?.transactionId;
                         return Accepted();
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -107,26 +105,24 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> MobileEmailPhrPreVerify(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] MobileEmailPhrPreVerificationRequest otpVerifyRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
             try
             {
                 logger.Log(LogLevel.Information,
@@ -142,7 +138,7 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var verificationResponse =
                             JsonConvert.DeserializeObject<MobileEmailPhrPreVerificationResponse>(responseContent);
-                        TxnDictionary[sessionId] = verificationResponse?.transactionId;
+                        txnId = verificationResponse?.transactionId;
                         return Accepted(new MobileEmailPhrPreVerificationResponse(verificationResponse.mobileEmail, verificationResponse.mappedPhrAddress));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -160,26 +156,26 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> GetUserTokenForMobileEmailPhr(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] MobileEmailPhrGetUserTokenRequest userTokenRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
-            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            // var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
                 logger.Log(LogLevel.Information,
@@ -194,14 +190,8 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var tokenResponse =
                             JsonConvert.DeserializeObject<MobileEmailPhrGetUserTokenResponse>(responseContent);
-                        if (HealthIdTokenDictionary.ContainsKey(sessionId))
-                        {
-                            HealthIdTokenDictionary[sessionId] = $"{X_TOKEN_TYPE} {tokenResponse?.token}";
-                        }
-                        else
-                        {
-                            HealthIdTokenDictionary.Add(sessionId, $"{X_TOKEN_TYPE} {tokenResponse?.token}");
-                        }
+                        // HealthIdTokenDictionary.Add(sessionId, generationResponse?.token);
+                        token = $"{X_TOKEN_TYPE} {tokenResponse?.token}";
                         var healthIdNumber = await getABHAAddressProfile(new TokenRequest(tokenResponse?.token));
                         return Accepted(healthIdNumber);
                     }
@@ -220,26 +210,26 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> LinkABHAAddress(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] PhrAddressLinkRequest phrAddressLinkRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
             
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            // var txnId = TxnDictionary.ContainsKey(sessionId) ? HealthIdNumberDictionary[sessionId] : null;
             try
             {
                 logger.Log(LogLevel.Information,
@@ -247,7 +237,7 @@ namespace In.ProjectEKA.HipService.Creation
                     "Request for link phr-address to gateway: {@GatewayResponse}",
                     phrAddressLinkRequest);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
-                    LINK_PHR_ADDRESS, new PhrAddressLinkRequest(phrAddressLinkRequest.action,txnId), correlationId, HealthIdTokenDictionary[sessionId]))
+                    LINK_PHR_ADDRESS, new PhrAddressLinkRequest(phrAddressLinkRequest.action,txnId), correlationId, token))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
@@ -271,24 +261,24 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> GetAuthModeForHealthId(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] HealthIdNumberRequest idNumberRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
             
             try
             {
@@ -304,14 +294,7 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         var authModeResponse =
                             JsonConvert.DeserializeObject<HealthIdAuthModeResponse>(responseContent);
-                        if (HealthIdNumberDictionary.ContainsKey(sessionId))
-                        {
-                            HealthIdNumberDictionary[sessionId] = authModeResponse?.healthIdNumber;
-                        }
-                        else
-                        {
-                            HealthIdNumberDictionary.Add(sessionId, authModeResponse?.healthIdNumber);
-                        }
+                        healthId = authModeResponse?.healthIdNumber;
                         return Accepted(authModeResponse);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -326,42 +309,43 @@ namespace In.ProjectEKA.HipService.Creation
         }
         
         [Route(TRANSACTION_INIT)]
-        public async Task<ActionResult> GetAuthModeForHealthId(
+        public async Task<ActionResult> TransactionInit(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromQuery(Name = "authMode")] string authMode)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-            
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
+            Log.Information("healthId" + healthId);
             try
             {
                 logger.Log(LogLevel.Information,
                     LogEvents.LinkingPhr,
                     "Request for health id transaction to gateway with auth-mode: {@GatewayResponse}", authMode);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl,
-                    TRANSACTION_INIT, new HealthIdNumberRequest(authMode,HealthIdNumberDictionary[sessionId]), correlationId))
+                    TRANSACTION_INIT, new HealthIdNumberRequest(authMode,healthId), correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
                         var txnResponse =
                             JsonConvert.DeserializeObject<TransactionInitResponse>(responseContent);
-                        TxnDictionary[sessionId] = txnResponse.transactionId;
+                        // TxnDictionary[sessionId] = txnResponse.transactionId;
+                        txnId = txnResponse?.transactionId;
                         return Accepted();
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
