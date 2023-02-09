@@ -375,6 +375,35 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
         
+        [Route(CHECK_ABHA_ADDRESS)]
+        public async Task<string> checkIfABHAAddressExists(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromQuery(Name = "phrAddress")]  string phrAddress)
+        {
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, "Request for ABHA-Address Exists to gateway");
+                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, gatewayConfiguration.AbhaAddressServiceUrl,CHECK_ABHA_ADDRESS + "?phrAddress=" + phrAddress,
+                    null, null))
+                {
+                    var responseContent = await response?.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return responseContent;
+                    }
+                    logger.LogError(LogEvents.Creation, "Error happened for check ABHA Address Exists with error response" + responseContent);
+                    return null;
+                }
+                
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for ABHA patient profile");
+                
+            }
+            return null;
+        }
+        
         private async Task<ABHAAddressProfile> getABHAAddressProfile(TokenRequest tokenRequest)
         {
             try

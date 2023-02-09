@@ -92,6 +92,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string AUTH_MODE_FOR_HEALTH_ID = "/" + VERSION_V1 + "/phr/registration/hid/search/auth-methods";
         public const string TRANSACTION_INIT = "/" + VERSION_V1 + "/phr/login/init/transaction";
         public const string ABHA_ADDRESS_PROFILE = "/" + VERSION_V1 + "/phr/profile";
+        public const string CHECK_ABHA_ADDRESS = "/" + VERSION_V1 + "/phr/search/isExist";
         public const string X_TOKEN_TYPE = "Bearer";
         
     }
