@@ -153,6 +153,7 @@ namespace In.ProjectEKA.HipService.Creation
                             {
                                 otpResponse.phrAddress = profile.phrAddress;
                                 otpResponse.phone = profile.mobile;
+                                otpResponse.healthId = profile.healthId;
                             }
                         }
                         return Accepted(otpResponse);

@@ -54,6 +54,7 @@ namespace In.ProjectEKA.HipService.Creation.Model
         public string healthIdNumber { get;  }
         public JwtToken jwtResponse { get; }
         public List<string> phrAddress { get; set; }
+        public string healthId { get; set; }
     }
 
     public class JwtToken
