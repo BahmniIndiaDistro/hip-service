@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using Xunit;
 using Address = In.ProjectEKA.HipService.Patient.Model.Address;
-using Identifier = In.ProjectEKA.HipLibrary.Patient.Model.Identifier;
+using Identifier = In.ProjectEKA.HipService.UserAuth.Model.Identifier;
 
 namespace In.ProjectEKA.HipServiceTest.Patient
 {
@@ -69,7 +69,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
         {
             var requestId = Guid.NewGuid().ToString();
             var timestamp = DateTime.Now.ToUniversalTime();
-            var identifier = new Identifier(IdentifierType.MOBILE, "9999999999");
+            var identifier = new Identifier("MOBILE", "9999999999");
             var address = new Address("string", "string", "string", "string");
             var patient = new PatientDemographics("test t", "M", "test@sbx", address, 2000, 0, 0,
                 new List<Identifier>() {identifier}, "1234-5678");
@@ -100,7 +100,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
         {
             var requestId = Guid.NewGuid().ToString();
             var timestamp = DateTime.Now.ToUniversalTime();
-            var identifier = new Identifier(IdentifierType.MOBILE, "9999999999");
+            var identifier = new Identifier("MOBILE", "9999999999");
             var address = new Address("string", "string", "string", "string");
             var patient = new PatientDemographics(null, "M", "test@sbx", address, 2000, 0, 0,
                 new List<Identifier>() {identifier}, "1234-5678");

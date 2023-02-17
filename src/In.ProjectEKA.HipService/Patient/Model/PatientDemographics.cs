@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using In.ProjectEKA.HipLibrary.Patient.Model;
-using Identifier = In.ProjectEKA.HipLibrary.Patient.Model.Identifier;
+using Identifier = In.ProjectEKA.HipService.UserAuth.Model.Identifier;
 
 namespace In.ProjectEKA.HipService.Patient.Model
 {
