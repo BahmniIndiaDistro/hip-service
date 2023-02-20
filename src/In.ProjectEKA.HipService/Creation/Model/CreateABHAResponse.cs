@@ -1,16 +1,16 @@
-using System;
 using System.Collections.Generic;
 
 namespace In.ProjectEKA.HipService.Creation.Model
 {
     public class CreateABHAResponse
     {
-        public CreateABHAResponse(string token, string refreshToken)
+        public CreateABHAResponse(string healthIdNumber,string mobile)
         {
-            this.token = token;
-            this.refreshToken = refreshToken;
+            this.healthIdNumber = healthIdNumber;
+            this.mobile = mobile;
         }
-        public string token { get; }
-        public string refreshToken { get; }
+
+        public string healthIdNumber { get; }
+        public string mobile { get;  }
     }
 }
