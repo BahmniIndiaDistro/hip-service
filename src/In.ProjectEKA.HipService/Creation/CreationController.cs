@@ -319,6 +319,15 @@ namespace In.ProjectEKA.HipService.Creation
                     if (response.IsSuccessStatusCode)
                     {
                         var createAbhaResponse = JsonConvert.DeserializeObject<CreateABHAResponse>(responseContent);
+                        var tokenRequest = new TokenRequest(createAbhaResponse.token);
+                        if (HealthIdNumberTokenDictionary.ContainsKey(sessionId))
+                        {
+                            HealthIdNumberTokenDictionary[sessionId] = tokenRequest;
+                        }
+                        else
+                        {
+                            HealthIdNumberTokenDictionary.Add(sessionId, tokenRequest);
+                        }
                         return Accepted(createAbhaResponse);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
