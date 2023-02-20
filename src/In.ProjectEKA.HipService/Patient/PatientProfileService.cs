@@ -91,7 +91,7 @@ namespace In.ProjectEKA.HipService.Patient
                 patientDemographics.DayOfBirth ?? 1).ToString();
             var ndhmDemograhics = new NdhmDemographics(patientDemographics.HealthId, patientDemographics.Name,
                 patientDemographics.Gender,
-                dob, patientDemographics.Identifiers[0].Value);
+                dob, patientDemographics.Identifiers[0].value);
             var request = new HttpRequestMessage(HttpMethod.Post, hipConfiguration.Value.Url + PATH_DEMOGRAPHICS);
             request.Content = new StringContent(JsonConvert.SerializeObject(ndhmDemograhics), Encoding.UTF8,
                 "application/json");
