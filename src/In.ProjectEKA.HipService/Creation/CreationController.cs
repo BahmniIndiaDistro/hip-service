@@ -319,7 +319,10 @@ namespace In.ProjectEKA.HipService.Creation
                     if (response.IsSuccessStatusCode)
                     {
                         var createAbhaResponse = JsonConvert.DeserializeObject<CreateABHAResponse>(responseContent);
-                        return Accepted(createAbhaResponse);
+                        var profile = await getABHAProfile(sessionId, new TokenRequest(createAbhaResponse.token));
+                        if(profile == null)
+                            return StatusCode(StatusCodes.Status500InternalServerError);
+                        return Accepted(profile);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
                 }
