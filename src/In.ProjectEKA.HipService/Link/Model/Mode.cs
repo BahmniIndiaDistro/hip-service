@@ -9,6 +9,7 @@ namespace In.ProjectEKA.HipService.Link.Model
         MOBILE_OTP,
         AADHAAR_OTP,
         PASSWORD,
-        DEMOGRAPHICS 
+        EMAIL_OTP,
+        DEMOGRAPHICS
     }
 }

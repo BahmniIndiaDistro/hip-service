@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - BAH-2471
       - 'release-*'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
