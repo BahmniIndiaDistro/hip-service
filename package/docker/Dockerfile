@@ -17,8 +17,21 @@ WORKDIR /app/src/In.ProjectEKA.HipService
 RUN dotnet publish -c Release -o /app
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM alpine:latest
+
+RUN apk update
+
+# Install .NET Dependencies
+RUN apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib
+
+# Install .NET Runtime
+RUN apk add aspnetcore6-runtime
+
+RUN mkdir app
+
 WORKDIR /app
+
 COPY --from=build-env /app .
+
 ENTRYPOINT ["dotnet", "In.ProjectEKA.HipService.dll"]
 EXPOSE 80
