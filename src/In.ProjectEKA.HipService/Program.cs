@@ -53,7 +53,8 @@
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseSerilog()
-                .UseStartup<Startup>();
+                .UseStartup<Startup>()
+                .UseUrls("http://*:80");
         }
     }
 }
