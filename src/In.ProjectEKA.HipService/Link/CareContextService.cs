@@ -44,7 +44,7 @@ namespace In.ProjectEKA.HipService.Link
         public async Task<Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>> AddContextsResponse(
             AddContextsRequest addContextsRequest, string cmSuffix)
         {
-            var accessToken = GetAccessToken(addContextsRequest.ReferenceNumber).Result;
+            var accessToken = UserAuthMap.HealthIdToAccessToken[addContextsRequest.ConsentManagerUserId];
             var referenceNumber = addContextsRequest.ReferenceNumber;
             var careContexts = addContextsRequest.CareContexts;
             var display = addContextsRequest.Display;
@@ -84,10 +84,8 @@ namespace In.ProjectEKA.HipService.Link
             return DateTime.Compare(exp, DateTime.Now.ToLocalTime()) < 0;
         }
 
-        public async Task SetAccessToken(string patientReferenceNumber)
+        public async Task SetAccessToken(string healthId)
         {
-            var (healthId, exception) =
-                await linkPatientRepository.GetHealthID(patientReferenceNumber);
             var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();
             var request = new HttpRequestMessage(HttpMethod.Post,  hipConfiguration.Value.Url + PATH_DEMOGRAPHICS);
             request.Content = new StringContent(JsonConvert.SerializeObject(demographics), Encoding.UTF8,
@@ -98,13 +96,6 @@ namespace In.ProjectEKA.HipService.Link
                 var (accessToken, error) = await userAuthRepository.GetAccessToken(healthId);
                 UserAuthMap.HealthIdToAccessToken.Add(healthId, accessToken);
             }
-        }
-
-        private async Task<string> GetAccessToken(string patientReferenceNumber)
-        {
-            var (healthId, exception) =
-                await linkPatientRepository.GetHealthID(patientReferenceNumber);
-            return UserAuthMap.HealthIdToAccessToken[healthId];
         }
 
         public Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation> NotificationContextResponse(
