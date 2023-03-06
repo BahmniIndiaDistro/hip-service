@@ -41,7 +41,7 @@ namespace In.ProjectEKA.HipService.Link
         public async Task<ActionResult> AddContexts(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AddContextsRequest addContextsRequest)
         {
-            await careContextService.SetAccessToken(addContextsRequest.ReferenceNumber);
+            await careContextService.SetAccessToken(addContextsRequest.ConsentManagerUserId);
             var cmSuffix = gatewayConfiguration.CmSuffix;
             var (gatewayAddContextsRequestRepresentation, error) =
                await careContextService.AddContextsResponse(addContextsRequest,cmSuffix);
@@ -125,11 +125,9 @@ namespace In.ProjectEKA.HipService.Link
         {
             var (careContexts, exception) =
                 await linkPatientRepository.GetLinkedCareContextsOfPatient(newContextRequest.PatientReferenceNumber);
-           if(careContexts != null)
-           {
             foreach (var context in newContextRequest.CareContexts)
             {
-                if (careContextService.IsLinkedContext(careContexts, context.ReferenceNumber))
+                if (careContexts != null && careContextService.IsLinkedContext(careContexts, context.ReferenceNumber))
                 {
                     await careContextService.CallNotifyContext(newContextRequest, context);
                 }
@@ -138,8 +136,6 @@ namespace In.ProjectEKA.HipService.Link
                     await careContextService.CallAddContext(newContextRequest);
                 }
             }
-            }
-
             return StatusCode(StatusCodes.Status200OK);
         }
     }

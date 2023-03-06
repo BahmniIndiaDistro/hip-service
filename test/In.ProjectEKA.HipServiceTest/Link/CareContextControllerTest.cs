@@ -64,7 +64,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
             var onAddContextRequest =
                 new HipLinkContextConfirmation(requestId.ToString(), timeStamp, addContextsAcknowledgement, error,
                     resp);
-            var addContextRequest = new AddContextsRequest("123", "abc", careContexts, "pqr","abcd@sbx");
+            var addContextRequest = new AddContextsRequest("abc", careContexts, "pqr","abcd@sbx");
 
             careContextService.Setup(a => a.AddContextsResponse(addContextRequest,"sbx"))
                 .Returns(Task.FromResult(new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>

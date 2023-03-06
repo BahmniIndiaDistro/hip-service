@@ -115,7 +115,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             {
                 var authRequest = await authContext.AuthConfirm
                     .FirstOrDefaultAsync(request => request.HealthId.Equals(healthId));
-                return new Tuple<string, Exception>(authRequest.AccessToken, null);
+                return new Tuple<string, Exception>(authRequest != null ? authRequest.AccessToken : null, null);
             }
             catch (Exception exception)
             {
