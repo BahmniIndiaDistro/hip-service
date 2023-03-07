@@ -249,7 +249,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             OnAuthConfirmRequest onAuthConfirmRequest)
         {
             var accessToken = onAuthConfirmRequest.auth.accessToken;
-            var healthId = onAuthConfirmRequest.auth.patient.id;
+            var healthId = onAuthConfirmRequest.auth.patient != null ? onAuthConfirmRequest.auth.patient.id : null;
             if(healthId == null)
             {
                 healthId = getHealthId(onAuthConfirmRequest.auth.accessToken);

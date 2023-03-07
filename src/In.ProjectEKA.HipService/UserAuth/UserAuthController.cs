@@ -298,7 +298,7 @@ namespace In.ProjectEKA.HipService.UserAuth
         [Route(PATH_DEMOGRAPHICS)]
         public async Task<ActionResult> DemographicAuth([FromBody] NdhmDemographics ndhmDemographics)
         {
-            var authInitRequest = new AuthInitRequest(ndhmDemographics.HealthId, "DEMOGRAPHICS", "KYC_AND_LINK");
+            var authInitRequest = new AuthInitRequest(ndhmDemographics.HealthId, "DEMOGRAPHICS", "LINK");
             
             var initError = await userAuthService.AuthInit(authInitRequest, null, bahmniConfiguration,gatewayConfiguration);
             if (initError != null)
