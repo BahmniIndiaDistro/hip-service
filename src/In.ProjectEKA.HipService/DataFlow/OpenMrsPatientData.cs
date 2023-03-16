@@ -7,7 +7,7 @@ using System.Text.Json;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using In.ProjectEKA.HipService.Common.Model;
+using In.ProjectEKA.HipLibrary.Patient.Model;
 
 namespace In.ProjectEKA.HipService.DataFlow
 {

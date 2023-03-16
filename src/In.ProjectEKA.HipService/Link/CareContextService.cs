@@ -15,7 +15,7 @@ using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Optional.Unsafe;
-using HiType = In.ProjectEKA.HipService.Common.Model.HiType;
+using HiType = In.ProjectEKA.HipLibrary.Patient.Model.HiType;
 
 namespace In.ProjectEKA.HipService.Link
 {
