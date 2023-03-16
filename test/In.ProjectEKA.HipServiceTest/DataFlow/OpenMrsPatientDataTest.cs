@@ -22,12 +22,12 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
         private void ShouldReturnDataForPrescriptionForVisit()
         {
             var patientUuid = "12";
-            var grantedContext = "OPD / 2020-05-05";
+            var careContextReference = "VISIT:1234";
             var fromDate = "2020-01-01";
             var toDate = "2020-12-12";
             var hiType = "prescription";
             var pathForPrescription =
-                "ws/rest/v1/hip/prescriptions/visit/?patientId=12&visitType=OPD&visitStartDate=2020-05-05&fromDate=2020-01-01&toDate=2020-12-13";
+                "ws/rest/v1/hip/prescriptions/visit/?patientId=12&visitUuid=1234&fromDate=2020-01-01&toDate=2020-12-13";
 
             OpenMrsClientMock
                 .Setup(x => x.GetAsync(pathForPrescription))
@@ -38,7 +38,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
                         "{\"prescriptions\": [{\"careContext\":{},\"bundle\":{\"resourceType\": \"Bundle\"}}]}")
                 })
                 .Verifiable();
-            var response = openMrsPatientData.GetPatientData(patientUuid, grantedContext, toDate, fromDate, hiType);
+            var response = openMrsPatientData.GetPatientData(patientUuid, careContextReference, toDate, fromDate, hiType);
             response.Result.Should().BeEquivalentTo("{\"resourceType\": \"Bundle\"}");
         }
 
@@ -71,12 +71,12 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
         private void ShouldReturnDataForDiagnosticReportForVisit()
         {
             var patientUuid = "12";
-            var grantedContext = "OPD / 2020-05-05";
+            var careContextReference = "VISIT:1234";
             var fromDate = "2020-01-01";
             var toDate = "2020-12-12";
             var hiType = "diagnosticreport";
             var pathForPrescription =
-                "ws/rest/v1/hip/diagnosticReports/visit/?patientId=12&visitType=OPD&visitStartDate=2020-05-05&fromDate=2020-01-01&toDate=2020-12-13";
+                "ws/rest/v1/hip/diagnosticReports/visit/?patientId=12&visitUuid=1234&fromDate=2020-01-01&toDate=2020-12-13";
 
             OpenMrsClientMock
                 .Setup(x => x.GetAsync(pathForPrescription))
@@ -87,7 +87,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
                         "{\"diagnosticReports\": [{\"careContext\":{},\"bundle\":{\"resourceType\": \"Bundle\"}}]}")
                 })
                 .Verifiable();
-            var response = openMrsPatientData.GetPatientData(patientUuid, grantedContext, toDate, fromDate, hiType);
+            var response = openMrsPatientData.GetPatientData(patientUuid, careContextReference, toDate, fromDate, hiType);
             response.Result.Should().BeEquivalentTo("{\"resourceType\": \"Bundle\"}");
         }
 
