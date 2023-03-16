@@ -1,5 +1,6 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Utility;
+using In.ProjectEKA.HipLibrary.Patient.Model;
 
 namespace In.ProjectEKA.DefaultHipTest.DataFlow
 {
@@ -30,11 +31,7 @@ namespace In.ProjectEKA.DefaultHipTest.DataFlow
             var dateRange = new DateRange("2017-12-01T15:43:00.818234", "2021-12-31T15:43:00.818234");
             var hiTypes = new List<HiType>
             {
-                HiType.Condition,
-                HiType.Observation,
                 HiType.DiagnosticReport,
-                HiType.MedicationRequest,
-                HiType.DocumentReference,
                 HiType.Prescription,
                 HiType.DischargeSummary,
                 HiType.OPConsultation
@@ -51,7 +48,7 @@ namespace In.ProjectEKA.DefaultHipTest.DataFlow
                 Uuid.Generate().ToString(), Uuid.Generate().ToString());
 
             var entries = await collect.CollectData(traceableDataRequest);
-            entries.ValueOrDefault().CareBundles.Count().Should().Be(18);
+            entries.ValueOrDefault().CareBundles.Count().Should().Be(12);
         }
 
         [Fact]
@@ -67,13 +64,10 @@ namespace In.ProjectEKA.DefaultHipTest.DataFlow
             var dateRange = new DateRange("2013-12-01T15:43:00.000+0000", "2021-12-31T15:43:19.279+0000");
             var hiTypes = new List<HiType>
             {
-                HiType.Condition,
-                HiType.Observation,
                 HiType.DiagnosticReport,
-                HiType.MedicationRequest,
-                HiType.DocumentReference,
                 HiType.Prescription,
-                HiType.DischargeSummary
+                HiType.DischargeSummary,
+                HiType.OPConsultation
             };
             var traceableDataRequest = new TraceableDataRequest(grantedContexts,
                 dateRange,

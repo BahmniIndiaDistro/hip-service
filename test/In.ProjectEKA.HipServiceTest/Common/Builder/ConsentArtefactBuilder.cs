@@ -1,4 +1,5 @@
 // ReSharper disable MemberCanBePrivate.Global
+using In.ProjectEKA.HipLibrary.Patient.Model;
 namespace In.ProjectEKA.HipServiceTest.Common.Builder
 {
     using System;

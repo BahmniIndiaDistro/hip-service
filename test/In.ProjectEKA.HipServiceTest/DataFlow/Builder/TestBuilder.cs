@@ -123,7 +123,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow.Builder
                         faker.Random.Word()),
                     new PatientReference(faker.Random.Word()),
                     new HIPReference(faker.Random.Word(), faker.Random.Word()),
-                    new []{HipService.Common.Model.HiType.OPConsultation},
+                    new []{HipLibrary.Patient.Model.HiType.OPConsultation},
                     new ConsentPermission(AccessMode.View,
                         new AccessPeriod(DateTime.Today,
                             DateTime.Today),
