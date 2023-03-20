@@ -38,16 +38,22 @@ namespace In.ProjectEKA.HipService.DataFlow
             string fromDate, string hiType)
         {
             if (!hiTypeToRootElement.ContainsKey(hiType)) return new List<string>();
+            Log.Information("In GetPatientData ---> before if --- " + !IsProgramCareContext(careContextReference));
+            Log.Information("In GetPatientData ---> before if careContextReference --- " + careContextReference);
             if (!IsProgramCareContext(careContextReference))
                 return await GetForVisits(hiType, patientUuid, careContextReference, toDate, fromDate);
             var programName = careContextReference
                 .Substring(0, careContextReference.IndexOf("(", StringComparison.Ordinal))
                 .Trim();
+            Log.Information("In GetPatientData ---> programName --- " + programName);
             var indexOfClosingBracket = careContextReference.IndexOf(")", StringComparison.Ordinal);
+            Log.Information("In GetPatientData ---> indexOfClosingBracket --- " + indexOfClosingBracket);
             var indexOfColon = careContextReference.IndexOf(":", StringComparison.Ordinal);
+            Log.Information("In GetPatientData ---> indexOfColon --- " + indexOfColon);
             var programId = careContextReference
                 .Substring(indexOfColon + 1, indexOfClosingBracket - indexOfColon - 1)
                 .Trim();
+            Log.Information("In GetPatientData ---> programId --- " + programId);
             return await GetForPrograms(hiType, patientUuid, programName, programId, toDate, fromDate);
         }
 
@@ -55,7 +61,10 @@ namespace In.ProjectEKA.HipService.DataFlow
             string toDate,
             string fromDate)
         {
+            Log.Information("In GetForVisits ---> hiType - " + hiType + " consentId - " + consentId + " grantedContext - " + grantedContext);
+            Log.Information("In GetForVisits ---> hiTypeToRootElement[hiType] - " + hiTypeToRootElement[hiType]);
             var pathForVisit = $"{Constants.PATH_OPENMRS_HITYPE}{hiTypeToRootElement[hiType]}/visit/";
+            Log.Information("In GetForVisits ---> pathForVisit - " + pathForVisit);
             var query = HttpUtility.ParseQueryString(string.Empty);
             if (
                 !string.IsNullOrEmpty(consentId) &&
