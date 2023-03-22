@@ -18,7 +18,8 @@ namespace In.ProjectEKA.HipService.DataFlow
             {HiType.Prescription.ToString().ToLower(), "prescriptions"},
             {HiType.DiagnosticReport.ToString().ToLower(), "diagnosticReports"},
             {HiType.OPConsultation.ToString().ToLower(), "opConsults"},
-            {HiType.DischargeSummary.ToString().ToLower(), "dischargeSummary"}
+            {HiType.DischargeSummary.ToString().ToLower(), "dischargeSummary"},
+            {HiType.ImmunizationRecord.ToString().ToLower(), "immunizationRecord"}
         };
 
         private readonly IOpenMrsClient openMrsClient;
@@ -67,7 +68,7 @@ namespace In.ProjectEKA.HipService.DataFlow
                 var careContexReference = grantedContext.Split(":");
                 query["patientId"] = consentId;
                 query["visitUuid"] = careContexReference[1];
-                query["fromDate"] = fromDate;
+                query["fromDate"] = DateTime.Parse(fromDate).ToString("yyyy-MM-dd");
                 query["toDate"] = DateTime.Parse(toDate).AddDays(1).ToString("yyyy-MM-dd");
             }
 
