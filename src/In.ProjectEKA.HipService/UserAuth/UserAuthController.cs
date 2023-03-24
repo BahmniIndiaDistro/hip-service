@@ -7,6 +7,7 @@ using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Gateway;
+using In.ProjectEKA.HipService.Gateway.Model;
 using In.ProjectEKA.HipService.Link.Model;
 using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.UserAuth.Model;
@@ -311,6 +312,33 @@ namespace In.ProjectEKA.HipService.UserAuth
             
             var (authConfirm, confirmError) = await userAuthService.AuthConfirm(authConfirmRequest, null ,gatewayConfiguration);
             return confirmError != null ? StatusCode(StatusCodes.Status500InternalServerError,confirmError) : Accepted(authConfirm);
+        }
+
+        [Authorize]
+        [HttpPost(PATH_AUTH_NOTIFY)]
+        public async Task<ActionResult> AuthNotify([FromHeader(Name = CORRELATION_ID)] string correlationId, 
+            [FromBody] AuthNotifyRequest request)
+        {
+            logger.Log(LogLevel.Information,
+                LogEvents.UserAuth, "Auth notify request received." +
+                                    $" RequestId:{request.requestId}, " +
+                                    $" Timestamp:{request.timestamp}");
+            TransactionIdToAuthNotifyStatus.Add(Guid.Parse(request.auth.transactionId),request.auth.status);
+            if (request.auth.status == AuthNotifyStatus.GRANTED)
+            {
+                TransactionIdToPatientDetails.Add(Guid.Parse(request.auth.transactionId), request.auth.patient);
+            }
+            var cmSuffix = gatewayConfiguration.CmSuffix;
+            var gatewayAuthOnNotifyResponseRepresentation = new AuthOnNotifyResponse(
+                Guid.NewGuid(),
+                DateTime.Now.ToUniversalTime(),
+                new AuthOnNotifyAcknowledgement(AuthOnNotifyStatus.OK),
+                null,
+                new Resp(request.requestId.ToString())
+            );
+            await gatewayClient.SendDataToGateway(PATH_AUTH_ON_NOTIFY, gatewayAuthOnNotifyResponseRepresentation, cmSuffix, correlationId);
+            
+            return Accepted();
         }
     }
 }

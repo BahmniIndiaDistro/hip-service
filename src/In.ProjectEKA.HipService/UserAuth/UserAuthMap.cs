@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using In.ProjectEKA.HipLibrary.Patient.Model;
+using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Link.Model;
 using In.ProjectEKA.HipService.UserAuth.Model;
 
@@ -14,5 +15,7 @@ namespace In.ProjectEKA.HipService.UserAuth
         public static Dictionary<Guid, AuthConfirmPatient> RequestIdToPatientDetails = new Dictionary<Guid, AuthConfirmPatient>();
         public static Dictionary<Guid, Error> RequestIdToErrorMessage = new Dictionary<Guid, Error>();
         public static Dictionary<string, string> HealthIdToAccessToken = new Dictionary<string, string>();
+        public static Dictionary<Guid, AuthNotifyStatus> TransactionIdToAuthNotifyStatus = new Dictionary<Guid, AuthNotifyStatus>();
+        public static Dictionary<Guid, AuthConfirmPatient> TransactionIdToPatientDetails = new Dictionary<Guid, AuthConfirmPatient>();
     }
 }
