@@ -148,7 +148,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                     i++;
                 } while (i < gatewayConfiguration.Counter);
                 return new Tuple<AuthConfirmPatient, ErrorRepresentation>(null,
-                new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway Timed out")));
+                new ErrorRepresentation(new Error(ErrorCode.ConsentNotGranted, "Consent Not Approved")));
         }
 
 

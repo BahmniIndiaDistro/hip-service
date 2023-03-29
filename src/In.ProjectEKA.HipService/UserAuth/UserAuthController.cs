@@ -183,7 +183,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             if (error == null) return Accepted();
             Log.Information($" Error Code:{error.Error.Code}," +
                             $" Error Message:{error.Error.Message}");
-            return StatusCode(StatusCodes.Status500InternalServerError, error);
+            return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code, StatusCodes.Status400BadRequest), error);
         }
 
         [Authorize]
@@ -239,7 +239,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             if (error == null) return Accepted(authConfirm);
             Log.Information($" Error Code:{error.Error.Code}," +
                             $" Error Message:{error.Error.Message}");
-            return StatusCode(StatusCodes.Status500InternalServerError,error);
+            return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code, StatusCodes.Status400BadRequest), error);
         }
 
         [Authorize]
@@ -313,7 +313,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             var authConfirmRequest = new AuthConfirmRequest(null, ndhmDemographics.HealthId, demographics);
             
             var (authConfirm, confirmError) = await userAuthService.AuthConfirm(authConfirmRequest, null ,gatewayConfiguration);
-            return confirmError != null ? StatusCode(StatusCodes.Status500InternalServerError,confirmError) : Accepted(authConfirm);
+            return confirmError != null ? StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(confirmError.Error.Code,StatusCodes.Status400BadRequest),confirmError) : Accepted(authConfirm);
         }
 
         [Authorize]
@@ -370,7 +370,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             
             Log.Information($" Error Code:{error.Error.Code}," +
                             $" Error Message:{error.Error.Message}");
-            return StatusCode(StatusCodes.Status504GatewayTimeout, error);
+            return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code,StatusCodes.Status400BadRequest), error);
         }
     }
 }
