@@ -113,6 +113,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                             requestId, RequestIdToAuthModes[requestId]
                         );
                         List<Mode> authModes = RequestIdToAuthModes[requestId];
+                        authModes.Add(Mode.DIRECT);
                         FetchModeResponse fetchModeResponse = new FetchModeResponse(authModes);
                         return Json(fetchModeResponse);
                     }
