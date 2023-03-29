@@ -118,6 +118,40 @@ namespace In.ProjectEKA.HipService.UserAuth
             return new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway timed out"));
         }
 
+        public Tuple<AuthConfirmPatient, ErrorRepresentation> GetPatientDetailsForDirectAuth(
+            string healthId, GatewayConfiguration gatewayConfiguration)
+        {
+                var i = 0;
+                do
+                {
+                    Thread.Sleep(gatewayConfiguration.TimeOut);
+                    if (UserAuthMap.HealthIdToTransactionId.ContainsKey(healthId))
+                    {
+                        var transactionId =
+                            Guid.Parse(UserAuthMap.HealthIdToTransactionId[healthId]);
+                        if (UserAuthMap.TransactionIdToAuthNotifyStatus.ContainsKey(transactionId))
+                        {
+                            if (UserAuthMap.TransactionIdToAuthNotifyStatus[transactionId] ==
+                                AuthNotifyStatus.GRANTED)
+                            {
+                                var patient = UserAuthMap.TransactionIdToPatientDetails[transactionId];
+                                return new Tuple<AuthConfirmPatient, ErrorRepresentation>(patient, null);
+                            }
+                            if (UserAuthMap.TransactionIdToAuthNotifyStatus[transactionId] ==
+                                AuthNotifyStatus.DENIED)
+                            {
+                                return new Tuple<AuthConfirmPatient, ErrorRepresentation>(null,
+                                    new ErrorRepresentation(new Error(ErrorCode.ConsentNotGranted, "Consent Denied")));
+                            }
+                        }
+                    }
+                    i++;
+                } while (i < gatewayConfiguration.Counter);
+                return new Tuple<AuthConfirmPatient, ErrorRepresentation>(null,
+                new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway Timed out")));
+        }
+
+
         private Tuple<GatewayAuthInitRequestRepresentation, ErrorRepresentation> AuthInitResponse(
             AuthInitRequest authInitRequest, BahmniConfiguration bahmniConfiguration)
         {

@@ -25,6 +25,7 @@ namespace In.ProjectEKA.HipLibrary.Patient.Model
         InvalidHealthId = 3433,
         DuplicateAuthConfirmRequest = 3434,
         GatewayTimedOut = 3435,
-        BadRequest = 3400
+        BadRequest = 3400,
+        ConsentNotGranted = 1428
     }
 }

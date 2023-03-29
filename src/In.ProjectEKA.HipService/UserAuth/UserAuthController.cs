@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Hangfire;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Common.Model;
@@ -340,6 +341,36 @@ namespace In.ProjectEKA.HipService.UserAuth
             await gatewayClient.SendDataToGateway(PATH_AUTH_ON_NOTIFY, gatewayAuthOnNotifyResponseRepresentation, cmSuffix, correlationId);
             
             return Accepted();
+        }
+        
+        [Route(PATH_HIP_DIRECT_AUTH)]
+        public async Task<ActionResult> GetPatientDetails([FromParameter("healthId")] string healthId)
+        {
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    string sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+            
+            var (authConfirmPatient, error) = userAuthService.GetPatientDetailsForDirectAuth(healthId, gatewayConfiguration);
+            if (error == null) 
+                return Accepted(authConfirmPatient);
+            
+            Log.Information($" Error Code:{error.Error.Code}," +
+                            $" Error Message:{error.Error.Message}");
+            return StatusCode(StatusCodes.Status504GatewayTimeout, error);
         }
     }
 }

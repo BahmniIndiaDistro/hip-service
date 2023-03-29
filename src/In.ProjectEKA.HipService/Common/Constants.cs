@@ -55,6 +55,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_HIP_AUTH_CONFIRM = "/" + CURRENT_VERSION + "/hip/auth/confirm";
         public const string PATH_ADD_NDHM_DEMOGRAPHICS = "/" + CURRENT_VERSION + "/hip/ndhm-demographics";
         public const string PATH_DEMOGRAPHICS = "/" + CURRENT_VERSION + "/hip/auth/demographics";
+        public const string PATH_HIP_DIRECT_AUTH = "/" + CURRENT_VERSION + "/hip/auth/direct";
         public const string PATH_AUTH_NOTIFY = "/" + CURRENT_VERSION + "/users/auth/notify";
         public const string PATH_AUTH_ON_NOTIFY = "/" + CURRENT_VERSION + "/users/auth/on-notify";
 
