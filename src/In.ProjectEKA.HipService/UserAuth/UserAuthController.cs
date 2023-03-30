@@ -325,17 +325,14 @@ namespace In.ProjectEKA.HipService.UserAuth
                 LogEvents.UserAuth, "Auth notify request received." +
                                     $" RequestId:{request.requestId}, " +
                                     $" Timestamp:{request.timestamp}");
-            TransactionIdToAuthNotifyStatus.Add(Guid.Parse(request.auth.transactionId),request.auth.status);
-            if (request.auth.status == AuthNotifyStatus.GRANTED)
-            {
-                TransactionIdToPatientDetails.Add(Guid.Parse(request.auth.transactionId), request.auth.patient);
-            }
+
+            var error = await userAuthService.AuthNotify(request);
             var cmSuffix = gatewayConfiguration.CmSuffix;
             var gatewayAuthOnNotifyResponseRepresentation = new AuthOnNotifyResponse(
                 Guid.NewGuid(),
                 DateTime.Now.ToUniversalTime(),
                 new AuthOnNotifyAcknowledgement(AuthOnNotifyStatus.OK),
-                null,
+                error?.Error,
                 new Resp(request.requestId.ToString())
             );
             await gatewayClient.SendDataToGateway(PATH_AUTH_ON_NOTIFY, gatewayAuthOnNotifyResponseRepresentation, cmSuffix, correlationId);

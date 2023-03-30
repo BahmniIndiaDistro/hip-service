@@ -321,6 +321,32 @@ namespace In.ProjectEKA.HipService.UserAuth
             return new Tuple<AuthConfirm, ErrorRepresentation>(authConfirm, null);
         }
 
+        public async Task<ErrorRepresentation> AuthNotify(AuthNotifyRequest request)
+        {
+            if (UserAuthMap.TransactionIdToAuthNotifyStatus.ContainsKey(Guid.Parse(request.auth.transactionId)))
+            {
+                return new ErrorRepresentation(new Error(ErrorCode.BadRequest, "Duplicate Transaction Id"));
+            }
+            UserAuthMap.TransactionIdToAuthNotifyStatus.Add(Guid.Parse(request.auth.transactionId),request.auth.status);
+            if (request.auth.status == AuthNotifyStatus.GRANTED)
+            {
+                UserAuthMap.TransactionIdToPatientDetails.Add(Guid.Parse(request.auth.transactionId), request.auth.patient);
+                var healthId = request.auth.patient.id;
+                var authConfirm = new AuthConfirm(healthId, request.auth.accessToken);
+                var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
+                if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
+                {
+                    await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
+                }
+                else
+                {
+                    userAuthRepository.Update(authConfirm);
+                }
+            }
+
+            return null;
+        }
+
         public async Task Dump(NdhmDemographics ndhmDemographics)
         {
             await userAuthRepository.AddDemographics(ndhmDemographics).ConfigureAwait(false);
