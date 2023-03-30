@@ -238,7 +238,7 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
             
             if (userAuthController.GetTransactionId(correlationId, request).Result is ObjectResult authMode)
             {
-                authMode.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+                authMode.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
                 authMode.Value?.Should().BeEquivalentTo(error);
             }
         }
@@ -264,7 +264,7 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
                 await userAuthController.GetAccessToken(correlationId, authConfirmRequest) as ObjectResult;
             if (response != null)
             {
-                response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+                response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
                 response.Value.Should().BeEquivalentTo(new ErrorRepresentation(error));
             }
         }
