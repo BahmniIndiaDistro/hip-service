@@ -20,7 +20,8 @@ namespace In.ProjectEKA.HipService.DataFlow
             {HiType.OPConsultation.ToString().ToLower(), "opConsults"},
             {HiType.DischargeSummary.ToString().ToLower(), "dischargeSummary"},
             {HiType.ImmunizationRecord.ToString().ToLower(), "immunizationRecord"},
-            {HiType.HealthDocumentRecord.ToString().ToLower(), "healthDocumentRecord"}
+            {HiType.HealthDocumentRecord.ToString().ToLower(), "healthDocumentRecord"},
+            {HiType.WellnessRecord.ToString().ToLower(), "wellnessRecord"}
         };
 
         private readonly IOpenMrsClient openMrsClient;
