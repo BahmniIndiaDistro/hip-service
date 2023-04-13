@@ -9,14 +9,14 @@ namespace In.ProjectEKA.HipService.UserAuth.Model
         public string gender { get; }
         public string dateOfBirth { get; }
     
-        public Identifier identifer { get; }
+        public Identifier identifier { get; }
 
-        public Demographics(string name, string gender, string dateOfBirth, Identifier identifer)
+        public Demographics(string name, string gender, string dateOfBirth, Identifier identifier)
         {
             this.name = name;
             this.gender = gender;
             this.dateOfBirth = dateOfBirth;
-            this.identifer = identifer;
+            this.identifier = identifier;
         }
     }
 }
