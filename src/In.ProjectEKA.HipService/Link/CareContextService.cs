@@ -73,17 +73,7 @@ namespace In.ProjectEKA.HipService.Link
             return new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
                 (new GatewayAddContextsRequestRepresentation(requestId, timeStamp, link), null);
         }
-
-        private bool IsExpired(string accessToken)
-        {
-            var token = new JwtSecurityTokenHandler().ReadToken(accessToken) as JwtSecurityToken;
-            var expInUnixTimeStamp = token?.Claims.First(c => c.Type == "exp").Value;
-            var exp = DateTimeOffset
-                .FromUnixTimeSeconds(long.Parse(expInUnixTimeStamp ?? throw new InvalidOperationException()))
-                .LocalDateTime;
-            return DateTime.Compare(exp, DateTime.Now.ToLocalTime()) < 0;
-        }
-
+        
         public async Task SetAccessToken(string healthId)
         {
             var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();

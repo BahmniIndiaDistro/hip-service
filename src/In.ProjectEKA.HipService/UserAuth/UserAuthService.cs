@@ -283,6 +283,13 @@ namespace In.ProjectEKA.HipService.UserAuth
             OnAuthConfirmRequest onAuthConfirmRequest)
         {
             var accessToken = onAuthConfirmRequest.auth.accessToken;
+            var tokenError = CheckAccessToken(accessToken);
+            if (tokenError != null)
+            {
+                return new Tuple<AuthConfirm, ErrorRepresentation>(null,
+                    new ErrorRepresentation(tokenError));
+                   
+            }
             var healthId = onAuthConfirmRequest.auth.patient != null ? onAuthConfirmRequest.auth.patient.id : null;
             if(healthId == null)
             {
@@ -350,6 +357,26 @@ namespace In.ProjectEKA.HipService.UserAuth
         public async Task Dump(NdhmDemographics ndhmDemographics)
         {
             await userAuthRepository.AddDemographics(ndhmDemographics).ConfigureAwait(false);
+        }
+        
+        private Error CheckAccessToken(string accessToken)
+        {
+            if (accessToken != null)
+            {
+                var token = new JwtSecurityTokenHandler().ReadToken(accessToken) as JwtSecurityToken;
+                if (token?.Claims.First(c => c.Type == "patientId").Value == null)
+                    return new Error(ErrorCode.BadRequest, "Invalid Access token");
+                var expInUnixTimeStamp = token?.Claims.First(c => c.Type == "exp").Value;
+                var exp = DateTimeOffset
+                    .FromUnixTimeSeconds(long.Parse(expInUnixTimeStamp ?? throw new InvalidOperationException()))
+                    .LocalDateTime;
+                if (DateTime.Compare(exp, DateTime.Now.ToLocalTime()) < 0)
+                    return new Error(ErrorCode.BadRequest, "Invalid Access token");
+                return null;
+            }
+            return new Error(ErrorCode.BadRequest,
+                "Access token should not be null");
+
         }
 
     }
