@@ -16,8 +16,7 @@ namespace In.ProjectEKA.HipService.Link
     using Microsoft.AspNetCore.Mvc.ModelBinding;
     using static Common.Constants;
     using Model;
-
-    [Authorize]
+    
     [ApiController]
     [Consumes("application/json")]
     [Produces("application/json")]

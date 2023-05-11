@@ -14,8 +14,7 @@
     using Microsoft.Extensions.Logging;
     using Common;
 
-
-    [Authorize]
+    
     [Route(PATH_CARE_CONTEXTS_DISCOVER)]
     [ApiController]
     public class CareContextDiscoveryController : Controller
