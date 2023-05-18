@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using static In.ProjectEKA.HipService.Verification.VerificationMap;
 
 namespace In.ProjectEKA.HipService.Verification
 {
@@ -81,6 +82,69 @@ namespace In.ProjectEKA.HipService.Verification
             {
                 logger.LogError(LogEvents.Verification, exception, "Error happened for " +
                                                                "search healthId request" + exception.StackTrace);
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
+            
+        }
+        
+        
+        [Route(AUTH_INIT_VERIFY)]
+        public async Task<ActionResult> AuthInit(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AuthInitRequest authInitRequest)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Verification,
+                    "Request for auth init to gateway: {@GatewayResponse}", authInitRequest);
+                logger.Log(LogLevel.Information,
+                    LogEvents.Verification, $"correlationId: {{correlationId}}," +
+                                            $" healthId: {{healthId}}" + $" authMethod: {{authMethod}}",
+                    correlationId, authInitRequest.healthid,authInitRequest.authMethod);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, AUTH_INIT_VERIFY, authInitRequest, correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var generationResponse =
+                            JsonConvert.DeserializeObject<AuthInitResponse>(responseContent);
+                        if (TxnDictionary.ContainsKey(sessionId))
+                        {
+                            TxnDictionary[sessionId] = generationResponse?.txnId;
+                        }
+                        else
+                        {
+                            TxnDictionary.Add(sessionId, generationResponse?.txnId);
+                        }
+                        return Accepted();
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                                   "search healthId request" + exception.StackTrace);
             }
             
             return StatusCode(StatusCodes.Status500InternalServerError);
