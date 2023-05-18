@@ -85,6 +85,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string GET_ABHA_CARD =  "/" + VERSION_V2 + "/account/getPngCard";
         public const string ABHA_PATIENT_PROFILE = "/" + VERSION_V2 + "/account/profile";
         public const string CREATE_PHR = "/" + VERSION_V2 + "/account/phr-linked";
+        public const string SEARCH_HEALTHID = "/" + VERSION_V2 + "/search/searchHealthIdToLogin";
 
         public const string PUBLIC_CERT = "/" + VERSION_V1 + "/phr/public/certificate";
         public const string MOBILE_EMAIL_INIT = "/" + VERSION_V1 + "/phr/login/mobileEmail/init";

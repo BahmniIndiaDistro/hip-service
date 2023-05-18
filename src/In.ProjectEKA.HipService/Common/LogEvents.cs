@@ -9,5 +9,6 @@ namespace In.ProjectEKA.HipService.Common
         public const int SmsNotify = 1004;
         public const int Creation = 1005;
         public const int LinkingPhr = 1006;
+        public const int Verification = 1007;
     }
 }
