@@ -209,7 +209,58 @@ namespace In.ProjectEKA.HipService.Verification
             return StatusCode(StatusCodes.Status500InternalServerError);
             
         }
+        
+        
+        [Route(CREATE_DEFAULT_PHR_ADDRESS)]
+        public async Task<ActionResult> CreatePhrAddress(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
 
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Verification,
+                    "Request for create deflault phr address to gateway");
+                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_DEFAULT_PHR_ADDRESS, 
+                    null, correlationId,$"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return Accepted(responseContent);
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+                
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                               "create default phr address request" + exception.StackTrace);
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
+            
+        }
+        
         [NonAction]
         private async Task<StatusCodeResult> IsAuthorised(String sessionId)
         {
