@@ -1,8 +1,5 @@
 using System;
-using System.IO;
 using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Creation.Model;
@@ -26,18 +23,20 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly HttpClient httpClient;
         private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
+        private readonly IAbhaService abhaService;
         public static string public_key;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
             HttpClient httpClient,
-            OpenMrsConfiguration openMrsConfiguration, GatewayConfiguration gatewayConfiguration)
+            OpenMrsConfiguration openMrsConfiguration, GatewayConfiguration gatewayConfiguration, IAbhaService abhaService)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
             this.httpClient = httpClient;
             this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
+            this.abhaService = abhaService;
         }
 
         [Route(AADHAAR_GENERATE_OTP)]
@@ -73,7 +72,7 @@ namespace In.ProjectEKA.HipService.Creation
                     LogEvents.Creation, $"correlationId: {{correlationId}}," +
                                         $" aadhaar: {{aadhaar}}",
                      correlationId, aadhaarOtpGenerationRequest.aadhaar);
-                string text = await EncryptText(aadhaarOtpGenerationRequest.aadhaar);
+                string text = await abhaService.EncryptText(public_key,aadhaarOtpGenerationRequest.aadhaar);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, AADHAAR_GENERATE_OTP, new AadhaarOTPGenerationRequest(text), correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -132,7 +131,7 @@ namespace In.ProjectEKA.HipService.Creation
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = await EncryptText(otpVerifyRequest.otp);
+                string encryptedOTP = await abhaService.EncryptText(public_key,otpVerifyRequest.otp);
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation, $"Request for verify-aadhaar-otp to gateway:  correlationId: {{correlationId}}," +
                                         $"txnId: {{txnId}}",
@@ -148,7 +147,7 @@ namespace In.ProjectEKA.HipService.Creation
                         TxnDictionary[sessionId] = otpResponse?.txnId;
                         if (otpResponse.healthIdNumber != null)
                         {
-                            var profile = await getABHAProfile(sessionId,new TokenRequest(otpResponse.jwtResponse.token));
+                            var profile = await abhaService.getABHAProfile(sessionId,new TokenRequest(otpResponse.jwtResponse.token));
                             if (profile != null)
                             {
                                 otpResponse.phrAddress = profile.phrAddress;
@@ -252,7 +251,7 @@ namespace In.ProjectEKA.HipService.Creation
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = await EncryptText(otpVerifyRequest.otp);
+                string encryptedOTP = await abhaService.EncryptText(public_key,otpVerifyRequest.otp);
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation, $"Request for verify-mobile-otp to gateway:  correlationId: {{correlationId}}," +
                                         $"txnId: {{txnId}}",
@@ -435,43 +434,6 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
         
-        private async Task<ABHAProfile> getABHAProfile(string sessionId, TokenRequest tokenRequest)
-        {
-            
-            try
-            {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, "Request for ABHA-patient-profile to gateway");
-                if (HealthIdNumberTokenDictionary.ContainsKey(sessionId))
-                {
-                    HealthIdNumberTokenDictionary[sessionId] = tokenRequest;
-                }
-                else
-                {
-                    HealthIdNumberTokenDictionary.Add(sessionId, tokenRequest);
-                }
-                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, gatewayConfiguration.AbhaNumberServiceUrl,ABHA_PATIENT_PROFILE,
-                null, null,$"{tokenRequest.tokenType} {tokenRequest.token}" ))
-                {
-                    var responseContent = await response?.Content.ReadAsStringAsync();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var createAbhaResponse = JsonConvert.DeserializeObject<ABHAProfile>(responseContent);
-                        return createAbhaResponse;
-                    }
-                    logger.LogError(LogEvents.Creation, "Error happened for ABHA patient profile with error response" + responseContent);
-                    return null;
-                }
-                
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(LogEvents.Creation, exception, "Error happened for ABHA patient profile");
-                
-            }
-            return null;
-        }
         
         [NonAction]
         private async Task<StatusCodeResult> IsAuthorised(String sessionId)
@@ -488,19 +450,6 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status200OK);
         }
         
-        private async Task<string> EncryptText(string text)
-        {
-            var rsaPublicKey = RSA.Create();
-            if (public_key == null)
-            {
-                HttpResponseMessage response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,gatewayConfiguration.AbhaNumberServiceUrl,CERT, null,null);
-                public_key = await response.Content.ReadAsStringAsync();
-            }
-            byte[] byteData = Encoding.UTF8.GetBytes(text);
-            rsaPublicKey.ImportFromPem(public_key);
-            byte[] bytesEncrypted = rsaPublicKey.Encrypt(byteData, RSAEncryptionPadding.Pkcs1);
-            return await Task.FromResult(Convert.ToBase64String(bytesEncrypted));
-        }
         
     }
 }

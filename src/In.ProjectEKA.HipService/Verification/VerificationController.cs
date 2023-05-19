@@ -2,6 +2,8 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipService.Common;
+using In.ProjectEKA.HipService.Creation;
+using In.ProjectEKA.HipService.Creation.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.Verification.Model;
@@ -9,7 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using static In.ProjectEKA.HipService.Verification.VerificationMap;
+using static In.ProjectEKA.HipService.Creation.CreationMap;
 
 namespace In.ProjectEKA.HipService.Verification
 {
@@ -23,17 +25,20 @@ namespace In.ProjectEKA.HipService.Verification
         private readonly HttpClient httpClient;
         private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
+        private readonly IAbhaService abhaService;
+        public static string public_key;
 
         public VerificationController(IGatewayClient gatewayClient,
             ILogger<VerificationController> logger,
             HttpClient httpClient,
-            OpenMrsConfiguration openMrsConfiguration, GatewayConfiguration gatewayConfiguration)
+            OpenMrsConfiguration openMrsConfiguration, GatewayConfiguration gatewayConfiguration, IAbhaService abhaService)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
             this.httpClient = httpClient;
             this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
+            this.abhaService = abhaService;
         }
 
         [Route(SEARCH_HEALTHID)]
@@ -151,6 +156,60 @@ namespace In.ProjectEKA.HipService.Verification
             
         }
         
+        [Route(CONFIRM_OTP_VERIFY)]
+        public async Task<ActionResult> VerifyOTP(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] OtpVerifyRequest otpVerifyRequest)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            try
+            {
+                string encryptedOTP = await abhaService.EncryptText(public_key,otpVerifyRequest.otp);
+                logger.Log(LogLevel.Information,
+                    LogEvents.Verification, $"Request for otp verify to gateway:" +
+                                        $"txnId: {{txnId}}",txnId);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, 
+                    otpVerifyRequest.authMethod == AuthMode.MOBILE_OTP ? CONFIRM_WITH_MOBILE_OTP : CONFIRM_WITH_AADHAAR_OTP, 
+                    new OTPVerifyRequest(txnId, encryptedOTP), correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var otpResponse = JsonConvert.DeserializeObject<TokenRequest>(responseContent);
+                        var profile = await abhaService.getABHAProfile(sessionId,new TokenRequest(otpResponse.token));
+                        return Accepted(profile);
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                                   "otp verify  request" + exception.StackTrace);
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
+            
+        }
+
         [NonAction]
         private async Task<StatusCodeResult> IsAuthorised(String sessionId)
         {
