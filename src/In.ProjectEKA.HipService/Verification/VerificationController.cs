@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Hangfire;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Creation;
 using In.ProjectEKA.HipService.Creation.Model;
@@ -259,6 +260,55 @@ namespace In.ProjectEKA.HipService.Verification
             
             return StatusCode(StatusCodes.Status500InternalServerError);
             
+        }
+        
+        [Route(CREATE_PHR_ADDRESS)]
+        public async Task<ActionResult> UpdatePhrAddress(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromParameter("healthId")] string healthId)
+        {
+            string sessionId = null;
+            if (Request != null)
+            {
+                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+                {
+                    sessionId = Request.Cookies[REPORTING_SESSION];
+            
+                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+                    {
+                        return statusCodeResult.Result;
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+            }
+            
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Verification, $"Request to create and update ABHA-Address to gateway: correlationId: {{correlationId}}," +
+                                            $" healthId: {{healthId}}",correlationId, healthId);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, ABHA_PATIENT_PROFILE,
+                    new ABHAProfile(healthId), correlationId, $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
+                {
+                    var responseContent = await response?.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var abhaProfile = JsonConvert.DeserializeObject<ABHAProfile>(responseContent);
+                        return Accepted(abhaProfile);
+                    }
+                    return StatusCode((int)response.StatusCode,responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for create ABHA Address");
+                
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
         
         [NonAction]

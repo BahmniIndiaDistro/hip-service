@@ -41,6 +41,11 @@ namespace In.ProjectEKA.HipService.Creation.Model
             this.@new = @new;
         }
 
+        public ABHAProfile(string healthId)
+        {
+            this.healthId = healthId;
+        }
+
         public string healthIdNumber { get; }
         public string healthId { get; }
         public bool @new { get; }
