@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace In.ProjectEKA.HipService.Creation.Model
 {
     public class ABHAProfile
     {
+        [JsonConstructor]
         public ABHAProfile(string healthIdNumber, string healthId, string profilePhoto, string kycPhoto, string name, string firstName,
             string middleName, string lastName, string gender, string dayOfBirth, string monthOfBirth, string yearOfBirth, string address, string districtCode, string districtName, string stateCode, string stateName, string subDistrictCode, string subDistrictName, string townCode, string townName, string villageCode, string villageName, string wardCode, string wardName, string pincode, string email, string mobile, List<string> authMethods, object tags, List<string> phrAddress, bool @new)
         {

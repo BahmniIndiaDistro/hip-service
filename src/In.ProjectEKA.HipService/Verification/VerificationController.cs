@@ -75,11 +75,12 @@ namespace In.ProjectEKA.HipService.Verification
                      correlationId, searchHealthIdRequest.healthId,searchHealthIdRequest.yearOfBirth);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, SEARCH_HEALTHID, searchHealthIdRequest, correlationId))
                 {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        return Accepted();
+                        var resp = JsonConvert.DeserializeObject<SearchHealthIdResponse>(responseContent);
+                        return Accepted(resp);
                     }
-                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     return StatusCode((int)response.StatusCode,responseContent);
                 }
                 
@@ -243,10 +244,10 @@ namespace In.ProjectEKA.HipService.Verification
                 using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_DEFAULT_PHR_ADDRESS, 
                     null, correlationId,$"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var responseContent = await response.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
-                        return Accepted(responseContent);
+                        return Accepted(new ABHAProfile(responseContent));
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
                 }
