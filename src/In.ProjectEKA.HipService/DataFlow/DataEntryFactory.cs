@@ -1,3 +1,5 @@
+using In.ProjectEKA.HipService.Logger;
+
 namespace In.ProjectEKA.HipService.DataFlow
 {
     using System;
@@ -92,6 +94,7 @@ namespace In.ProjectEKA.HipService.DataFlow
         private Entry LinkEntry(string linkId, string token, string careContextReference)
         {
             var link = $"{hipConfiguration.Value.Url}/health-information/{linkId}?token={token}";
+            Log.Information("link------> " + link);
             return EntryWith(null, link, careContextReference);
         }
 
@@ -115,7 +118,7 @@ namespace In.ProjectEKA.HipService.DataFlow
         {
             using var serviceScope = serviceScopeFactory.CreateScope();
             var healthInformationRepository = serviceScope.ServiceProvider.GetService<IHealthInformationRepository>();
-            healthInformationRepository.Add(new HealthInformation(linkId, entry, DateTime.Now, token));
+            healthInformationRepository.Add(new HealthInformation(linkId, entry, DateTime.UtcNow, token));
         }
     }
 }
