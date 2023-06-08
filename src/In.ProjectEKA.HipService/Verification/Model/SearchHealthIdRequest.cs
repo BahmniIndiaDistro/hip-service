@@ -3,12 +3,9 @@ namespace In.ProjectEKA.HipService.Verification.Model
     public class SearchHealthIdRequest
     {
         public string healthId { get; }
-        public string yearOfBirth { get; }
-        
-        public SearchHealthIdRequest(string healthId, string yearOfBirth)
+        public SearchHealthIdRequest(string healthId)
         {
             this.healthId = healthId;
-            this.yearOfBirth = yearOfBirth;
         }
     }
 }

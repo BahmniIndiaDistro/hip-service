@@ -71,8 +71,8 @@ namespace In.ProjectEKA.HipService.Verification
                     "Request for search healthId to gateway: {@GatewayResponse}", searchHealthIdRequest);
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification, $"correlationId: {{correlationId}}," +
-                                        $" healthId: {{healthId}}" + $" yearOfBirth: {{yearOfBirth}}",
-                     correlationId, searchHealthIdRequest.healthId,searchHealthIdRequest.yearOfBirth);
+                                        $" healthId: {{healthId}}",
+                     correlationId, searchHealthIdRequest.healthId);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, SEARCH_HEALTHID, searchHealthIdRequest, correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
