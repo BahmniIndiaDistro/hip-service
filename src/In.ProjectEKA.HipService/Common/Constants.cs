@@ -89,7 +89,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string AUTH_INIT_VERIFY = "/" + VERSION_V2 + "/auth/init";
         public const string CONFIRM_OTP_VERIFY = "/" + VERSION_V2 + "/hip/confirmOTP";
         public const string CONFIRM_WITH_MOBILE_OTP = "/" + VERSION_V2 + "/auth/confirmWithMobileOTP";
-        public const string CONFIRM_WITH_AADHAAR_OTP = "/" + VERSION_V2 + "/auth/confirmWithAadhaarOTP";
+        public const string CONFIRM_WITH_AADHAAR_OTP = "/" + VERSION_V2 + "/auth/confirmWithAadhaarOtp";
         public const string CREATE_DEFAULT_PHR_ADDRESS = "/" + VERSION_V1 + "/account/update/phr-address";
         public const string CREATE_PHR_ADDRESS = "/" + VERSION_V2 + "/hip/profile/updatePhrAddress";
 
