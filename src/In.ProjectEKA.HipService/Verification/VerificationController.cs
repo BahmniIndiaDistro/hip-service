@@ -28,6 +28,7 @@ namespace In.ProjectEKA.HipService.Verification
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
         public static string public_key;
+        public string sessionId;
 
         public VerificationController(IGatewayClient gatewayClient,
             ILogger<VerificationController> logger,
@@ -40,29 +41,30 @@ namespace In.ProjectEKA.HipService.Verification
             this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
+            sessionId = "abcd1234efgh";
         }
 
         [Route(SEARCH_HEALTHID)]
         public async Task<ActionResult> SearchHealthId(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] SearchHealthIdRequest searchHealthIdRequest)
         {
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    string sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         string sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             try
             {
@@ -100,24 +102,24 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> AuthInit(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AuthInitRequest authInitRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             try
             {
@@ -162,24 +164,24 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> VerifyOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] OtpVerifyRequest otpVerifyRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
@@ -217,24 +219,24 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> CreatePhrAddress(
             [FromHeader(Name = CORRELATION_ID)] string correlationId)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             try
             {
@@ -267,24 +269,24 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> UpdatePhrAddress(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromParameter("healthId")] string healthId)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
             
             try
             {

@@ -25,6 +25,7 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
         public static string public_key;
+        public string sessionId;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
@@ -37,30 +38,31 @@ namespace In.ProjectEKA.HipService.Creation
             this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
+            sessionId = "abcd1234efgh";
         }
 
         [Route(AADHAAR_GENERATE_OTP)]
         public async Task<ActionResult> GenerateAadhaarOtp(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AadhaarOTPGenerationRequest aadhaarOtpGenerationRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = "abcd1234efgh";
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             try
             {
@@ -109,26 +111,27 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> VerifyAadhaarOtp(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = "abcd1234efgh";
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            logger.LogInformation("dictionery12------" + TxnDictionary[sessionId]);
             try
             {
                 string encryptedOTP = await abhaService.EncryptText(public_key,otpVerifyRequest.otp);
@@ -174,24 +177,24 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> CheckAndGenerateMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, MobileOTPGenerationRequest mobileOtpGenerationRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = "abcd1234efgh";
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             var mobileNumber = mobileOtpGenerationRequest.mobile;
@@ -229,24 +232,24 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> VerifyMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
 
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
@@ -282,26 +285,26 @@ namespace In.ProjectEKA.HipService.Creation
         
         [Route(Constants.CREATE_ABHA_ID)]
         public async Task<ActionResult> CreateABHAId(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId,CreateABHARequest createAbhaRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
         
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
@@ -346,24 +349,24 @@ namespace In.ProjectEKA.HipService.Creation
         public async Task<ActionResult> CreateABHAAddress(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, CreateABHAAddressRequest createAbhaRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            // string sessionId = null;
+            // if (Request != null)
+            // {
+            //     if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            //     {
+            //         sessionId = Request.Cookies[REPORTING_SESSION];
+            //
+            //         Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
+            //         if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
+            //         {
+            //             return statusCodeResult.Result;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         return StatusCode(StatusCodes.Status401Unauthorized);
+            //     }
+            // }
             
             try
             {
