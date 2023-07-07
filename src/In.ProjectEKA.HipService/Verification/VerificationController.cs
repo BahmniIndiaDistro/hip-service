@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog;
 using static In.ProjectEKA.HipService.Creation.CreationMap;
 
 namespace In.ProjectEKA.HipService.Verification
@@ -28,6 +29,7 @@ namespace In.ProjectEKA.HipService.Verification
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
         public static string public_key;
+        public static string txnId;
 
         public VerificationController(IGatewayClient gatewayClient,
             ILogger<VerificationController> logger,
@@ -135,14 +137,16 @@ namespace In.ProjectEKA.HipService.Verification
                     {
                         var generationResponse =
                             JsonConvert.DeserializeObject<AuthInitResponse>(responseContent);
-                        if (TxnDictionary.ContainsKey(sessionId))
-                        {
-                            TxnDictionary[sessionId] = generationResponse?.txnId;
-                        }
-                        else
-                        {
-                            TxnDictionary.Add(sessionId, generationResponse?.txnId);
-                        }
+                        txnId = generationResponse?.txnId;
+                        Log.Information("txnId------------" + txnId);
+                        // if (TxnDictionary.ContainsKey(sessionId))
+                        // {
+                        //     TxnDictionary[sessionId] = generationResponse?.txnId;
+                        // }
+                        // else
+                        // {
+                        //     TxnDictionary.Add(sessionId, generationResponse?.txnId);
+                        // }
                         return Accepted();
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -181,7 +185,8 @@ namespace In.ProjectEKA.HipService.Verification
                 }
             }
 
-            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            // var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            Log.Information("after txnId------------" + txnId);
             try
             {
                 string encryptedOTP = await abhaService.EncryptText(public_key,otpVerifyRequest.otp);
