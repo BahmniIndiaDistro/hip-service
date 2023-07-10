@@ -5,6 +5,7 @@ using In.ProjectEKA.HipService.Patient.Database;
 using In.ProjectEKA.HipService.SmsNotification;
 using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Database;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace In.ProjectEKA.HipService
 {
@@ -200,36 +201,74 @@ namespace In.ProjectEKA.HipService
                 {
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                     options.JsonSerializerOptions.IgnoreNullValues = true;
-                })
-                .Services.AddAuthentication(options =>
+                });
+                var authenticationMethod = Configuration.GetValue<string>("AuthenticationMethod");
+                if (authenticationMethod == "JwtToken")
                 {
-                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                })
-                .AddJwtBearer(options =>
-                {
-                    // Need to validate Audience and Issuer properly
-                    options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/{Constants.CURRENT_VERSION}";
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        ValidateLifetime = true,
-                        AudienceValidator = (audiences, token, parameters) => true,
-                        IssuerValidator = (issuer, token, parameters) => token.Issuer
-                    };
-                    options.RequireHttpsMetadata = false;
-                    options.IncludeErrorDetails = true;
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnTokenValidated = context =>
+                    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme
+                    )
+                        .AddJwtBearer(options =>
                         {
-                            if (!IsTokenValid(context))
-                                context.Fail("Unable to validate token.");
-                            return Task.CompletedTask;
-                        }
-                    };
-                })
-                .Services.AddHealthChecks();
+                            options.Authority = Configuration.GetValue<string>("Jwt:Authority");
+                            options.Audience = Configuration.GetValue<string>("Jwt:Audience");
+                            options.TokenValidationParameters = new TokenValidationParameters
+                            {
+                                ValidateIssuer = true,
+                                ValidateAudience = true,
+                                ValidateLifetime = true,
+                                ValidateIssuerSigningKey = true,
+                                ValidIssuer = Configuration.GetValue<string>("Jwt:Authority"),
+                                ValidAudience = Configuration.GetValue<string>("Jwt:Audience"),
+                                // IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]))
+                            };
+                            //To run in local without https
+                            options.RequireHttpsMetadata = false;
+                            options.Events = new JwtBearerEvents
+                            {
+                                OnTokenValidated = context =>
+                                {
+                                    // Extract the 'sid' claim from the token
+                                    string sid =  context.Principal.Claims.FirstOrDefault(c => c.Type == "sid")?.Value;
+                            
+                                    // Store the 'sid' in the HTTP context
+                                    context.HttpContext.Items[Constants.SESSION_ID] = sid;
+                            
+                                    return Task.CompletedTask;
+                                }
+                            };
+                        });
+                }
+                else
+                {
+                    services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                        .AddScheme<CustomAuthenticationOptions, CustomAuthenticationHandler>(CookieAuthenticationDefaults.AuthenticationScheme, options => { });
+
+                }
+                services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer("gateway", options =>
+                    {
+                        // Need to validate Audience and Issuer properly
+                        options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/{Constants.CURRENT_VERSION}";
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuerSigningKey = true,
+                            ValidateLifetime = true,
+                            AudienceValidator = (audiences, token, parameters) => true,
+                            IssuerValidator = (issuer, token, parameters) => token.Issuer
+                        };
+                        options.RequireHttpsMetadata = false;
+                        options.IncludeErrorDetails = true;
+                        options.Events = new JwtBearerEvents
+                        {
+                            OnTokenValidated = context =>
+                            {
+                                if (!IsTokenValid(context))
+                                    context.Fail("Unable to validate token.");
+                                return Task.CompletedTask;
+                            }
+                        };
+                    });
+                services.AddHealthChecks();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
