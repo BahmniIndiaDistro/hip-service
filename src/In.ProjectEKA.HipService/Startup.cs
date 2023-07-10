@@ -203,7 +203,7 @@ namespace In.ProjectEKA.HipService
                     options.JsonSerializerOptions.IgnoreNullValues = true;
                 });
                 var authenticationMethod = Configuration.GetValue<string>("AuthenticationMethod");
-                if (authenticationMethod == "JwtToken")
+                if (authenticationMethod == "Jwt")
                 {
                     services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme
                     )
@@ -240,7 +240,11 @@ namespace In.ProjectEKA.HipService
                 }
                 else
                 {
-                    services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                    services.AddAuthentication(options =>
+                        {
+                            options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                            options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                        })
                         .AddScheme<CustomAuthenticationOptions, CustomAuthenticationHandler>(CookieAuthenticationDefaults.AuthenticationScheme, options => { });
 
                 }

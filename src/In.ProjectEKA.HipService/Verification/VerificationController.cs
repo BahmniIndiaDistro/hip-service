@@ -8,6 +8,7 @@ using In.ProjectEKA.HipService.Creation.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.Verification.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,7 @@ namespace In.ProjectEKA.HipService.Verification
     using static Constants;
     
     [ApiController]
+    [Authorize]
     public class VerificationController : Controller
     {
         private readonly IGatewayClient gatewayClient;
@@ -46,24 +48,6 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> SearchHealthId(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] SearchHealthIdRequest searchHealthIdRequest)
         {
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    string sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
             try
             {
                 logger.Log(LogLevel.Information,
@@ -100,24 +84,7 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> AuthInit(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AuthInitRequest authInitRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
 
             try
             {
@@ -162,25 +129,8 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> VerifyOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] OtpVerifyRequest otpVerifyRequest)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
             
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
@@ -217,25 +167,8 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> CreatePhrAddress(
             [FromHeader(Name = CORRELATION_ID)] string correlationId)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
             
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
             try
             {
                 logger.Log(LogLevel.Information,
@@ -267,24 +200,7 @@ namespace In.ProjectEKA.HipService.Verification
         public async Task<ActionResult> UpdatePhrAddress(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromParameter("healthId")] string healthId)
         {
-            string sessionId = null;
-            if (Request != null)
-            {
-                if (Request.Cookies.ContainsKey(REPORTING_SESSION))
-                {
-                    sessionId = Request.Cookies[REPORTING_SESSION];
-            
-                    Task<StatusCodeResult> statusCodeResult = IsAuthorised(sessionId);
-                    if (!statusCodeResult.Result.StatusCode.Equals(StatusCodes.Status200OK))
-                    {
-                        return statusCodeResult.Result;
-                    }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
             
             try
             {
@@ -310,21 +226,6 @@ namespace In.ProjectEKA.HipService.Verification
             }
             
             return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-        
-        [NonAction]
-        private async Task<StatusCodeResult> IsAuthorised(String sessionId)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, openMrsConfiguration.Url + WHO_AM_I);
-            request.Headers.Add("Cookie", OPENMRS_SESSION_ID_COOKIE_NAME + "=" + sessionId);
-
-            var response = await httpClient.SendAsync(request).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            return StatusCode(StatusCodes.Status200OK);
         }
     }
 }
