@@ -160,6 +160,7 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton(Configuration.GetSection("OpenMrs").Get<OpenMrsConfiguration>())
                 .AddSingleton(new OpenMrsClient(HttpClient,
                     Configuration.GetSection("OpenMrs").Get<OpenMrsConfiguration>()))
+                .AddSingleton(Configuration.GetSection("Jwt").Get<JwtConfiguration>())
                 .AddScoped<IOpenMrsClient, OpenMrsClient>()
                 .AddScoped<IOpenMrsPatientData, OpenMrsPatientData>()
                 .AddScoped<IUserAuthRepository, UserAuthRepository>()
@@ -202,77 +203,36 @@ namespace In.ProjectEKA.HipService
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                     options.JsonSerializerOptions.IgnoreNullValues = true;
                 });
-                var authenticationMethod = Configuration.GetValue<string>("AuthenticationMethod");
-                if (authenticationMethod == "Jwt")
+            services.AddAuthentication(options =>
                 {
-                    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme
-                    )
-                        .AddJwtBearer(options =>
-                        {
-                            options.Authority = Configuration.GetValue<string>("Jwt:Authority");
-                            options.Audience = Configuration.GetValue<string>("Jwt:Audience");
-                            options.TokenValidationParameters = new TokenValidationParameters
-                            {
-                                ValidateIssuer = true,
-                                ValidateAudience = true,
-                                ValidateLifetime = true,
-                                ValidateIssuerSigningKey = true,
-                                ValidIssuer = Configuration.GetValue<string>("Jwt:Authority"),
-                                ValidAudience = Configuration.GetValue<string>("Jwt:Audience"),
-                                // IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]))
-                            };
-                            //To run in local without https
-                            options.RequireHttpsMetadata = false;
-                            options.Events = new JwtBearerEvents
-                            {
-                                OnTokenValidated = context =>
-                                {
-                                    // Extract the 'sid' claim from the token
-                                    string sid =  context.Principal.Claims.FirstOrDefault(c => c.Type == "sid")?.Value;
-                            
-                                    // Store the 'sid' in the HTTP context
-                                    context.HttpContext.Items[Constants.SESSION_ID] = sid;
-                            
-                                    return Task.CompletedTask;
-                                }
-                            };
-                        });
-                }
-                else
+                    options.DefaultAuthenticateScheme = "auth";
+                    options.DefaultChallengeScheme = "auth";
+                }).AddScheme<CustomAuthenticationOptions, CustomAuthenticationHandler>("auth", options => { });
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer("gateway", options =>
                 {
-                    services.AddAuthentication(options =>
-                        {
-                            options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                            options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                        })
-                        .AddScheme<CustomAuthenticationOptions, CustomAuthenticationHandler>(CookieAuthenticationDefaults.AuthenticationScheme, options => { });
-
-                }
-                services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer("gateway", options =>
+                    // Need to validate Audience and Issuer properly
+                    options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/{Constants.CURRENT_VERSION}";
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        // Need to validate Audience and Issuer properly
-                        options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/{Constants.CURRENT_VERSION}";
-                        options.TokenValidationParameters = new TokenValidationParameters
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true,
+                        AudienceValidator = (audiences, token, parameters) => true,
+                        IssuerValidator = (issuer, token, parameters) => token.Issuer
+                    };
+                    options.RequireHttpsMetadata = false;
+                    options.IncludeErrorDetails = true;
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
                         {
-                            ValidateIssuerSigningKey = true,
-                            ValidateLifetime = true,
-                            AudienceValidator = (audiences, token, parameters) => true,
-                            IssuerValidator = (issuer, token, parameters) => token.Issuer
-                        };
-                        options.RequireHttpsMetadata = false;
-                        options.IncludeErrorDetails = true;
-                        options.Events = new JwtBearerEvents
-                        {
-                            OnTokenValidated = context =>
-                            {
-                                if (!IsTokenValid(context))
-                                    context.Fail("Unable to validate token.");
-                                return Task.CompletedTask;
-                            }
-                        };
-                    });
-                services.AddHealthChecks();
+                            if (!IsTokenValid(context))
+                                context.Fail("Unable to validate token.");
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+            services.AddHealthChecks();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
