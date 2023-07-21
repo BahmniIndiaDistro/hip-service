@@ -216,7 +216,7 @@ namespace In.ProjectEKA.HipService.Creation
         
         [Route(Constants.CREATE_ABHA_ID)]
         public async Task<ActionResult> CreateABHAId(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId,CreateABHARequest createAbhaRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
         
