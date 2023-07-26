@@ -20,6 +20,8 @@ service:
 
 config:
   GATEWAY_URL: "https://dev.abdm.gov.in/gateway"
+  ABHA_NUMBER_URL: "https://healthidsbx.abdm.gov.in/api"
+  ABHA_ADDRESS_URL: "https://phrsbx.abdm.gov.in/api"
   BAHMNI_URL: ""
   GATEWAY_CMSUFFIX: "sbx"
   OTPSERVICE_URL: "http://otp-service:80"
