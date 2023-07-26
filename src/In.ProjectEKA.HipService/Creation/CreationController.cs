@@ -17,7 +17,7 @@ namespace In.ProjectEKA.HipService.Creation
     using static Constants;
 
     [ApiController]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = BAHMNI_AUTH)]
     public class CreationController : Controller
     {
         private readonly IGatewayClient gatewayClient;

@@ -52,7 +52,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             this.openMrsConfiguration = openMrsConfiguration;
         }
 
-        [Authorize]
+        [Authorize(AuthenticationSchemes = BAHMNI_AUTH)]
         [Route(PATH_FETCH_MODES)]
         public async Task<ActionResult> GetAuthModes(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] FetchRequest fetchRequest)
@@ -114,7 +114,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                 new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway timed out")));
         }
 
-        [Authorize(AuthenticationSchemes = "gateway")]
+        [Authorize]
         [HttpPost(PATH_ON_FETCH_AUTH_MODES)]
         public AcceptedResult SetAuthModes(OnFetchAuthModeRequest request)
         {
@@ -138,7 +138,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             return Accepted();
         }
 
-        [Authorize]
+        [Authorize(AuthenticationSchemes = BAHMNI_AUTH)]
         [Route(PATH_HIP_AUTH_INIT)]
         public async Task<ActionResult> GetTransactionId(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AuthInitRequest authInitRequest)
@@ -151,7 +151,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code, StatusCodes.Status400BadRequest), error);
         }
 
-        [Authorize(AuthenticationSchemes = "gateway")]
+        [Authorize]
         [HttpPost(PATH_ON_AUTH_INIT)]
         public AcceptedResult SetTransactionId(AuthOnInitRequest request)
         {
@@ -177,7 +177,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             return Accepted();
         }
 
-        [Authorize]
+        [Authorize(AuthenticationSchemes = BAHMNI_AUTH)]
         [Route(PATH_HIP_AUTH_CONFIRM)]
         public async Task<ActionResult> GetAccessToken(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AuthConfirmRequest authConfirmRequest)
@@ -190,7 +190,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code, StatusCodes.Status400BadRequest), error);
         }
 
-        [Authorize(AuthenticationSchemes = "gateway")]
+        [Authorize]
         [HttpPost(PATH_ON_AUTH_CONFIRM)]
         public async Task<ActionResult> SetAccessToken(OnAuthConfirmRequest request)
         {
@@ -249,7 +249,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             return confirmError != null ? StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(confirmError.Error.Code,StatusCodes.Status400BadRequest),confirmError) : Accepted(authConfirm);
         }
 
-        [Authorize(AuthenticationSchemes = "gateway")]
+        [Authorize]
         [HttpPost(PATH_AUTH_NOTIFY)]
         public async Task<ActionResult> AuthNotify([FromHeader(Name = CORRELATION_ID)] string correlationId, 
             [FromBody] AuthNotifyRequest request)
@@ -273,7 +273,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             return Accepted();
         }
         
-        [Authorize]
+        [Authorize(AuthenticationSchemes = BAHMNI_AUTH)]
         [Route(PATH_HIP_DIRECT_AUTH)]
         public async Task<ActionResult> GetPatientDetails([FromParameter("healthId")] string healthId)
         {

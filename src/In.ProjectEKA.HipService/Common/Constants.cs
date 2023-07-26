@@ -105,6 +105,8 @@ namespace In.ProjectEKA.HipService.Common
         public const string CHECK_ABHA_ADDRESS = "/" + VERSION_V1 + "/phr/search/isExist";
         public const string X_TOKEN_TYPE = "Bearer";
         public const string AUTHORIZATION = "Authorization";
-        
+        public const string BAHMNI_AUTH = "bahmni";
+        public const string GATEWAY_AUTH = "gateway";
+
     }
 }
