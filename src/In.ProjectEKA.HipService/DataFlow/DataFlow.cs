@@ -154,7 +154,8 @@ namespace In.ProjectEKA.HipService.DataFlow
                 "yyyy-MM-dd'T'HH:mm:ss", "dd/MM/yyyy", "dd/MM/yyyy hh:mm:ss", "dd/MM/yyyy hh:mm:ss tt",
                 "dd/MM/yyyyTHH:mm:ss.fffzzz",
                 "yyyy-MM-dd'T'HH:mm:ss.ffffff",
-                "yyyy-MM-dd'T'HH:mm:ss.fff'Z'"
+                "yyyy-MM-dd'T'HH:mm:ss.fff'Z'",
+                "yyyy-MM-ddTHH:mm:ss.fffffffZ"
             };
             var tryParseExact = DateTime.TryParseExact(expiryDate,
                 formatStrings,
