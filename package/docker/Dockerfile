@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /app
 
 # Copy csproj and restore as distinct layers
@@ -12,7 +12,9 @@ RUN dotnet restore
 COPY . .
 WORKDIR /app/src/In.ProjectEKA.DefaultHip
 
-RUN apk add --no-cache python3 py3-pip
+RUN apt-get update
+RUN apt-get install -y python3
+
 RUN dotnet build -c Release -o /app
 
 WORKDIR /app/src/In.ProjectEKA.HipService
