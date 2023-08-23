@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - 'release-*'
+      - 'BAH-3165'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
 jobs:
