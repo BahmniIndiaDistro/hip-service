@@ -12,9 +12,7 @@ RUN dotnet restore
 COPY . .
 WORKDIR /app/src/In.ProjectEKA.DefaultHip
 
-RUN apt-get update
-RUN apt-get install -y python3
-
+RUN apk add --no-cache python3 py3-pip
 RUN dotnet build -c Release -o /app
 
 WORKDIR /app/src/In.ProjectEKA.HipService
