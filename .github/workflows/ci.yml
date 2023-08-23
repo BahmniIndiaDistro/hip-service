@@ -45,7 +45,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/arm64
           file: package/docker/Dockerfile
           push: false
           tags: bahmniindiadistro/hip:${{env.ARTIFACT_VERSION}},bahmniindiadistro/hip:latest
