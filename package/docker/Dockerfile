@@ -11,6 +11,10 @@ RUN dotnet restore
 # Copy everything else and build
 COPY . .
 WORKDIR /app/src/In.ProjectEKA.DefaultHip
+
+RUN apt-get update
+RUN apt-get install -y python3
+
 RUN dotnet build -c Release -o /app
 
 WORKDIR /app/src/In.ProjectEKA.HipService
