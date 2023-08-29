@@ -17,7 +17,7 @@ namespace In.ProjectEKA.HipService.Gateway
     {
         Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix,string correlationId);
         Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string baseUrl, string urlPath, T response,
-            string correlationId, string xtoken = null);
+            string correlationId, string xtoken = null, string tToken = null);
     }
     
     public class GatewayClient: IGatewayClient
@@ -84,7 +84,7 @@ namespace In.ProjectEKA.HipService.Gateway
         }
 
         public virtual async Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string baseUrl,string urlPath,
-            T representation, string correlationId, string xtoken = null)
+            T representation, string correlationId, string xtoken = null, string tToken = null)
         {
             var token = await Authenticate(correlationId).ConfigureAwait(false);
             HttpResponseMessage response = null;
@@ -94,7 +94,7 @@ namespace In.ProjectEKA.HipService.Gateway
                 {
                     response = await httpClient
                         .SendAsync(CreateHttpRequest(method, baseUrl + urlPath, representation, token.ValueOr(String.Empty),
-                            null, correlationId,xtoken))
+                            null, correlationId,xtoken, tToken))
                         .ConfigureAwait(false);
                 }
                 catch (Exception exception)

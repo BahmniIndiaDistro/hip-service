@@ -93,6 +93,9 @@ namespace In.ProjectEKA.HipService.Common
         public const string CONFIRM_WITH_AADHAAR_OTP = "/" + VERSION_V2 + "/auth/confirmWithAadhaarOtp";
         public const string CREATE_DEFAULT_PHR_ADDRESS = "/" + VERSION_V1 + "/account/update/phr-address";
         public const string CREATE_PHR_ADDRESS = "/" + VERSION_V2 + "/hip/profile/updatePhrAddress";
+        public const string MOBILE_GENERATE_OTP = "/" + VERSION_V2 + "/registration/mobile/login/generateOtp";
+        public const string MOBILE_VERIFY_OTP = "/" + VERSION_V2 + "/registration/mobile/login/verifyOtp";
+        public const string GET_AUTHORIZED_TOKEN = "/" + VERSION_V2 + "/registration/mobile/login/userAuthorizedToken";
 
         public const string PUBLIC_CERT = "/" + VERSION_V1 + "/phr/public/certificate";
         public const string MOBILE_EMAIL_INIT = "/" + VERSION_V1 + "/phr/login/mobileEmail/init";
@@ -104,6 +107,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string ABHA_ADDRESS_PROFILE = "/" + VERSION_V1 + "/phr/profile";
         public const string CHECK_ABHA_ADDRESS = "/" + VERSION_V1 + "/phr/search/isExist";
         public const string X_TOKEN_TYPE = "Bearer";
+        public const string T_TOKEN_TYPE = "Bearer";
         public const string AUTHORIZATION = "Authorization";
         public const string BAHMNI_AUTH = "bahmni";
         public const string GATEWAY_AUTH = "gateway";

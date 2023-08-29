@@ -18,7 +18,8 @@ namespace In.ProjectEKA.HipService.Common
             string token,
             string cmSuffix,
             string correlationId,
-            string xtoken = null)
+            string xtoken = null,
+            string tToken = null)
         {
             var json = JsonConvert.SerializeObject(content, new JsonSerializerSettings
             {
@@ -38,6 +39,8 @@ namespace In.ProjectEKA.HipService.Common
                 httpRequestMessage.Headers.Add(HeaderNames.Authorization, token);
             if(xtoken != null)
                 httpRequestMessage.Headers.Add("X-Token", xtoken);
+            if(tToken != null)
+                httpRequestMessage.Headers.Add("T-token", tToken);
             if (cmSuffix != null)
                 httpRequestMessage.Headers.Add("X-CM-ID", cmSuffix);
             if (correlationId != null)

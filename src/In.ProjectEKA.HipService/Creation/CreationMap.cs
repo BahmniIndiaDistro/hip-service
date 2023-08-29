@@ -12,5 +12,7 @@ namespace In.ProjectEKA.HipService.Creation
         public static Dictionary<string, TokenRequest> HealthIdNumberTokenDictionary = new Dictionary<string, TokenRequest>();
         
         public static Dictionary<string, string> HealthIdTokenDictionary = new Dictionary<string, string>();
+        
+        public static Dictionary<string, string> VerifiedMobileTokenDictionary = new Dictionary<string, string>();
     }
 }
