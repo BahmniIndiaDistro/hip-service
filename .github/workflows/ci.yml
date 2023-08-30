@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - 'release-*'
+      - 'workflow-fix'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
 jobs:
