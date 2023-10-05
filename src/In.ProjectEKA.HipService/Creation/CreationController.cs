@@ -315,6 +315,43 @@ namespace In.ProjectEKA.HipService.Creation
             }
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+        
+        [Route(CREATE_ABHA_ID_BY_AADHAAR_DEMO)]
+        public async Task<IActionResult> createAbhaIdByDemographics(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, AadhaarDemoAuthRequest demoAuthRequest)
+        {
+            try
+            {
+                logger.Log(LogLevel.Information,
+                    LogEvents.Creation, $"Request for aadhaar demo auth to gateway:  correlationId: {{correlationId}}",
+                    correlationId);
+                
+                var createAbhaRequest = await abhaService.GetHidDemoAuthRequest(demoAuthRequest);
+
+                if (createAbhaRequest != null)
+                {
+                    using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                        gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ID_BY_AADHAAR_DEMO,
+                        createAbhaRequest, correlationId))
+                    {
+                        var responseContent = await response?.Content.ReadAsStringAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var createAbhaResponse = JsonConvert.DeserializeObject<ABHAProfile>(responseContent);
+                            return Accepted(createAbhaResponse);
+                        }
+
+                        return StatusCode((int) response.StatusCode, responseContent);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for abha creation using aadhaar demo auth");
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
 
     }
 }

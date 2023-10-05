@@ -16,5 +16,7 @@ namespace In.ProjectEKA.HipService.Gateway
         public string AbhaNumberServiceUrl { get; set; }
         
         public string AbhaAddressServiceUrl { get; set; }
+        
+        public string BenefitName { get; set; }
     }
 }

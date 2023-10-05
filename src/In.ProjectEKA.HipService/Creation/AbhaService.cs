@@ -1,8 +1,11 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Creation.Model;
 using In.ProjectEKA.HipService.Gateway;
@@ -19,14 +22,16 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly IGatewayClient gatewayClient;
         private readonly ILogger<AbhaService> logger;
         private readonly GatewayConfiguration gatewayConfiguration;
+        private readonly IOpenMrsClient openMrsClient;
 
         public AbhaService(IGatewayClient gatewayClient,
             ILogger<AbhaService> logger,
-            GatewayConfiguration gatewayConfiguration)
+            GatewayConfiguration gatewayConfiguration, IOpenMrsClient openMrsClient)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
             this.gatewayConfiguration = gatewayConfiguration;
+            this.openMrsClient = openMrsClient;
         }
         
         
@@ -80,6 +85,30 @@ namespace In.ProjectEKA.HipService.Creation
             rsaPublicKey.ImportFromPem(public_key);
             byte[] bytesEncrypted = rsaPublicKey.Encrypt(byteData, RSAEncryptionPadding.Pkcs1);
             return await Task.FromResult(Convert.ToBase64String(bytesEncrypted));
+        }
+
+        public async Task<CreateHIdDemoAuthRequest> GetHidDemoAuthRequest(AadhaarDemoAuthRequest aadhaarDemoAuthRequest)
+        {
+
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            query["state"] = aadhaarDemoAuthRequest.state;
+            query["district"] = aadhaarDemoAuthRequest.district;
+
+            var response = await openMrsClient.GetAsync($"{PATH_OPENMRS_LGD_CODE}?{query}");
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var jsonDoc = JsonDocument.Parse(content);
+                var root = jsonDoc.RootElement;
+                
+                return new CreateHIdDemoAuthRequest(
+                    gatewayConfiguration.BenefitName,
+                    aadhaarDemoAuthRequest.aadhaarNumber, aadhaarDemoAuthRequest.name,
+                    aadhaarDemoAuthRequest.gender,
+                    aadhaarDemoAuthRequest.dateOfBirth, aadhaarDemoAuthRequest.mobileNumber,
+                    root.GetProperty("districtCode").ToString(), root.GetProperty("stateCode").ToString());
+            }
+            return null;
         }
     }
 }

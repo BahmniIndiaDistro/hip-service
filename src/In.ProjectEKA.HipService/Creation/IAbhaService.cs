@@ -13,5 +13,6 @@ namespace In.ProjectEKA.HipService.Creation
         public Task<ABHAProfile> getABHAProfile(string sessionId, TokenRequest tokenRequest);
 
         public Task<string> EncryptText(string public_key, string text);
+        Task<CreateHIdDemoAuthRequest> GetHidDemoAuthRequest(AadhaarDemoAuthRequest request);
     }
 }
