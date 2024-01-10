@@ -22,7 +22,7 @@ FROM alpine:latest
 RUN apk update
 
 # Install .NET Dependencies
-RUN apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib
+RUN apk add bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib
 
 # Install .NET Runtime
 RUN apk add aspnetcore6-runtime
