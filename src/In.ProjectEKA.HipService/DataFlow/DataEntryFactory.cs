@@ -67,7 +67,7 @@ namespace In.ProjectEKA.HipService.DataFlow
                 });
             }
 
-            var keyStructure = new KeyStructure(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            var keyStructure = new KeyStructure(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.SSSZ"),
                 dataRequestKeyMaterial.DhPublicKey.Parameters, EncryptorHelper.GetPublicKey(keyPair));
             var keyMaterial = new KeyMaterial(dataRequestKeyMaterial.CryptoAlg,
                 dataRequestKeyMaterial.Curve,
