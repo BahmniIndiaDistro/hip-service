@@ -1,4 +1,6 @@
+using System.Reflection;
 using In.ProjectEKA.HipLibrary.Patient.Model;
+using In.ProjectEKA.HipService.Logger;
 
 namespace In.ProjectEKA.HipService.DataFlow
 {

@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace In.ProjectEKA.HipService.DataFlow
 {
     using System;
@@ -53,6 +55,15 @@ namespace In.ProjectEKA.HipService.DataFlow
             {
                 // TODO: Need to handle non 2xx response also
                 httpClient.DefaultRequestHeaders.Remove("Authorization");
+                Log.Information("Encrtpted data------->");
+                System.Type type = dataResponse.GetType();
+                PropertyInfo[] properties = type.GetProperties();
+
+                foreach (PropertyInfo property in properties)
+                {
+                    object value = property.GetValue(dataResponse);
+                    Log.Information($"{property.Name}: {value}");
+                }
                 await httpClient.SendAsync(CreateHttpRequest(HttpMethod.Post, dataPushUrl, dataResponse, correlationId)).ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -76,6 +87,16 @@ namespace In.ProjectEKA.HipService.DataFlow
                     new StatusNotification(sessionStatus, gatewayConfiguration.ClientId, statusResponses),
                     consentId,
                     Guid.NewGuid());
+                Log.Information("Data Notification request------->");
+
+                System.Type type = dataNotificationRequest.GetType();
+                PropertyInfo[] properties = type.GetProperties();
+
+                foreach (PropertyInfo property in properties)
+                {
+                    object value = property.GetValue(dataNotificationRequest);
+                    Log.Information($"{property.Name}: {value}");
+                }
                 await GetDataNotificationRequest(dataNotificationRequest, cmSuffix, correlationId).ConfigureAwait(false);
             }
             catch (Exception ex)

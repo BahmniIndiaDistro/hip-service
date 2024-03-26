@@ -1,3 +1,5 @@
+using In.ProjectEKA.HipService.Logger;
+
 namespace In.ProjectEKA.HipService.Common
 {
     using System;
@@ -34,6 +36,7 @@ namespace In.ProjectEKA.HipService.Common
             {
                 Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json)
             };
+            Log.Information("jsonBody-----" + json);
 
             if (token != null)
                 httpRequestMessage.Headers.Add(HeaderNames.Authorization, token);
@@ -45,6 +48,8 @@ namespace In.ProjectEKA.HipService.Common
                 httpRequestMessage.Headers.Add("X-CM-ID", cmSuffix);
             if (correlationId != null)
                 httpRequestMessage.Headers.Add(CORRELATION_ID, correlationId);
+            Log.Information("HttpRequestMessage-------" + httpRequestMessage);
+            Log.Information("HttpRequestBody-------" + httpRequestMessage.Content);
             return httpRequestMessage;
         }
 
