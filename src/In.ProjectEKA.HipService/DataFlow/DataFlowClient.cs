@@ -48,8 +48,8 @@ namespace In.ProjectEKA.HipService.DataFlow
             string correlationId)
         {
             var grantedContexts = careContexts as GrantedContext[] ?? careContexts.ToArray();
-            var hiStatus = HiStatus.DELIVERED;
-            var sessionStatus = SessionStatus.TRANSFERRED;
+            HiStatus hiStatus = HiStatus.DELIVERED;
+            SessionStatus sessionStatus = SessionStatus.TRANSFERRED;
             var message = "Successfully delivered health information";
             try
             {
