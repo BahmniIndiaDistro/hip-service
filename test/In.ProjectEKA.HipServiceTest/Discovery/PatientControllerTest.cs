@@ -378,6 +378,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         {
             discoveryRequest = new DiscoveryRequestPayloadBuilder()
                 .FromUser(user)
+                .WithVerifiedIdentifiers(IdentifierType.NDHM_HEALTH_NUMBER, "12345678910")
                 .WithRequestId("aRequestId")
                 .WithTransactionId("aTransactionId")
                 .RequestedOn(new DateTime(2020, 06, 14))

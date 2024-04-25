@@ -35,6 +35,24 @@ namespace In.ProjectEKA.HipService.OpenMrs
 
             return responseMessage;
         }
+        
+        public async Task<HttpResponseMessage> PostAsync(string openMrsUrl, string jsonContent)
+        {
+            var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var responseMessage = await httpClient.PostAsync(Path.Join(configuration.Url, openMrsUrl), httpContent);
+
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                var error = await responseMessage.Content.ReadAsStringAsync();
+                Log.Error(
+                    $"Failure in posting the data into OpenMrs with status code {responseMessage.StatusCode}" +
+                    $" {error}");
+                throw new OpenMrsConnectionException();
+            }
+
+            return responseMessage;
+        }
 
         private void SettingUpHeaderAuthorization()
         {

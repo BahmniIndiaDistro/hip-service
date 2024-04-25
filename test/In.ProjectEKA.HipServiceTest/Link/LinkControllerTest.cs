@@ -25,7 +25,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
 
         public LinkControllerTest()
         {
-            link = new Mock<LinkPatient>(MockBehavior.Strict, null, null, null, null, null, null);
+            link = new Mock<LinkPatient>(MockBehavior.Strict, null, null, null, null, null, null, null);
             discoveryRequestRepository = new Mock<IDiscoveryRequestRepository>();
             var gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
 

@@ -1,3 +1,7 @@
+using System.Net;
+using System.Net.Http;
+using In.ProjectEKA.HipService.OpenMrs;
+
 namespace In.ProjectEKA.HipServiceTest.Link
 {
     using System;
@@ -44,6 +48,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
         private readonly Mock<IPatientRepository> patientRepository = new Mock<IPatientRepository>();
         private readonly Mock<IPatientVerification> patientVerification = new Mock<IPatientVerification>();
         private readonly Mock<ReferenceNumberGenerator> guidGenerator = new Mock<ReferenceNumberGenerator>();
+        private readonly Mock<IOpenMrsClient> openmrsClient = new Mock<IOpenMrsClient>();
 
         public LinkPatientTest()
         {
@@ -54,7 +59,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 patientVerification.Object,
                 guidGenerator.Object,
                 discoveryRequestRepository.Object,
-                otpServiceConfigurations);
+                otpServiceConfigurations,
+                openmrsClient.Object);
         }
 
         [Fact]
@@ -211,6 +217,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
             var testLinkedAccounts = new LinkedAccounts(testLinkRequest.PatientReferenceNumber,
                 testLinkRequest.LinkReferenceNumber,
                 testLinkRequest.ConsentManagerUserId, It.IsAny<string>(), new[] {programRefNo}.ToList(),It.IsAny<Guid>());
+            DiscoveryReqMap.AbhaIdentifierMap.Add(testLinkRequest.ConsentManagerUserId, "1234567891011" );
             patientVerification.Setup(e => e.Verify(sessionId, otpToken))
                 .ReturnsAsync((OtpMessage) null);
             linkRepository.Setup(e => e.GetPatientFor(sessionId))
@@ -224,6 +231,13 @@ namespace In.ProjectEKA.HipServiceTest.Link
                     It.IsAny<Guid>()
                     ))
                 .ReturnsAsync(Option.Some(testLinkedAccounts));
+            openmrsClient
+                .Setup(x => x.PostAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK
+                })
+                .Verifiable();
             var expectedLinkResponse = new PatientLinkConfirmationRepresentation(
                 new LinkConfirmationRepresentation(
                     testPatient.Identifier,

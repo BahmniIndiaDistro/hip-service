@@ -39,6 +39,7 @@ namespace In.ProjectEKA.HipService.Common
         public static readonly string PATH_OPENMRS_HITYPE = "ws/rest/v1/hip/";
         public static readonly string CONFIG_KEY = "OpenMrs";
         public static readonly string PATH_OPENMRS_LGD_CODE = "ws/rest/v1/hip/lgdCode";
+        public static readonly string PATH_OPENMRS_UPDATE_IDENTIFIER = "ws/rest/v1/hip/existingPatients/update";
 
         public const string CORRELATION_ID = "CORRELATION-ID";
         public const string PATH_PATIENT_PROFILE_ON_SHARE = "/" + CURRENT_VERSION + "/patients/profile/on-share";

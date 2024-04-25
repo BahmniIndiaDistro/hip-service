@@ -1,4 +1,6 @@
-﻿namespace In.ProjectEKA.HipService.Discovery
+﻿using System.Linq;
+
+namespace In.ProjectEKA.HipService.Discovery
 {
     using System;
     using System.Net;
@@ -12,6 +14,7 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
+    using static In.ProjectEKA.HipService.Discovery.DiscoveryReqMap;
     using Common;
 
 
@@ -71,6 +74,12 @@
                     new DiscoveryResponse(request.RequestId,
                         error == null ? HttpStatusCode.OK : HttpStatusCode.NotFound,
                         error == null ? SuccessMessage : ErrorMessage));
+                var abhaNumberIdentifier =  request.Patient?.VerifiedIdentifiers.FirstOrDefault(id => id.Type == IdentifierType.NDHM_HEALTH_NUMBER);
+                if (!AbhaIdentifierMap.ContainsKey(patientId))
+                {
+                    AbhaIdentifierMap.Add(patientId, abhaNumberIdentifier?.Value);
+                }
+                
                 Log.Information("new GatewayDiscoveryRepresentation" + gatewayDiscoveryRepresentation);
                 Log.Information("Sending data to gateway");
                 Log.Information($"Response about to be send for {request.RequestId} with {@response?.Patient}");
