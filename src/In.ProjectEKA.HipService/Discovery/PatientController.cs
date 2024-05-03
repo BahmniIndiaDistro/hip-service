@@ -74,10 +74,9 @@ namespace In.ProjectEKA.HipService.Discovery
                     new DiscoveryResponse(request.RequestId,
                         error == null ? HttpStatusCode.OK : HttpStatusCode.NotFound,
                         error == null ? SuccessMessage : ErrorMessage));
-                var abhaNumberIdentifier =  request.Patient?.VerifiedIdentifiers.FirstOrDefault(id => id.Type == IdentifierType.NDHM_HEALTH_NUMBER);
-                if (!AbhaIdentifierMap.ContainsKey(patientId))
+                if (!PatientInfoMap.ContainsKey(patientId))
                 {
-                    AbhaIdentifierMap.Add(patientId, abhaNumberIdentifier?.Value);
+                    PatientInfoMap.Add(patientId, request.Patient);
                 }
                 
                 Log.Information("new GatewayDiscoveryRepresentation" + gatewayDiscoveryRepresentation);
