@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using In.ProjectEKA.HipLibrary.Patient;
+using In.ProjectEKA.HipService.Logger;
 using In.ProjectEKA.HipService.OpenMrs.Mappings;
 using Optional;
 
@@ -52,17 +54,41 @@ namespace In.ProjectEKA.HipService.OpenMrs
         {
             var result = new List<Patient>();
             var fhirPatients = await _patientDal.LoadPatientsAsync(name, gender, yearOfBirth);
+           
             foreach (var patient in fhirPatients)
             {
-                var hipPatient = patient.ToHipPatient(name);
-                var referenceNumber = hipPatient.Uuid;
-                var bahmniPhoneNumber = _phoneNumberRepository.GetPhoneNumber(referenceNumber).Result;
-                if (bahmniPhoneNumber != null && phoneNumber[^PHONE_NUMBER_LENGTH..].Equals(bahmniPhoneNumber[^PHONE_NUMBER_LENGTH..]))
+                Log.Information("PATIENT 1------" + patient.Identifier);
+                if (CheckIfPatientAlreadyHasAbhaIdentifier(patient.Identifier))
                 {
-                    result.Add(hipPatient);
+                    Log.Information("PATIENT------" + patient);
+                    
+                    var hipPatient = patient.ToHipPatient(name);
+                    var referenceNumber = hipPatient.Uuid;
+                    var bahmniPhoneNumber = _phoneNumberRepository.GetPhoneNumber(referenceNumber).Result;
+                    if (bahmniPhoneNumber != null && phoneNumber[^PHONE_NUMBER_LENGTH..]
+                        .Equals(bahmniPhoneNumber[^PHONE_NUMBER_LENGTH..]))
+                    {
+                        result.Add(hipPatient);
+                    }
                 }
             }
             return result.ToList().AsQueryable();
+        }
+
+        private Boolean CheckIfPatientAlreadyHasAbhaIdentifier(List<Hl7.Fhir.Model.Identifier> identifiers)
+        {
+            foreach (var identifier in identifiers)
+            {
+                if (identifier != null)
+                {
+                    if (identifier.Type.Text.Equals("ABHA Number") ||
+                        identifier.Type.Text.Equals("ABHA Address"))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
     }
 }
