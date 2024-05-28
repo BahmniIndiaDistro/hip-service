@@ -7,7 +7,7 @@ namespace In.ProjectEKA.HipService.Gateway.Model
     {
         public GatewayDiscoveryRepresentation(PatientEnquiryRepresentation patient,
             Guid requestId,
-            DateTime timestamp,
+            string timestamp,
             string transactionId,
             Error error,
             DiscoveryResponse resp)
@@ -22,7 +22,7 @@ namespace In.ProjectEKA.HipService.Gateway.Model
 
         public PatientEnquiryRepresentation Patient { get; }
         public Guid RequestId { get; }
-        public DateTime Timestamp { get; }
+        public string Timestamp { get; }
         public string TransactionId { get; }
         public Error Error { get; }
         public Resp Resp { get; }

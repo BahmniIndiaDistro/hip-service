@@ -41,7 +41,7 @@ namespace In.ProjectEKA.HipServiceTest.Gateway
             var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
                 patientEnquiryRepresentation,
                 Guid.NewGuid(),
-                DateTime.Now,
+                DateTime.Now.ToString(DateTimeFormat),
                 "transactionId",
                 null,
                 new DiscoveryResponse("requestId", HttpStatusCode.OK, "uselessMessage"));
@@ -95,7 +95,7 @@ namespace In.ProjectEKA.HipServiceTest.Gateway
             var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
                 patientEnquiryRepresentation,
                 Guid.NewGuid(),
-                DateTime.Now,
+                DateTime.Now.ToString(DateTimeFormat),
                 "transactionId",
                 null,
                 new DiscoveryResponse("requestId", HttpStatusCode.OK, "uselessMessage"));

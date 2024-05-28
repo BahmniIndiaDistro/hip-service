@@ -113,7 +113,7 @@ namespace In.ProjectEKA.HipService.Link
                     error?.Error,
                     new Resp(request.RequestId),
                     request.TransactionId,
-                    DateTime.Now.ToUniversalTime(),
+                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                     Guid.NewGuid());
 
                 await gatewayClient.SendDataToGateway(PATH_ON_LINK_INIT, response, cmSuffix, correlationId);
@@ -140,7 +140,7 @@ namespace In.ProjectEKA.HipService.Link
 
                 var response = new GatewayLinkConfirmResponse(
                     Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime(),
+                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                     linkedPatientRepresentation,
                     error?.Error,
                     new Resp(request.RequestId));

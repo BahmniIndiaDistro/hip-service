@@ -6,12 +6,12 @@ namespace In.ProjectEKA.HipService.UserAuth.Model
     public class GatewayAuthConfirmRequestRepresentation
     {
         public Guid requestId { get; }
-        public DateTime timestamp { get; }
+        public string timestamp { get; }
         public string transactionId { get; }
         public AuthConfirmCredential credential { get; }
 
 
-        public GatewayAuthConfirmRequestRepresentation(Guid requestId, DateTime timestamp, string transactionId,
+        public GatewayAuthConfirmRequestRepresentation(Guid requestId, string timestamp, string transactionId,
             AuthConfirmCredential credential)
         {
             this.requestId = requestId;

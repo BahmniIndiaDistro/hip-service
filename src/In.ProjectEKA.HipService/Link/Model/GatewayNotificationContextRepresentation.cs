@@ -6,10 +6,10 @@ namespace In.ProjectEKA.HipService.Link.Model
     public class GatewayNotificationContextRepresentation
     {
         public Guid requestId { get; }
-        public DateTime timestamp { get; }
+        public string timestamp { get; }
         public NotificationContext notification { get; }
 
-        public GatewayNotificationContextRepresentation(Guid requestId, DateTime timestamp,
+        public GatewayNotificationContextRepresentation(Guid requestId, string timestamp,
             NotificationContext notification)
         {
             this.requestId = requestId;

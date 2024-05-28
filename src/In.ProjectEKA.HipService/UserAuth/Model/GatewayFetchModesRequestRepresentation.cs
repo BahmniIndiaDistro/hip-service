@@ -7,12 +7,12 @@ namespace In.ProjectEKA.HipService.UserAuth.Model
     {
         public Guid requestId { get; }
 
-        public DateTime timestamp { get; }
+        public string timestamp { get; }
 
         public FetchQuery query { get; }
 
 
-        public GatewayFetchModesRequestRepresentation(Guid requestId, DateTime timestamp, FetchQuery query)
+        public GatewayFetchModesRequestRepresentation(Guid requestId, string timestamp, FetchQuery query)
         {
             this.requestId = requestId;
             this.timestamp = timestamp;

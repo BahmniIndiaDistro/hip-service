@@ -1,3 +1,5 @@
+using In.ProjectEKA.HipService.Common;
+
 namespace In.ProjectEKA.HipService.DataFlow
 {
     using System;
@@ -20,7 +22,7 @@ namespace In.ProjectEKA.HipService.DataFlow
             string correlationId)
         {
             var notificationRequest = new GatewayDataNotificationRequest(Guid.NewGuid(),
-                DateTime.Now.ToUniversalTime(),
+                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                 new DataFlowNotificationRequest(
                     dataNotificationRequest.TransactionId,
                     dataNotificationRequest.ConsentId,

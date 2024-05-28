@@ -52,7 +52,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             var query = purpose != null
                 ? new FetchQuery(healthId, purpose, requester)
                 : new FetchQuery(healthId, requester);
-            var timeStamp = DateTime.Now.ToUniversalTime();
+            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
             var requestId = Guid.NewGuid();
             return new Tuple<GatewayFetchModesRequestRepresentation, ErrorRepresentation>
                 (new GatewayFetchModesRequestRepresentation(requestId, timeStamp, query), null);
@@ -164,7 +164,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                 healthId = Regex.Replace(healthId, @"^(.{2})(.{4})(.{4})(.{4})$", "$1-$2-$3-$4");
             }
 
-            var timeStamp = DateTime.Now.ToUniversalTime();
+            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
             var requestId = Guid.NewGuid();
             var requester = new Requester(bahmniConfiguration.Id, HIP);
             var purpose = authInitRequest.purpose;
@@ -241,7 +241,7 @@ namespace In.ProjectEKA.HipService.UserAuth
                 : new AuthConfirmCredential(null, authConfirmRequest.Demographic);
 
             var transactionId = UserAuthMap.HealthIdToTransactionId[healthId];
-            var timeStamp = DateTime.Now.ToUniversalTime();
+            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
             var requestId = Guid.NewGuid();
             return new Tuple<GatewayAuthConfirmRequestRepresentation, ErrorRepresentation>
             (new GatewayAuthConfirmRequestRepresentation(requestId, timeStamp, transactionId, credential),

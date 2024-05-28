@@ -1,3 +1,5 @@
+using In.ProjectEKA.HipService.Common;
+
 namespace In.ProjectEKA.HipService.Patient
 {
     using System;
@@ -34,7 +36,7 @@ namespace In.ProjectEKA.HipService.Patient
             await _patientNotificationService.Perform(hipPatientStatusNotification);
             var gatewayResponse = new HipPatientNotifyConfirmation(
                 Guid.NewGuid().ToString(),
-                DateTime.Now.ToUniversalTime(),
+                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                 new PatientNotifyAcknowledgement(Status.SUCCESS.ToString()), null,
                 new Resp(hipPatientStatusNotification.requestId.ToString()));
             await _gatewayClient.SendDataToGateway(PATH_PATIENT_ON_NOTIFY,
@@ -65,7 +67,7 @@ namespace In.ProjectEKA.HipService.Patient
 
             var gatewayResponse = new ProfileShareConfirmation(
                 Guid.NewGuid().ToString(),
-                DateTime.Now.ToUniversalTime(),
+                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                 new ProfileShareAcknowledgement(status.ToString(),shareProfileRequest.Profile.PatientDemographics.HealthId,token.ToString()), error,
                 new Resp(shareProfileRequest.RequestId));
             Task.Run(async () =>

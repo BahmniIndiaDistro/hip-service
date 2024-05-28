@@ -68,7 +68,7 @@ namespace In.ProjectEKA.HipService.Discovery
                 var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
                     response?.Patient,
                     Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime(),
+                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                     request.TransactionId, //TODO: should be reading transactionId from contract
                     error?.Error,
                     new DiscoveryResponse(request.RequestId,
@@ -90,7 +90,7 @@ namespace In.ProjectEKA.HipService.Discovery
                 var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
                     null,
                     Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime(),
+                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                     request.TransactionId, //TODO: should be reading transactionId from contract
                     new Error(ErrorCode.ServerInternalError, "Unreachable external service"),
                     new DiscoveryResponse(request.RequestId, HttpStatusCode.InternalServerError,

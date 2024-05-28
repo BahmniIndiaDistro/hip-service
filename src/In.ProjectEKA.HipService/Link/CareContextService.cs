@@ -50,7 +50,7 @@ namespace In.ProjectEKA.HipService.Link
             var display = addContextsRequest.Display;
             var patient = new AddCareContextsPatient(referenceNumber, display, careContexts);
             var link = new AddCareContextsLink(accessToken, patient);
-            var timeStamp = DateTime.Now.ToUniversalTime();
+            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
             var requestId = Guid.NewGuid();
             if (!await linkPatient.SaveInitiatedLinkRequest(requestId.ToString(), null, requestId.ToString())
                 .ConfigureAwait(false))
@@ -99,8 +99,8 @@ namespace In.ProjectEKA.HipService.Link
             var patient = new NotificationPatientContext(id);
             var careContext = new NotificationCareContext(patientReference, careContextReference);
             var hip = new NotificationContextHip(hipId);
-            var date = DateTime.Now.ToUniversalTime();
-            var timeStamp = DateTime.Now.ToUniversalTime();
+            var date = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
+            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
             var requestId = Guid.NewGuid();
             var notification = new NotificationContext(patient, careContext, hiTypes, date, hip);
             return new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
