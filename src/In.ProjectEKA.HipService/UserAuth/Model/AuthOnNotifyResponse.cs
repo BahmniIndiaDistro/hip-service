@@ -6,7 +6,7 @@ namespace In.ProjectEKA.HipService.UserAuth.Model
 
     public class AuthOnNotifyResponse
     {
-        public AuthOnNotifyResponse(Guid requestId, DateTime timestamp,
+        public AuthOnNotifyResponse(Guid requestId, string timestamp,
             AuthOnNotifyAcknowledgement acknowledgement, Error error, Resp resp)
         {
             RequestId = requestId;
@@ -17,7 +17,7 @@ namespace In.ProjectEKA.HipService.UserAuth.Model
         }
 
         public Guid RequestId { get; }
-        public DateTime Timestamp { get; }
+        public string Timestamp { get; }
         public Error Error { get; }
         public Resp Resp { get; }
         public AuthOnNotifyAcknowledgement Acknowledgement { get; }

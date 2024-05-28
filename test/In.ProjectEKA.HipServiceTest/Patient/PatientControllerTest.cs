@@ -52,7 +52,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
             var hipPatientStatusNotification = new HipPatientStatusNotification(requestId, timestamp, notification);
             var correlationId = Uuid.Generate().ToString();
             var cmSuffix = "ncg";
-            var hipPatientNotifyConfirmation = new HipPatientNotifyConfirmation(Guid.NewGuid().ToString(), timestamp,
+            var hipPatientNotifyConfirmation = new HipPatientNotifyConfirmation(Guid.NewGuid().ToString(), timestamp.ToString(DateTimeFormat),
                 new PatientNotifyAcknowledgement(Status.SUCCESS.ToString()),
                 null, new Resp(requestId.ToString()));
             _gatewayClient.Setup(
@@ -80,7 +80,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
             _patientProfileService.Setup(d => d.IsValidRequest(shareProfileRequest)).Returns(true);
             var profileShareConfirmation = new ProfileShareConfirmation(
                 Guid.NewGuid().ToString(),
-                DateTime.Now.ToUniversalTime(),
+                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                 new ProfileShareAcknowledgement("test@sbx",
                     Status.SUCCESS.ToString(),"1"), null,
                 new Resp(requestId));
@@ -111,7 +111,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
             _patientProfileService.Setup(d => d.IsValidRequest(shareProfileRequest)).Returns(false);
             var profileShareConfirmation = new ProfileShareConfirmation(
                 Guid.NewGuid().ToString(),
-                DateTime.Now.ToUniversalTime(),
+                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                 new ProfileShareAcknowledgement("test@sbx",
                     Status.SUCCESS.ToString(),"1"), null,
                 new Resp(requestId));

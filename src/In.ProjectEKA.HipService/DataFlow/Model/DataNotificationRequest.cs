@@ -11,7 +11,7 @@ namespace In.ProjectEKA.HipService.DataFlow.Model
 
         public DataNotificationRequest(
             string transactionId,
-            DateTime doneAt,
+            string doneAt,
             Notifier notifier,
             StatusNotification statusNotification,
             string consentId,
@@ -30,7 +30,7 @@ namespace In.ProjectEKA.HipService.DataFlow.Model
 
         public Guid RequestId { get; }
         public string ConsentId { get; }
-        public DateTime DoneAt { get; }
+        public string DoneAt { get; }
         public Notifier Notifier { get; }
         public StatusNotification StatusNotification { get; }
     }

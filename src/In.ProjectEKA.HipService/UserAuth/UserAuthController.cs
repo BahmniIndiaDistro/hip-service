@@ -263,7 +263,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             var cmSuffix = gatewayConfiguration.CmSuffix;
             var gatewayAuthOnNotifyResponseRepresentation = new AuthOnNotifyResponse(
                 Guid.NewGuid(),
-                DateTime.Now.ToUniversalTime(),
+                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                 new AuthOnNotifyAcknowledgement(AuthOnNotifyStatus.OK),
                 error?.Error,
                 new Resp(request.requestId.ToString())

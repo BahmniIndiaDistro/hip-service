@@ -6,7 +6,7 @@ namespace In.ProjectEKA.HipService.Gateway.Model
     public class GatewayLinkResponse
     {
         public GatewayLinkResponse(LinkEnquiryRepresentation link,
-            Error error, Resp resp, string transactionId, DateTime timestamp, Guid requestId)
+            Error error, Resp resp, string transactionId, string timestamp, Guid requestId)
         {
             Link = link;
             Error = error;
@@ -20,7 +20,7 @@ namespace In.ProjectEKA.HipService.Gateway.Model
 
         public Guid RequestId { get; }
 
-        public DateTime Timestamp { get; }
+        public string Timestamp { get; }
 
         public string TransactionId { get; }
 

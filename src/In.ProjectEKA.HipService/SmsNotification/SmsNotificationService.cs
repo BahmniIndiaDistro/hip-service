@@ -12,7 +12,7 @@ namespace In.ProjectEKA.HipService.SmsNotification
         public Tuple<GatewaySmsNotifyRequestRepresentation, ErrorRepresentation> SmsNotifyRequest(
             SmsNotifyRequest smsNotifyRequest, BahmniConfiguration bahmniConfiguration)
         {
-            var timeStamp = DateTime.Now.ToUniversalTime();
+            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
             var requestId = Guid.NewGuid();
             var hip = new SmsNotifyHip(bahmniConfiguration.Id, bahmniConfiguration.Id);
             var notification = new Model.SmsNotification(smsNotifyRequest.phoneNo,hip);

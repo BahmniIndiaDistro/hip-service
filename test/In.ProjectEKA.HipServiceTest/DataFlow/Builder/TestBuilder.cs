@@ -1,4 +1,5 @@
 using Hl7.Fhir.Model;
+using In.ProjectEKA.HipService.Common;
 
 namespace In.ProjectEKA.HipServiceTest.DataFlow.Builder
 {
@@ -96,7 +97,8 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow.Builder
                 SessionStatus.TRANSFERRED,
                 "IN0410000183",
                 new List<StatusResponse>());
-            return new DataNotificationRequest(transactionId, DateTime.Now, notifier, statusNotification, consentId, Guid.NewGuid());
+            return new DataNotificationRequest(transactionId, DateTime.Now.ToString(Constants.DateTimeFormat), notifier, statusNotification, consentId, Guid.NewGuid());
+            
         }
 
         internal static Consent Consent()

@@ -113,7 +113,7 @@ namespace In.ProjectEKA.HipService.DataFlow
                 {
                     gatewayResponse = new GatewayDataFlowRequestResponse(
                         Guid.NewGuid(),
-                        DateTime.Now.ToUniversalTime(),
+                        DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                         new DataFlowRequestResponse(healthInformationRequest.TransactionId,
                             DataFlowRequestStatus.ERRORED.ToString()),
                         error.Error,
@@ -127,7 +127,7 @@ namespace In.ProjectEKA.HipService.DataFlow
                 {
                     gatewayResponse = new GatewayDataFlowRequestResponse(
                         Guid.NewGuid(),
-                        DateTime.Now.ToUniversalTime(),
+                        DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                         new DataFlowRequestResponse(healthInformationRequest.TransactionId,
                             DataFlowRequestStatus.ACKNOWLEDGED.ToString()),
                         null,

@@ -8,7 +8,7 @@ namespace In.ProjectEKA.HipService.Patient.Model
 
     public class HipPatientNotifyConfirmation
     {
-        public HipPatientNotifyConfirmation(string requestId, DateTime timestamp,
+        public HipPatientNotifyConfirmation(string requestId, string timestamp,
             PatientNotifyAcknowledgement acknowledgement, Error error, Resp resp)
         {
             RequestId = requestId;
@@ -19,7 +19,7 @@ namespace In.ProjectEKA.HipService.Patient.Model
         }
 
         public string RequestId { get; }
-        public DateTime Timestamp { get; }
+        public string Timestamp { get; }
         public Error Error { get; }
         public Resp Resp { get; }
         public PatientNotifyAcknowledgement Acknowledgement { get; }

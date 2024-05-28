@@ -59,7 +59,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
             var correlationId = Uuid.Generate().ToString();
 
             var gatewayAddContextsRequestRepresentation =
-                new GatewayAddContextsRequestRepresentation(requestId, timeStamp, careContextLink);
+                new GatewayAddContextsRequestRepresentation(requestId, timeStamp.ToString(DateTimeFormat), careContextLink);
 
             var onAddContextRequest =
                 new HipLinkContextConfirmation(requestId.ToString(), timeStamp, addContextsAcknowledgement, error,
@@ -99,8 +99,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
             var notificationCareContext = new NotificationCareContext("abc", "qqwq");
             var hipReference = new NotificationContextHip("1212");
             var gatewayNotificationContextsRequestRepresentation =
-                new GatewayNotificationContextRepresentation(requestId, timeStamp,
-                    new NotificationContext(patient, notificationCareContext, hiTypes, new DateTime(), hipReference));
+                new GatewayNotificationContextRepresentation(requestId, timeStamp.ToString(DateTimeFormat),
+                    new NotificationContext(patient, notificationCareContext, hiTypes, new DateTime().ToString(DateTimeFormat), hipReference));
 
             careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest))
                 .Returns(new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>

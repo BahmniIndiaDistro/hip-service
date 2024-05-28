@@ -11,13 +11,13 @@ namespace In.ProjectEKA.HipService.Link.Model
 
         public List<string> hiTypes { get; }
 
-        public DateTime date { get; }
+        public string date { get; }
 
         public NotificationContextHip hip { get; }
 
 
         public NotificationContext(NotificationPatientContext patient, NotificationCareContext careContext,
-            List<string> hiTypes, DateTime dateTime, NotificationContextHip hip)
+            List<string> hiTypes, string dateTime, NotificationContextHip hip)
         {
             this.patient = patient;
             this.careContext = careContext;
