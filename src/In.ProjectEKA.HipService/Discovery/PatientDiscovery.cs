@@ -81,12 +81,18 @@ namespace In.ProjectEKA.HipService.Discovery
                 return await patient
                     .Map(async patient =>
                     {
-                        await discoveryRequestRepository.Add(new Model.DiscoveryRequest(request.TransactionId,
-                            request.Patient.Id,
-                            patient.Identifier));
-                        return (new DiscoveryRepresentation(patient.ToPatientEnquiryRepresentation(
-                                GetUnlinkedCareContexts(linkedCareContexts, patient))),
-                            (ErrorRepresentation) null);
+                        var unlinkedCareContexts = GetUnlinkedCareContexts(linkedCareContexts, patient).ToList();
+                        if (unlinkedCareContexts.Any())
+                        {
+                            await discoveryRequestRepository.Add(new Model.DiscoveryRequest(request.TransactionId,
+                                request.Patient.Id,
+                                patient.Identifier));
+                            return (new DiscoveryRepresentation(patient.ToPatientEnquiryRepresentation(
+                                   unlinkedCareContexts)),
+                                (ErrorRepresentation) null);
+                        }
+                        return (null,
+                            new ErrorRepresentation(new Error(ErrorCode.NoCareContextFound, "Care Context Not Found")));
                     })
                     .ValueOr(Task.FromResult(GetError(ErrorCode.NoPatientFound, ErrorMessage.NoPatientFound)));
             }

@@ -26,6 +26,7 @@ namespace In.ProjectEKA.HipLibrary.Patient.Model
         DuplicateAuthConfirmRequest = 3434,
         GatewayTimedOut = 3435,
         BadRequest = 3400,
-        ConsentNotGranted = 1428
+        ConsentNotGranted = 1428,
+        NoCareContextFound = 1402,
     }
 }
