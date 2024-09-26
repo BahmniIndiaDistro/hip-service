@@ -6,18 +6,18 @@ namespace In.ProjectEKA.HipService.Creation.Model
     {
         public string txnId { get; }
         
-        public string mobileNumber { get;  }
+        public string message { get;  }
         
         [JsonConstructor]
-        public AadhaarOTPGenerationResponse(string txnId,string mobileNumber)
+        public AadhaarOTPGenerationResponse(string txnId,string message)
         {
             this.txnId = txnId;
-            this.mobileNumber = mobileNumber;
+            this.message = message;
         }
         
-        public AadhaarOTPGenerationResponse(string mobileNumber)
+        public AadhaarOTPGenerationResponse(string message)
         {
-            this.mobileNumber = mobileNumber;
+            this.message = message;
         }
         
     }
