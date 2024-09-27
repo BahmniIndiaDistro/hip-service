@@ -28,7 +28,7 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
-        private readonly Lazy<Task<string>> publicKeyLazy;
+        private static string publicKey;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
@@ -42,7 +42,10 @@ namespace In.ProjectEKA.HipService.Creation
             this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
-            this.publicKeyLazy = new Lazy<Task<string>>(async () => await FetchPublicKey());
+            if (publicKey == null)
+            {
+                publicKey = FetchPublicKey().GetAwaiter().GetResult();
+            }
         }
 
         [HttpPost]
@@ -64,7 +67,7 @@ namespace In.ProjectEKA.HipService.Creation
                                         $" aadhaar: {{aadhaar}}",
                     correlationId, aadhaarOtpGenerationRequest.aadhaar);
                 string encryptedAadhaar =
-                    await abhaService.EncryptText(await GetPublicKey(), aadhaarOtpGenerationRequest.aadhaar);
+                    await abhaService.EncryptText(GetPublicKey(), aadhaarOtpGenerationRequest.aadhaar);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest("",
                     new List<ABHAEnrollmentScope>() { ABHAEnrollmentScope.ABHA_ENROL }, ABHAEnrollmentLoginHint.AADHAAR,
                     encryptedAadhaar, OTPSystem.AADHAAR);
@@ -113,7 +116,7 @@ namespace In.ProjectEKA.HipService.Creation
             try
             {
                 string encryptedOTP =
-                    await abhaService.EncryptText(await GetPublicKey(), appVerifyAadhaarOtpRequest.otp);
+                    await abhaService.EncryptText(GetPublicKey(), appVerifyAadhaarOtpRequest.otp);
                 string mobile = appVerifyAadhaarOtpRequest.mobile;
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation,
@@ -193,7 +196,7 @@ namespace In.ProjectEKA.HipService.Creation
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = await abhaService.EncryptText(await GetPublicKey(), otpVerifyRequest.otp);
+                string encryptedOTP = await abhaService.EncryptText(GetPublicKey(), otpVerifyRequest.otp);
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation,
                     $"Request for verify-mobile-otp to gateway:  correlationId: {{correlationId}}," +
@@ -380,10 +383,9 @@ namespace In.ProjectEKA.HipService.Creation
             return jsonDoc.RootElement.GetProperty("publicKey").GetString();
         }
 
-        private async Task<string> GetPublicKey()
+        private string GetPublicKey()
         {
-            string publicKeyString = await publicKeyLazy.Value;
-            var pemKey = $"-----BEGIN PUBLIC KEY-----\n{publicKeyString}\n-----END PUBLIC KEY-----";
+            var pemKey = $"-----BEGIN PUBLIC KEY-----\n{publicKey}\n-----END PUBLIC KEY-----";
             return pemKey;
         }
     }
