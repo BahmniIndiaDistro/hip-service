@@ -149,6 +149,7 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
+        [HttpPost]
         [Route(APP_PATH_GENERATE_MOBILE_OTP)]
         public async Task<ActionResult> GenerateMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
@@ -197,6 +198,7 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
+        [HttpPost]
         [Route(APP_PATH_VERIFY_MOBILE_OTP)]
         public async Task<ActionResult> VerifyMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
