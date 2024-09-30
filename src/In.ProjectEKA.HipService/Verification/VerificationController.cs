@@ -163,70 +163,70 @@ namespace In.ProjectEKA.HipService.Verification
         }
         
         
-        [Route(CREATE_DEFAULT_PHR_ADDRESS)]
-        public async Task<ActionResult> CreatePhrAddress(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId)
-        {
-            string sessionId = HttpContext.Items[SESSION_ID] as string;
-            
-            try
-            {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Verification,
-                    "Request for create deflault phr address to gateway");
-                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_DEFAULT_PHR_ADDRESS, 
-                    null, correlationId,$"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return Accepted(new ABHAProfile(responseContent));
-                    }
-                    return StatusCode((int)response.StatusCode,responseContent);
-                }
-                
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
-                                                               "create default phr address request" + exception.StackTrace);
-            }
-            
-            return StatusCode(StatusCodes.Status500InternalServerError);
-            
-        }
+        // [Route(CREATE_DEFAULT_PHR_ADDRESS)]
+        // public async Task<ActionResult> CreatePhrAddress(
+        //     [FromHeader(Name = CORRELATION_ID)] string correlationId)
+        // {
+        //     string sessionId = HttpContext.Items[SESSION_ID] as string;
+        //     
+        //     try
+        //     {
+        //         logger.Log(LogLevel.Information,
+        //             LogEvents.Verification,
+        //             "Request for create deflault phr address to gateway");
+        //         using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_DEFAULT_PHR_ADDRESS, 
+        //             null, correlationId,$"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
+        //         {
+        //             var responseContent = await response.Content.ReadAsStringAsync();
+        //             if (response.IsSuccessStatusCode)
+        //             {
+        //                 return Accepted(new ABHAProfile(responseContent));
+        //             }
+        //             return StatusCode((int)response.StatusCode,responseContent);
+        //         }
+        //         
+        //     }
+        //     catch (Exception exception)
+        //     {
+        //         logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+        //                                                        "create default phr address request" + exception.StackTrace);
+        //     }
+        //     
+        //     return StatusCode(StatusCodes.Status500InternalServerError);
+        //     
+        // }
         
-        [Route(CREATE_PHR_ADDRESS)]
-        public async Task<ActionResult> UpdatePhrAddress(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromParameter("healthId")] string healthId)
-        {
-            string sessionId = HttpContext.Items[SESSION_ID] as string;
-            
-            try
-            {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Verification, $"Request to create and update ABHA-Address to gateway: correlationId: {{correlationId}}," +
-                                            $" healthId: {{healthId}}",correlationId, healthId);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, ABHA_PATIENT_PROFILE,
-                    new ABHAProfile(healthId), correlationId, $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
-                {
-                    var responseContent = await response?.Content.ReadAsStringAsync();
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var abhaProfile = JsonConvert.DeserializeObject<ABHAProfile>(responseContent);
-                        return Accepted(abhaProfile);
-                    }
-                    return StatusCode((int)response.StatusCode,responseContent);
-                }
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(LogEvents.Creation, exception, "Error happened for create ABHA Address");
-                
-            }
-            
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+        // [Route(CREATE_PHR_ADDRESS)]
+        // public async Task<ActionResult> UpdatePhrAddress(
+        //     [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromParameter("healthId")] string healthId)
+        // {
+        //     string sessionId = HttpContext.Items[SESSION_ID] as string;
+        //     
+        //     try
+        //     {
+        //         logger.Log(LogLevel.Information,
+        //             LogEvents.Verification, $"Request to create and update ABHA-Address to gateway: correlationId: {{correlationId}}," +
+        //                                     $" healthId: {{healthId}}",correlationId, healthId);
+        //         using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, ABHA_PATIENT_PROFILE,
+        //             new ABHAProfile(healthId), correlationId, $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
+        //         {
+        //             var responseContent = await response?.Content.ReadAsStringAsync();
+        //             if (response.IsSuccessStatusCode)
+        //             {
+        //                 var abhaProfile = JsonConvert.DeserializeObject<ABHAProfile>(responseContent);
+        //                 return Accepted(abhaProfile);
+        //             }
+        //             return StatusCode((int)response.StatusCode,responseContent);
+        //         }
+        //     }
+        //     catch (Exception exception)
+        //     {
+        //         logger.LogError(LogEvents.Creation, exception, "Error happened for create ABHA Address");
+        //         
+        //     }
+        //     
+        //     return StatusCode(StatusCodes.Status500InternalServerError);
+        // }
         
         [Route(MOBILE_GENERATE_OTP)]
         public async Task<ActionResult> GenerateMobileOtp(

@@ -9,12 +9,12 @@ namespace In.ProjectEKA.HipService.Common
         public const string VERSION_V3 = "v3";
         
         //APIs Used for ABHA Creation from Frontend
-        public const string APP_PATH_GENERATE_AADHAAR_OTP = "/" + VERSION_V1 + "/hip/generateAadhaarOtp";
-        public const string APP_PATH_VERIFY_OTP_AND_CREATE_ABHA = "/" + VERSION_V1 + "/hip/verifyOtpAndCreateABHA";
-        public const string APP_PATH_GENERATE_MOBILE_OTP = "/" + VERSION_V1 + "/hip/generateMobileOtp";
-        public const string APP_PATH_VERIFY_MOBILE_OTP = "/" + VERSION_V1 + "/hip/verifyMobileOtp";
-        public const string APP_PATH_CREATE_HEALTH_ID = "/" + VERSION_V1 + "/hip/createAbhaAddress";
-        public const string APP_PATH_GET_ABHA_CARD = "/" + VERSION_V1 + "/hip/getAbhaCard";
+        public const string APP_PATH_GENERATE_AADHAAR_OTP = "/" + VERSION_V3 + "/hip/generateAadhaarOtp";
+        public const string APP_PATH_VERIFY_OTP_AND_CREATE_ABHA = "/" + VERSION_V3 + "/hip/verifyOtpAndCreateABHA";
+        public const string APP_PATH_GENERATE_MOBILE_OTP = "/" + VERSION_V3 + "/hip/generateMobileOtp";
+        public const string APP_PATH_VERIFY_MOBILE_OTP = "/" + VERSION_V3 + "/hip/verifyMobileOtp";
+        public const string APP_PATH_CREATE_HEALTH_ID = "/" + VERSION_V3 + "/hip/createAbhaAddress";
+        public const string APP_PATH_GET_ABHA_CARD = "/" + VERSION_V3 + "/hip/getAbhaCard";
         
         public const string PATH_SESSIONS = CURRENT_VERSION + "/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = CURRENT_VERSION + "/care-contexts/discover";

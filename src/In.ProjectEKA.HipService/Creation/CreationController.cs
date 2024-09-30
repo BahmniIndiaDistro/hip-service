@@ -131,7 +131,10 @@ namespace In.ProjectEKA.HipService.Creation
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        return Accepted(responseContent);
+                        EnrollByAadhaarResponse enrollByAadhaarResponse =
+                            JsonConvert.DeserializeObject<EnrollByAadhaarResponse>(responseContent);
+                        return Ok(new AadhaarOTPVerifyAndCreateABHAResponse(enrollByAadhaarResponse.Message,
+                            enrollByAadhaarResponse.ABHAProfile, enrollByAadhaarResponse.IsNew));
                     }
 
                     return StatusCode((int)response.StatusCode, responseContent);
