@@ -2,13 +2,14 @@ namespace In.ProjectEKA.HipService.Creation.Model
 {
     public class CreateABHAAddressRequest
     {
-        public string phrAddress;
-        public string preferred;
+        public string abhaAddress;
+        public string txnId;
+        public int preferred = 1;
 
-        public CreateABHAAddressRequest(string phrAddress, string preferred)
+        public CreateABHAAddressRequest(string txnId, string abhaAddress)
         {
-            this.phrAddress = phrAddress;
-            this.preferred = preferred;
+            this.txnId = txnId;
+            this.abhaAddress = abhaAddress;
         }
     }
 }

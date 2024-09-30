@@ -126,6 +126,7 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         EnrollByAadhaarResponse enrollByAadhaarResponse =
                             JsonConvert.DeserializeObject<EnrollByAadhaarResponse>(responseContent);
+                        HealthIdNumberTokenDictionary[sessionId] = new TokenRequest(enrollByAadhaarResponse?.Tokens.Token);
                         return Ok(new AadhaarOTPVerifyAndCreateABHAResponse(enrollByAadhaarResponse.Message,
                             enrollByAadhaarResponse.ABHAProfile, enrollByAadhaarResponse.IsNew));
                     }
@@ -237,39 +238,25 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        [Route(Constants.CREATE_ABHA_ID)]
-        public async Task<ActionResult> CreateABHAId(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId)
+        [HttpGet]
+        [Route(APP_PATH_GET_ABHA_ADDRESS_SUGGESTIONS)]
+        public async Task<ActionResult> GetAbhaAddressSuggestions()
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
-
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for create-ABHA to gateway:  correlationId: {{correlationId}}," +
-                                        $"txnId: {{txnId}}",
-                    correlationId, txnId);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
-                           gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ID,
-                           new CreateABHARequest(txnId), correlationId))
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Get,
+                           gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_ADDRESS_SUGGESTIONS, default(object), null,
+                           null, null, txnId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
-
+                    logger.LogError(responseContent);
                     if (response.IsSuccessStatusCode)
                     {
-                        var createAbhaResponse = JsonConvert.DeserializeObject<CreateABHAResponse>(responseContent);
-                        var tokenRequest = new TokenRequest(createAbhaResponse.token);
-                        if (HealthIdNumberTokenDictionary.ContainsKey(sessionId))
-                        {
-                            HealthIdNumberTokenDictionary[sessionId] = tokenRequest;
-                        }
-                        else
-                        {
-                            HealthIdNumberTokenDictionary.Add(sessionId, tokenRequest);
-                        }
-
-                        return Accepted(createAbhaResponse);
+                        var addressSuggestionsResponse =
+                            JsonConvert.DeserializeObject<ABHAAddressSuggestionResponse>(responseContent);
+                        return Ok(new ABHAAddressSuggestionResponse(addressSuggestionsResponse.abhaAddressList));
                     }
 
                     return StatusCode((int)response.StatusCode, responseContent);
@@ -278,17 +265,19 @@ namespace In.ProjectEKA.HipService.Creation
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
-                                                               " create-ABHA", txnId);
+                                                               " get-abha-address-suggestions", txnId);
             }
 
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        [Route(Constants.CREATE_PHR)]
+        [HttpPost]
+        [Route(Constants.APP_PATH_CREATE_ABHA_ADDRESS)]
         public async Task<ActionResult> CreateABHAAddress(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, CreateABHAAddressRequest createAbhaRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, AppCreateABHAAddressRequest appCreateAbhaAddressRequest)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
 
             try
             {
@@ -297,13 +286,12 @@ namespace In.ProjectEKA.HipService.Creation
                     $"Request for create ABHA-Address to gateway:  correlationId: {{correlationId}}",
                     correlationId);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
-                           gatewayConfiguration.AbhaNumberServiceUrl, CREATE_PHR,
-                           createAbhaRequest, correlationId,
-                           $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
+                           gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ADDRESS,
+                           new CreateABHAAddressRequest(txnId, appCreateAbhaAddressRequest.abhaAddress), correlationId))
                 {
                     if (response.IsSuccessStatusCode)
                     {
-                        return Accepted();
+                        return Ok();
                     }
 
                     var responseContent = await response?.Content.ReadAsStringAsync();
@@ -317,8 +305,9 @@ namespace In.ProjectEKA.HipService.Creation
 
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-
-        [Route(GET_ABHA_CARD)]
+        
+        [HttpGet]
+        [Route(APP_PATH_GET_ABHA_CARD)]
         public async Task<IActionResult> getPngCard(
             [FromHeader(Name = CORRELATION_ID)] string correlationId)
         {
