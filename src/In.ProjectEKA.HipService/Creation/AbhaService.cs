@@ -73,13 +73,13 @@ namespace In.ProjectEKA.HipService.Creation
             return null;
         }
 
-        public async Task<string> EncryptText(string public_key,string text)
+        public string EncryptText(string public_key,string text)
         {
             var rsaPublicKey = RSA.Create();
             byte[] byteData = Encoding.UTF8.GetBytes(text);
             rsaPublicKey.ImportFromPem(public_key);
             byte[] bytesEncrypted = rsaPublicKey.Encrypt(byteData, RSAEncryptionPadding.OaepSHA1);
-            return await Task.FromResult(Convert.ToBase64String(bytesEncrypted));
+            return Convert.ToBase64String(bytesEncrypted);
         }
 
         public async Task<CreateHIdDemoAuthRequest> GetHidDemoAuthRequest(AadhaarDemoAuthRequest aadhaarDemoAuthRequest)

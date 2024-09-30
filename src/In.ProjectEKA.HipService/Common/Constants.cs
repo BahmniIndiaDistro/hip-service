@@ -92,9 +92,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string ABHA_SERVICE_CERT_URL = "/" + VERSION_V3 + "/profile/public/certificate";
         public const string ENROLLMENT_REQUEST_OTP = "/" + VERSION_V3 + "/enrollment/request/otp";
         public const string ENROLLMENT_BY_AADHAAR = "/" + VERSION_V3 + "/enrollment/enrol/byAadhaar";
-        public const string AADHAAR_VERIFY_OTP = "/" + VERSION_V2 + "/registration/aadhaar/verifyOTP";  
-        public const string CHECK_GENERATE_MOBILE_OTP = "/" + VERSION_V2 + "/registration/aadhaar/checkAndGenerateMobileOTP";
-        public const string VERIFY_MOBILE_OTP = "/" + VERSION_V2 + "/registration/aadhaar/verifyMobileOTP";
+        public const string ENROLLMENT_AUTH_BY_ABDM = "/" + VERSION_V3 + "/enrollment/auth/byAbdm";
         public const string CREATE_ABHA_ID = "/" + VERSION_V2 + "/registration/aadhaar/createHealthIdByAdhaar";
         public const string GET_ABHA_CARD =  "/" + VERSION_V2 + "/account/getPngCard";
         public const string ABHA_PATIENT_PROFILE = "/" + VERSION_V2 + "/account/profile";

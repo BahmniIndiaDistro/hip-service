@@ -67,7 +67,7 @@ namespace In.ProjectEKA.HipService.Creation
                                         $" aadhaar: {{aadhaar}}",
                     correlationId, aadhaarOtpGenerationRequest.aadhaar);
                 string encryptedAadhaar =
-                    await abhaService.EncryptText(GetPublicKey(), aadhaarOtpGenerationRequest.aadhaar);
+                    abhaService.EncryptText(GetPublicKey(), aadhaarOtpGenerationRequest.aadhaar);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest("",
                     new List<ABHAEnrollmentScope>() { ABHAEnrollmentScope.ABHA_ENROL }, ABHAEnrollmentLoginHint.AADHAAR,
                     encryptedAadhaar, OTPSystem.AADHAAR);
@@ -116,7 +116,7 @@ namespace In.ProjectEKA.HipService.Creation
             try
             {
                 string encryptedOTP =
-                    await abhaService.EncryptText(GetPublicKey(), appVerifyAadhaarOtpRequest.otp);
+                    abhaService.EncryptText(GetPublicKey(), appVerifyAadhaarOtpRequest.otp);
                 string mobile = appVerifyAadhaarOtpRequest.mobile;
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation,
@@ -149,8 +149,8 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        [Route(CHECK_GENERATE_MOBILE_OTP)]
-        public async Task<ActionResult> CheckAndGenerateMobileOTP(
+        [Route(APP_PATH_GENERATE_MOBILE_OTP)]
+        public async Task<ActionResult> GenerateMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
             MobileOTPGenerationRequest mobileOtpGenerationRequest)
         {
@@ -165,17 +165,24 @@ namespace In.ProjectEKA.HipService.Creation
                     $"Request for generate-mobile-otp to gateway: correlationId: {{correlationId}}," +
                     $" mobile: {{mobile}}",
                     correlationId, mobileNumber);
+                string encryptedMobileNumber = abhaService.EncryptText(GetPublicKey(), mobileNumber);
+                ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest(txnId,
+                    new List<ABHAEnrollmentScope>()
+                        { ABHAEnrollmentScope.ABHA_ENROL, ABHAEnrollmentScope.MOBILE_VERIFY },
+                    ABHAEnrollmentLoginHint.MOBILE,
+                    encryptedMobileNumber, OTPSystem.ABDM);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
-                           gatewayConfiguration.AbhaNumberServiceUrl, CHECK_GENERATE_MOBILE_OTP,
-                           new MobileOTPGenerationRequest(txnId, mobileNumber), correlationId))
+                           gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_REQUEST_OTP,
+                           abhaEnrollmentOtpRequest, correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
+                        logger.LogError(responseContent);
                         var generationResponse =
                             JsonConvert.DeserializeObject<MobileOTPGenerationResponse>(responseContent);
                         TxnDictionary[sessionId] = generationResponse?.txnId;
-                        return Accepted(new MobileOTPGenerationResponse(generationResponse?.mobileLinked));
+                        return Accepted(new MobileOTPGenerationResponse(generationResponse?.message));
                     }
 
                     return StatusCode((int)response.StatusCode, responseContent);
@@ -190,7 +197,7 @@ namespace In.ProjectEKA.HipService.Creation
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        [Route(VERIFY_MOBILE_OTP)]
+        [Route(APP_PATH_VERIFY_MOBILE_OTP)]
         public async Task<ActionResult> VerifyMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
         {
@@ -199,23 +206,28 @@ namespace In.ProjectEKA.HipService.Creation
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = await abhaService.EncryptText(GetPublicKey(), otpVerifyRequest.otp);
+                string encryptedOTP = abhaService.EncryptText(GetPublicKey(), otpVerifyRequest.otp);
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation,
                     $"Request for verify-mobile-otp to gateway:  correlationId: {{correlationId}}," +
                     $"txnId: {{txnId}}",
                     correlationId, txnId);
-
+                EnrollmentAuthByAbdmRequest enrollmentAuthByAbdmRequest = new EnrollmentAuthByAbdmRequest(txnId,
+                    new List<ABHAEnrollmentScope>()
+                    {
+                        ABHAEnrollmentScope.ABHA_ENROL, ABHAEnrollmentScope.MOBILE_VERIFY
+                    },
+                    encryptedOTP);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
-                           gatewayConfiguration.AbhaNumberServiceUrl, VERIFY_MOBILE_OTP,
-                           new OTPVerifyRequest(txnId, encryptedOTP), correlationId))
+                           gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_AUTH_BY_ABDM,
+                           enrollmentAuthByAbdmRequest, correlationId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
-                        var otpResponse = JsonConvert.DeserializeObject<TransactionResponse>(responseContent);
-                        TxnDictionary[sessionId] = otpResponse?.txnId;
-                        return Accepted();
+                        EnrollmentAuthByAbdmResponse authResponse =
+                            JsonConvert.DeserializeObject<EnrollmentAuthByAbdmResponse>(responseContent);
+                        return Ok(authResponse);
                     }
 
                     return StatusCode((int)response.StatusCode, responseContent);
