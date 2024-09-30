@@ -28,7 +28,6 @@ namespace In.ProjectEKA.HipService.Creation
         private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
-        private static string publicKey;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
@@ -42,10 +41,6 @@ namespace In.ProjectEKA.HipService.Creation
             this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
-            if (publicKey == null)
-            {
-                publicKey = FetchPublicKey().GetAwaiter().GetResult();
-            }
         }
 
         [HttpPost]
@@ -66,8 +61,7 @@ namespace In.ProjectEKA.HipService.Creation
                     LogEvents.Creation, $"correlationId: {{correlationId}}," +
                                         $" aadhaar: {{aadhaar}}",
                     correlationId, aadhaarOtpGenerationRequest.aadhaar);
-                string encryptedAadhaar =
-                    abhaService.EncryptText(GetPublicKey(), aadhaarOtpGenerationRequest.aadhaar);
+                string encryptedAadhaar = EncryptionService.Encrypt(aadhaarOtpGenerationRequest.aadhaar);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest("",
                     new List<ABHAEnrollmentScope>() { ABHAEnrollmentScope.ABHA_ENROL }, ABHAEnrollmentLoginHint.AADHAAR,
                     encryptedAadhaar, OTPSystem.AADHAAR);
@@ -115,8 +109,7 @@ namespace In.ProjectEKA.HipService.Creation
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP =
-                    abhaService.EncryptText(GetPublicKey(), appVerifyAadhaarOtpRequest.otp);
+                string encryptedOTP = EncryptionService.Encrypt(appVerifyAadhaarOtpRequest.otp);
                 string mobile = appVerifyAadhaarOtpRequest.mobile;
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation,
@@ -166,7 +159,7 @@ namespace In.ProjectEKA.HipService.Creation
                     $"Request for generate-mobile-otp to gateway: correlationId: {{correlationId}}," +
                     $" mobile: {{mobile}}",
                     correlationId, mobileNumber);
-                string encryptedMobileNumber = abhaService.EncryptText(GetPublicKey(), mobileNumber);
+                string encryptedMobileNumber = EncryptionService.Encrypt(mobileNumber);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest(txnId,
                     new List<ABHAEnrollmentScope>()
                         { ABHAEnrollmentScope.ABHA_ENROL, ABHAEnrollmentScope.MOBILE_VERIFY },
@@ -208,7 +201,7 @@ namespace In.ProjectEKA.HipService.Creation
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = abhaService.EncryptText(GetPublicKey(), otpVerifyRequest.otp);
+                string encryptedOTP = EncryptionService.Encrypt(otpVerifyRequest.otp);
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation,
                     $"Request for verify-mobile-otp to gateway:  correlationId: {{correlationId}}," +
@@ -389,21 +382,6 @@ namespace In.ProjectEKA.HipService.Creation
             }
 
             return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-
-        private async Task<string> FetchPublicKey()
-        {
-            var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,
-                gatewayConfiguration.AbhaNumberServiceUrl, ABHA_SERVICE_CERT_URL, null, null);
-            var responseData = await response.Content.ReadAsStringAsync();
-            var jsonDoc = JsonDocument.Parse(responseData);
-            return jsonDoc.RootElement.GetProperty("publicKey").GetString();
-        }
-
-        private string GetPublicKey()
-        {
-            var pemKey = $"-----BEGIN PUBLIC KEY-----\n{publicKey}\n-----END PUBLIC KEY-----";
-            return pemKey;
         }
     }
 }

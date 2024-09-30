@@ -134,7 +134,7 @@ namespace In.ProjectEKA.HipService.Verification
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = abhaService.EncryptText(public_key,otpVerifyRequest.otp);
+                string encryptedOTP = EncryptionService.Encrypt(otpVerifyRequest.otp);
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification, $"Request for otp verify to gateway:" +
                                         $"txnId: {{txnId}}",txnId);
@@ -282,7 +282,7 @@ namespace In.ProjectEKA.HipService.Verification
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = abhaService.EncryptText(public_key, verifyMobileOtpRequest.otp);
+                string encryptedOTP = EncryptionService.Encrypt(verifyMobileOtpRequest.otp);
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification, $"Request for verify mobile otp to gateway:" +
                                             $"txnId: {{txnId}}", txnId);
