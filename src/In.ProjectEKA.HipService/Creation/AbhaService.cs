@@ -72,16 +72,6 @@ namespace In.ProjectEKA.HipService.Creation
             }
             return null;
         }
-
-        public string EncryptText(string public_key,string text)
-        {
-            var rsaPublicKey = RSA.Create();
-            byte[] byteData = Encoding.UTF8.GetBytes(text);
-            rsaPublicKey.ImportFromPem(public_key);
-            byte[] bytesEncrypted = rsaPublicKey.Encrypt(byteData, RSAEncryptionPadding.OaepSHA1);
-            return Convert.ToBase64String(bytesEncrypted);
-        }
-
         public async Task<CreateHIdDemoAuthRequest> GetHidDemoAuthRequest(AadhaarDemoAuthRequest aadhaarDemoAuthRequest)
         {
 

@@ -29,7 +29,6 @@ namespace In.ProjectEKA.HipService.Verification
         private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
-        public static string public_key;
 
         public VerificationController(IGatewayClient gatewayClient,
             ILogger<VerificationController> logger,
