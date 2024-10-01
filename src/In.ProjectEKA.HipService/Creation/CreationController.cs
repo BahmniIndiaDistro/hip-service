@@ -24,21 +24,16 @@ namespace In.ProjectEKA.HipService.Creation
     {
         private readonly IGatewayClient gatewayClient;
         private readonly ILogger<CreationController> logger;
-        private readonly HttpClient httpClient;
-        private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
-            HttpClient httpClient,
-            OpenMrsConfiguration openMrsConfiguration, GatewayConfiguration gatewayConfiguration,
+            GatewayConfiguration gatewayConfiguration,
             IAbhaService abhaService)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
-            this.httpClient = httpClient;
-            this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
         }
@@ -53,14 +48,6 @@ namespace In.ProjectEKA.HipService.Creation
 
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation,
-                    "Request for generate-aadhaar-otp to gateway: {@GatewayResponse}",
-                    aadhaarOtpGenerationRequest);
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"correlationId: {{correlationId}}," +
-                                        $" aadhaar: {{aadhaar}}",
-                    correlationId, aadhaarOtpGenerationRequest.aadhaar);
                 string encryptedAadhaar = EncryptionService.Encrypt(aadhaarOtpGenerationRequest.aadhaar);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest("",
                     new List<ABHAEnrollmentScope>() { ABHAEnrollmentScope.ABHA_ENROL }, ABHAEnrollmentLoginHint.AADHAAR,
@@ -74,15 +61,7 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         AadhaarOTPGenerationResponse generationResponse =
                             JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
-                        if (TxnDictionary.ContainsKey(sessionId))
-                        {
-                            TxnDictionary[sessionId] = generationResponse?.txnId;
-                        }
-                        else
-                        {
-                            TxnDictionary.Add(sessionId, generationResponse?.txnId);
-                        }
-
+                        TxnDictionary[sessionId] = generationResponse?.txnId;
                         return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.message));
                     }
 
@@ -111,11 +90,6 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 string encryptedOTP = EncryptionService.Encrypt(appVerifyAadhaarOtpRequest.otp);
                 string mobile = appVerifyAadhaarOtpRequest.mobile;
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation,
-                    $"Request for verify-aadhaar-otp to gateway:  correlationId: {{correlationId}}," +
-                    $"txnId: {{txnId}}",
-                    correlationId, txnId);
 
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
                            gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_BY_AADHAAR,
@@ -126,7 +100,8 @@ namespace In.ProjectEKA.HipService.Creation
                     {
                         EnrollByAadhaarResponse enrollByAadhaarResponse =
                             JsonConvert.DeserializeObject<EnrollByAadhaarResponse>(responseContent);
-                        HealthIdNumberTokenDictionary[sessionId] = new TokenRequest(enrollByAadhaarResponse?.Tokens.Token);
+                        HealthIdNumberTokenDictionary[sessionId] =
+                            new TokenRequest(enrollByAadhaarResponse?.Tokens.Token);
                         return Ok(new AadhaarOTPVerifyAndCreateABHAResponse(enrollByAadhaarResponse.Message,
                             enrollByAadhaarResponse.ABHAProfile, enrollByAadhaarResponse.IsNew));
                     }
@@ -155,11 +130,6 @@ namespace In.ProjectEKA.HipService.Creation
             var mobileNumber = mobileOtpGenerationRequest.mobile;
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation,
-                    $"Request for generate-mobile-otp to gateway: correlationId: {{correlationId}}," +
-                    $" mobile: {{mobile}}",
-                    correlationId, mobileNumber);
                 string encryptedMobileNumber = EncryptionService.Encrypt(mobileNumber);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest(txnId,
                     new List<ABHAEnrollmentScope>()
@@ -203,11 +173,6 @@ namespace In.ProjectEKA.HipService.Creation
             try
             {
                 string encryptedOTP = EncryptionService.Encrypt(otpVerifyRequest.otp);
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation,
-                    $"Request for verify-mobile-otp to gateway:  correlationId: {{correlationId}}," +
-                    $"txnId: {{txnId}}",
-                    correlationId, txnId);
                 EnrollmentAuthByAbdmRequest enrollmentAuthByAbdmRequest = new EnrollmentAuthByAbdmRequest(txnId,
                     new List<ABHAEnrollmentScope>()
                     {
@@ -247,11 +212,11 @@ namespace In.ProjectEKA.HipService.Creation
             try
             {
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Get,
-                           gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_ADDRESS_SUGGESTIONS, default(object), null,
+                           gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_ADDRESS_SUGGESTIONS, default(object),
+                           null,
                            null, null, txnId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
-                    logger.LogError(responseContent);
                     if (response.IsSuccessStatusCode)
                     {
                         var addressSuggestionsResponse =
@@ -274,17 +239,14 @@ namespace In.ProjectEKA.HipService.Creation
         [HttpPost]
         [Route(Constants.APP_PATH_CREATE_ABHA_ADDRESS)]
         public async Task<ActionResult> CreateABHAAddress(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, AppCreateABHAAddressRequest appCreateAbhaAddressRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            AppCreateABHAAddressRequest appCreateAbhaAddressRequest)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
 
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation,
-                    $"Request for create ABHA-Address to gateway:  correlationId: {{correlationId}}",
-                    correlationId);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
                            gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ADDRESS,
                            new CreateABHAAddressRequest(txnId, appCreateAbhaAddressRequest.abhaAddress), correlationId))
@@ -305,7 +267,7 @@ namespace In.ProjectEKA.HipService.Creation
 
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        
+
         [HttpGet]
         [Route(APP_PATH_GET_ABHA_CARD)]
         public async Task<IActionResult> getPngCard(
@@ -315,10 +277,6 @@ namespace In.ProjectEKA.HipService.Creation
 
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for abha-card to gateway:  correlationId: {{correlationId}}",
-                    correlationId);
-
                 var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,
                     gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_CARD,
                     null, correlationId,

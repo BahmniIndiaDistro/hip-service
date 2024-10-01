@@ -28,5 +28,10 @@ namespace In.ProjectEKA.HipService.Logger
         {
             Serilog.Log.Error(exception, LogTemplate.ExceptionTemplate, arg);
         }
+        
+        public static void Debug(string format, params object[] arg)
+        {
+            Serilog.Log.Debug(format, arg);
+        }
     }
 }

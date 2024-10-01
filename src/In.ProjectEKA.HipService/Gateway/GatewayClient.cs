@@ -1,3 +1,5 @@
+using In.ProjectEKA.HipService.Logger;
+
 namespace In.ProjectEKA.HipService.Gateway
 {
     using System;
@@ -7,7 +9,6 @@ namespace In.ProjectEKA.HipService.Gateway
     using System.Threading.Tasks;
     using Common;
     using Model;
-    using Logger;
     using static Common.HttpRequestHelper;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
@@ -92,11 +93,14 @@ namespace In.ProjectEKA.HipService.Gateway
             {
                 try
                 {
-                    Log.Information("Initiating Request to ABHA Service for URI {@uri} with method {@method}", baseUrl + urlPath,method); 
+                    Log.Information("Initiating Request to ABHA Service for URI {@uri} with method {@method}", baseUrl + urlPath,method);
+                    Log.Debug("Request Payload {@payload}", representation);
                     response = await httpClient
                         .SendAsync(CreateHttpRequest(method, baseUrl + urlPath, representation, token.ValueOr(String.Empty),
                             null, correlationId,xtoken, tToken, transactionId))
                         .ConfigureAwait(false);
+                    Log.Information("Response Status from ABHA Service for URI {@uri} is {@status}", baseUrl + urlPath, response.StatusCode);
+                    Log.Debug("Response Payload {@payload}", response.Content.ReadAsStringAsync());
                 }
                 catch (Exception exception)
                 {
