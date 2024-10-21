@@ -19,39 +19,46 @@ namespace In.ProjectEKA.HipService.Common
             string cmSuffix,
             string correlationId,
             string xtoken = null,
-            string tToken = null)
+            string tToken = null,
+            string transactionId = null)
         {
-            var json = JsonConvert.SerializeObject(content, new JsonSerializerSettings
+            HttpRequestMessage httpRequestMessage = new HttpRequestMessage(method, new Uri($"{url}"));
+            ;
+            if (content != null)
             {
-                NullValueHandling = NullValueHandling.Ignore,
-                ContractResolver = new DefaultContractResolver
+                var json = JsonConvert.SerializeObject(content, new JsonSerializerSettings
                 {
-                    NamingStrategy = new CamelCaseNamingStrategy()
-                }
-            });
-            
-            var httpRequestMessage = new HttpRequestMessage(method, new Uri($"{url}"))
-            {
-                Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json)
-            };
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy()
+                    }
+                });
+                httpRequestMessage.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
+            }
 
             if (token != null)
                 httpRequestMessage.Headers.Add(HeaderNames.Authorization, token);
-            if(xtoken != null)
+            if (xtoken != null)
                 httpRequestMessage.Headers.Add("X-Token", xtoken);
-            if(tToken != null)
+            if (tToken != null)
                 httpRequestMessage.Headers.Add("T-token", tToken);
             if (cmSuffix != null)
                 httpRequestMessage.Headers.Add("X-CM-ID", cmSuffix);
             if (correlationId != null)
                 httpRequestMessage.Headers.Add(CORRELATION_ID, correlationId);
+            if (transactionId != null)
+                httpRequestMessage.Headers.Add("Transaction_Id", transactionId);
+            httpRequestMessage.Headers.Add("REQUEST-ID", Guid.NewGuid().ToString());
+            httpRequestMessage.Headers.Add("TIMESTAMP", DateTime.Now.ToString(TIMESTAMP_FORMAT));
             return httpRequestMessage;
         }
 
-        public static HttpRequestMessage CreateHttpRequest<T>(HttpMethod method,string url, T content, String correlationId)
+        public static HttpRequestMessage CreateHttpRequest<T>(HttpMethod method, string url, T content,
+            String correlationId)
         {
             // ReSharper disable once IntroduceOptionalParameters.Global
-            return CreateHttpRequest(method,url, content, null, null, correlationId);
+            return CreateHttpRequest(method, url, content, null, null, correlationId);
         }
     }
 }

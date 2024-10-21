@@ -167,6 +167,7 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton<ICollectHipService, CollectHipService>()
                 .AddScoped<IPatientDal, FhirDiscoveryDataSource>()
                 .AddScoped<IPhoneNumberRepository, OpenMrsPhoneNumberRepository>()
+                .AddSingleton<EncryptionService>()
                 .AddTransient<IDataFlow, DataFlow.DataFlow>()
                 .AddRouting(options => options.LowercaseUrls = true)
                 .AddHttpContextAccessor()
@@ -288,6 +289,8 @@ namespace In.ProjectEKA.HipService
             ndhmContext.Database.Migrate();
             var patientContext = serviceScope.ServiceProvider.GetService<PatientContext>();
             patientContext.Database.Migrate();
+            var encryptionService = serviceScope.ServiceProvider.GetService<EncryptionService>();
+            encryptionService.InitializePublicKeyForEncryption().GetAwaiter().GetResult();
         }
 
         private static bool CheckRoleInAccessToken(JwtSecurityToken accessToken)

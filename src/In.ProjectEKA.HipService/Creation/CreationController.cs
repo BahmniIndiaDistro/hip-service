@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Creation.Model;
@@ -22,125 +24,105 @@ namespace In.ProjectEKA.HipService.Creation
     {
         private readonly IGatewayClient gatewayClient;
         private readonly ILogger<CreationController> logger;
-        private readonly HttpClient httpClient;
-        private readonly OpenMrsConfiguration openMrsConfiguration;
         private readonly GatewayConfiguration gatewayConfiguration;
         private readonly IAbhaService abhaService;
-        public static string public_key;
 
         public CreationController(IGatewayClient gatewayClient,
             ILogger<CreationController> logger,
-            HttpClient httpClient,
-            OpenMrsConfiguration openMrsConfiguration, GatewayConfiguration gatewayConfiguration, IAbhaService abhaService)
+            GatewayConfiguration gatewayConfiguration,
+            IAbhaService abhaService)
         {
             this.gatewayClient = gatewayClient;
             this.logger = logger;
-            this.httpClient = httpClient;
-            this.openMrsConfiguration = openMrsConfiguration;
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
         }
 
-        [Route(AADHAAR_GENERATE_OTP)]
+        [HttpPost]
+        [Route(APP_PATH_GENERATE_AADHAAR_OTP)]
         public async Task<ActionResult> GenerateAadhaarOtp(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AadhaarOTPGenerationRequest aadhaarOtpGenerationRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromBody] AadhaarOTPGenerationRequest aadhaarOtpGenerationRequest)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
 
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation,
-                    "Request for generate-aadhaar-otp to gateway: {@GatewayResponse}",
-                    aadhaarOtpGenerationRequest);
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"correlationId: {{correlationId}}," +
-                                        $" aadhaar: {{aadhaar}}",
-                     correlationId, aadhaarOtpGenerationRequest.aadhaar);
-                string text = await abhaService.EncryptText(public_key,aadhaarOtpGenerationRequest.aadhaar);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, AADHAAR_GENERATE_OTP, new AadhaarOTPGenerationRequest(text), correlationId))
+                string encryptedAadhaar = EncryptionService.Encrypt(aadhaarOtpGenerationRequest.aadhaar);
+                ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest("",
+                    new List<ABHAEnrollmentScope>() { ABHAEnrollmentScope.ABHA_ENROL }, ABHAEnrollmentLoginHint.AADHAAR,
+                    encryptedAadhaar, OTPSystem.AADHAAR);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_REQUEST_OTP, abhaEnrollmentOtpRequest,
+                           correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        var generationResponse =
+                        AadhaarOTPGenerationResponse generationResponse =
                             JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
-                        if (TxnDictionary.ContainsKey(sessionId))
-                        {
-                            TxnDictionary[sessionId] = generationResponse?.txnId;
-                        }
-                        else
-                        {
-                            TxnDictionary.Add(sessionId, generationResponse?.txnId);
-                        }
-                        return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.mobileNumber));
+                        TxnDictionary[sessionId] = generationResponse?.txnId;
+                        return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.message));
                     }
-                    return StatusCode((int)response.StatusCode,responseContent);
+
+                    return StatusCode((int)response.StatusCode, responseContent);
                 }
-                
             }
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for " +
                                                                "generate-aadhaar-otp request" + exception.StackTrace);
-                
             }
-            
+
             return StatusCode(StatusCodes.Status500InternalServerError);
-            
         }
-        
-        [Route(AADHAAR_VERIFY_OTP)]
-        public async Task<ActionResult> VerifyAadhaarOtp(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
+
+        [HttpPost]
+        [Route(APP_PATH_VERIFY_OTP_AND_CREATE_ABHA)]
+        public async Task<ActionResult> VerifyAadhaarOtpAndCreateABHA(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            AppVerifyAadhaarOTPRequest appVerifyAadhaarOtpRequest)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
 
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = await abhaService.EncryptText(public_key,otpVerifyRequest.otp);
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for verify-aadhaar-otp to gateway:  correlationId: {{correlationId}}," +
-                                        $"txnId: {{txnId}}",
-                     correlationId,txnId);
+                string encryptedOTP = EncryptionService.Encrypt(appVerifyAadhaarOtpRequest.otp);
+                string mobile = appVerifyAadhaarOtpRequest.mobile;
 
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, gatewayConfiguration.AbhaNumberServiceUrl,AADHAAR_VERIFY_OTP,
-                    new OTPVerifyRequest(txnId, encryptedOTP), correlationId))
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_BY_AADHAAR,
+                           new ABHAEnrollByAadhaarRequest(txnId, encryptedOTP, mobile), correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        var otpResponse = JsonConvert.DeserializeObject<AadhaarOTPVerifyResponse>(responseContent);
-                        TxnDictionary[sessionId] = otpResponse?.txnId;
-                        if (otpResponse.healthIdNumber != null)
-                        {
-                            var profile = await abhaService.getABHAProfile(sessionId,new TokenRequest(otpResponse.jwtResponse.token));
-                            if (profile != null)
-                            {
-                                otpResponse.phrAddress = profile.phrAddress;
-                                otpResponse.phone = profile.mobile;
-                                otpResponse.healthId = profile.healthId;
-                            }
-                        }
-                        return Accepted(otpResponse);
+                        EnrollByAadhaarResponse enrollByAadhaarResponse =
+                            JsonConvert.DeserializeObject<EnrollByAadhaarResponse>(responseContent);
+                        HealthIdNumberTokenDictionary[sessionId] =
+                            new TokenRequest(enrollByAadhaarResponse?.Tokens.Token);
+                        return Ok(new AadhaarOTPVerifyAndCreateABHAResponse(enrollByAadhaarResponse.Message,
+                            enrollByAadhaarResponse.ABHAProfile, enrollByAadhaarResponse.IsNew));
                     }
-                    return StatusCode((int)response.StatusCode,responseContent);
+
+                    return StatusCode((int)response.StatusCode, responseContent);
                 }
             }
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
                                                                " verify-aadhaar-otp", txnId);
-                
             }
+
             return StatusCode(StatusCodes.Status500InternalServerError);
-            
         }
 
-        [Route(CHECK_GENERATE_MOBILE_OTP)]
-        public async Task<ActionResult> CheckAndGenerateMobileOTP(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, MobileOTPGenerationRequest mobileOtpGenerationRequest)
+        [HttpPost]
+        [Route(APP_PATH_GENERATE_MOBILE_OTP)]
+        public async Task<ActionResult> GenerateMobileOTP(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            MobileOTPGenerationRequest mobileOtpGenerationRequest)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
 
@@ -148,35 +130,40 @@ namespace In.ProjectEKA.HipService.Creation
             var mobileNumber = mobileOtpGenerationRequest.mobile;
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for generate-mobile-otp to gateway: correlationId: {{correlationId}}," +
-                                        $" mobile: {{mobile}}",
-                    correlationId,mobileNumber);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, gatewayConfiguration.AbhaNumberServiceUrl, CHECK_GENERATE_MOBILE_OTP,
-                    new MobileOTPGenerationRequest(txnId, mobileNumber), correlationId))
+                string encryptedMobileNumber = EncryptionService.Encrypt(mobileNumber);
+                ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest(txnId,
+                    new List<ABHAEnrollmentScope>()
+                        { ABHAEnrollmentScope.ABHA_ENROL, ABHAEnrollmentScope.MOBILE_VERIFY },
+                    ABHAEnrollmentLoginHint.MOBILE,
+                    encryptedMobileNumber, OTPSystem.ABDM);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_REQUEST_OTP,
+                           abhaEnrollmentOtpRequest, correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
-                        var generationResponse = JsonConvert.DeserializeObject<MobileOTPGenerationResponse>(responseContent);
+                        logger.LogError(responseContent);
+                        var generationResponse =
+                            JsonConvert.DeserializeObject<MobileOTPGenerationResponse>(responseContent);
                         TxnDictionary[sessionId] = generationResponse?.txnId;
-                        return Accepted(new MobileOTPGenerationResponse(generationResponse?.mobileLinked));
+                        return Accepted(new MobileOTPGenerationResponse(generationResponse?.message));
                     }
-                    return StatusCode((int)response.StatusCode,responseContent);
-                    
+
+                    return StatusCode((int)response.StatusCode, responseContent);
                 }
             }
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
                                                                " generate-mobile-otp", txnId);
-                
             }
-            
+
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        
-        [Route(VERIFY_MOBILE_OTP)]
+
+        [HttpPost]
+        [Route(APP_PATH_VERIFY_MOBILE_OTP)]
         public async Task<ActionResult> VerifyMobileOTP(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, OTPVerifyRequest otpVerifyRequest)
         {
@@ -185,137 +172,126 @@ namespace In.ProjectEKA.HipService.Creation
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                string encryptedOTP = await abhaService.EncryptText(public_key,otpVerifyRequest.otp);
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for verify-mobile-otp to gateway:  correlationId: {{correlationId}}," +
-                                        $"txnId: {{txnId}}",
-                    correlationId,txnId);
-
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, gatewayConfiguration.AbhaNumberServiceUrl,VERIFY_MOBILE_OTP,
-                    new OTPVerifyRequest(txnId, encryptedOTP), correlationId))
+                string encryptedOTP = EncryptionService.Encrypt(otpVerifyRequest.otp);
+                EnrollmentAuthByAbdmRequest enrollmentAuthByAbdmRequest = new EnrollmentAuthByAbdmRequest(txnId,
+                    new List<ABHAEnrollmentScope>()
+                    {
+                        ABHAEnrollmentScope.ABHA_ENROL, ABHAEnrollmentScope.MOBILE_VERIFY
+                    },
+                    encryptedOTP);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_AUTH_BY_ABDM,
+                           enrollmentAuthByAbdmRequest, correlationId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
-                        var otpResponse = JsonConvert.DeserializeObject<TransactionResponse>(responseContent);
-                        TxnDictionary[sessionId] = otpResponse?.txnId;
-                        return Accepted();
+                        EnrollmentAuthByAbdmResponse authResponse =
+                            JsonConvert.DeserializeObject<EnrollmentAuthByAbdmResponse>(responseContent);
+                        return Ok(authResponse);
                     }
-                    return StatusCode((int)response.StatusCode,responseContent);
+
+                    return StatusCode((int)response.StatusCode, responseContent);
                 }
             }
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
                                                                " verify-mobile-otp", txnId);
-                
             }
-           
+
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        
-        [Route(Constants.CREATE_ABHA_ID)]
-        public async Task<ActionResult> CreateABHAId(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId)
+
+        [HttpGet]
+        [Route(APP_PATH_GET_ABHA_ADDRESS_SUGGESTIONS)]
+        public async Task<ActionResult> GetAbhaAddressSuggestions()
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
-        
             var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for create-ABHA to gateway:  correlationId: {{correlationId}}," +
-                                        $"txnId: {{txnId}}",
-                    correlationId,txnId);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ID,
-                    new CreateABHARequest(txnId), correlationId))
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Get,
+                           gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_ADDRESS_SUGGESTIONS, default(object),
+                           null,
+                           null, null, txnId))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
-
                     if (response.IsSuccessStatusCode)
                     {
-                        var createAbhaResponse = JsonConvert.DeserializeObject<CreateABHAResponse>(responseContent);
-                        var tokenRequest = new TokenRequest(createAbhaResponse.token);
-                        if (HealthIdNumberTokenDictionary.ContainsKey(sessionId))
-                        {
-                            HealthIdNumberTokenDictionary[sessionId] = tokenRequest;
-                        }
-                        else
-                        {
-                            HealthIdNumberTokenDictionary.Add(sessionId, tokenRequest);
-                        }
-                        return Accepted(createAbhaResponse);
+                        var addressSuggestionsResponse =
+                            JsonConvert.DeserializeObject<ABHAAddressSuggestionResponse>(responseContent);
+                        return Ok(new ABHAAddressSuggestionResponse(addressSuggestionsResponse.abhaAddressList));
                     }
-                    return StatusCode((int)response.StatusCode,responseContent);
+
+                    return StatusCode((int)response.StatusCode, responseContent);
                 }
             }
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for txnId: {txnId} for" +
-                                                               " create-ABHA", txnId);
-                
+                                                               " get-abha-address-suggestions", txnId);
             }
-            
+
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        
-        [Route(Constants.CREATE_PHR)]
+
+        [HttpPost]
+        [Route(Constants.APP_PATH_CREATE_ABHA_ADDRESS)]
         public async Task<ActionResult> CreateABHAAddress(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, CreateABHAAddressRequest createAbhaRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            AppCreateABHAAddressRequest appCreateAbhaAddressRequest)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
-            
+            var txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for create ABHA-Address to gateway:  correlationId: {{correlationId}}",
-                    correlationId);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, CREATE_PHR,
-                    createAbhaRequest, correlationId, $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}"))
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ADDRESS,
+                           new CreateABHAAddressRequest(txnId, appCreateAbhaAddressRequest.abhaAddress), correlationId))
                 {
                     if (response.IsSuccessStatusCode)
                     {
-                        return Accepted();
+                        return Ok();
                     }
+
                     var responseContent = await response?.Content.ReadAsStringAsync();
-                    return StatusCode((int)response.StatusCode,responseContent);
+                    return StatusCode((int)response.StatusCode, responseContent);
                 }
             }
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for create ABHA Address");
-                
             }
-            
+
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        
-        [Route(GET_ABHA_CARD)]
+
+        [HttpGet]
+        [Route(APP_PATH_GET_ABHA_CARD)]
         public async Task<IActionResult> getPngCard(
             [FromHeader(Name = CORRELATION_ID)] string correlationId)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
-            
+
             try
             {
-                logger.Log(LogLevel.Information,
-                    LogEvents.Creation, $"Request for abha-card to gateway:  correlationId: {{correlationId}}",
-                    correlationId);
-
-                var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_CARD,
-                    null, correlationId, $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}");
+                var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,
+                    gatewayConfiguration.AbhaNumberServiceUrl, GET_ABHA_CARD,
+                    null, correlationId,
+                    $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}");
                 var stream = await response.Content.ReadAsStreamAsync();
-                return File(stream,"image/png");
-                
+                return File(stream, "image/png");
             }
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Creation, exception, "Error happened for Abha-card generation");
-                
             }
+
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        
+
         [Route(CREATE_ABHA_ID_BY_AADHAAR_DEMO)]
         public async Task<IActionResult> createAbhaIdByDemographics(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, AadhaarDemoAuthRequest demoAuthRequest)
@@ -325,14 +301,14 @@ namespace In.ProjectEKA.HipService.Creation
                 logger.Log(LogLevel.Information,
                     LogEvents.Creation, $"Request for aadhaar demo auth to gateway:  correlationId: {{correlationId}}",
                     correlationId);
-                
+
                 var createAbhaRequest = await abhaService.GetHidDemoAuthRequest(demoAuthRequest);
 
                 if (createAbhaRequest != null)
                 {
                     using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
-                        gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ID_BY_AADHAAR_DEMO,
-                        createAbhaRequest, correlationId))
+                               gatewayConfiguration.AbhaNumberServiceUrl, CREATE_ABHA_ID_BY_AADHAAR_DEMO,
+                               createAbhaRequest, correlationId))
                     {
                         var responseContent = await response?.Content.ReadAsStringAsync();
 
@@ -342,16 +318,17 @@ namespace In.ProjectEKA.HipService.Creation
                             return Accepted(createAbhaResponse);
                         }
 
-                        return StatusCode((int) response.StatusCode, responseContent);
+                        return StatusCode((int)response.StatusCode, responseContent);
                     }
                 }
             }
             catch (Exception exception)
             {
-                logger.LogError(LogEvents.Creation, exception, "Error happened for abha creation using aadhaar demo auth");
+                logger.LogError(LogEvents.Creation, exception,
+                    "Error happened for abha creation using aadhaar demo auth");
             }
+
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-
     }
 }

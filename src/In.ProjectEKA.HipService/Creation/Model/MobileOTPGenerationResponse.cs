@@ -5,18 +5,18 @@ namespace In.ProjectEKA.HipService.Creation.Model
     public class MobileOTPGenerationResponse
     {
         public string txnId { get; }
-        public string mobileLinked { get;  }
+        public string message { get;  }
         
         [JsonConstructor]
-        public MobileOTPGenerationResponse(string txnId,string mobileLinked)
+        public MobileOTPGenerationResponse(string txnId,string message)
         {
             this.txnId = txnId;
-            this.mobileLinked = mobileLinked;
+            this.message = message;
         }
 
-        public MobileOTPGenerationResponse(string mobileLinked)
+        public MobileOTPGenerationResponse(string message)
         {
-            this.mobileLinked = mobileLinked;
+            this.message = message;
         }
     }
 }
