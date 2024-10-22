@@ -16,6 +16,14 @@ namespace In.ProjectEKA.HipService.Common
         public const string APP_PATH_GET_ABHA_ADDRESS_SUGGESTIONS = "/" + VERSION_V3 + "/hip/getAbhaAddressSuggestions";
         public const string APP_PATH_CREATE_ABHA_ADDRESS = "/" + VERSION_V3 + "/hip/createAbhaAddress";
         public const string APP_PATH_GET_ABHA_CARD = "/" + VERSION_V3 + "/hip/getAbhaCard";
+        public const string APP_PATH_VERIFICATION_REQUEST_OTP = "/" + VERSION_V3 + "/hip/verification/requestOtp";
+        public const string APP_PATH_VERIFICATION_VERIFY_OTP = "/" + VERSION_V3 + "/hip/verification/verifyOtp";
+        public const string APP_PATH_VERIFICATION_VERIFY_ABHA_ACCOUNT = "/" + VERSION_V3 + "/hip/verification/verifyAbhaAccount";
+        public const string APP_PATH_VERIFICATION_ABHA_PROFILE = "/" + VERSION_V3 + "/hip/verification/getAbhaProfile";
+        public const string APP_PATH_VERIFICATION_ABHAADDRESS_SEARCH = "/" + VERSION_V3 + "/hip/verification/abhaAddress/search";
+        public const string APP_PATH_VERIFICATION_ABHAADDRESS_REQUEST_OTP = "/" + VERSION_V3 + "/hip/verification/abhaAddress/requestOtp";
+        public const string APP_PATH_VERIFICATION_ABHAADDRESS_VERIFY_OTP = "/" + VERSION_V3 + "/hip/verification/abhaAddress/verifyOtp";
+        public const string APP_PATH_VERIFICATION_ABHAADDRESS_PROFILE = "/" + VERSION_V3 + "/hip/verification/abhAddress/getProfile";
         
         public const string PATH_SESSIONS = CURRENT_VERSION + "/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = CURRENT_VERSION + "/care-contexts/discover";
@@ -97,6 +105,10 @@ namespace In.ProjectEKA.HipService.Common
         public const string GET_ABHA_ADDRESS_SUGGESTIONS = "/" + VERSION_V3 + "/enrollment/enrol/suggestion";
         public const string CREATE_ABHA_ADDRESS = "/" + VERSION_V3 + "/enrollment/enrol/abha-address";
         public const string GET_ABHA_CARD =  "/" + VERSION_V3 + "/profile/account/abha-card";
+        public const string ABHA_LOGIN_REQUEST_OTP = "/" + VERSION_V3 + "/profile/login/request/otp";
+        public const string ABHA_LOGIN_VERIFY_OTP = "/" + VERSION_V3 + "/profile/login/verify";
+        public const string VERIFY_ABHA_ACCOUNT = "/" + VERSION_V3 + "/profile/login/verify/user";
+        public const string ABHA_ACCOUNT = "/" + VERSION_V3 + "/profile/account";
         public const string ABHA_PATIENT_PROFILE = "/" + VERSION_V2 + "/account/profile";
         public const string SEARCH_HEALTHID = "/" + VERSION_V2 + "/search/searchHealthIdToLogin";
         public const string AUTH_INIT_VERIFY = "/" + VERSION_V2 + "/auth/init";

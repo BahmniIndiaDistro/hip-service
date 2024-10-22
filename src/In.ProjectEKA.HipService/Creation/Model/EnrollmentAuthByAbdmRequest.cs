@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using In.ProjectEKA.HipService.Common;
+using In.ProjectEKA.HipService.Common.Model;
 
 namespace In.ProjectEKA.HipService.Creation.Model;
 
@@ -9,7 +10,7 @@ public class EnrollmentAuthByAbdmRequest
 {
     public AuthDataModel AuthData { get; set; }
     public List<string> Scope { get; }
-    public EnrollmentAuthByAbdmRequest(string txnId, List<ABHAEnrollmentScope> abhaEnrollmentScopes, string otpValue)
+    public EnrollmentAuthByAbdmRequest(string txnId, List<ABHAScope> abhaEnrollmentScopes, string otpValue)
     {
         Scope = abhaEnrollmentScopes.Select(s => s.Value).ToList();
         AuthData = new AuthDataModel

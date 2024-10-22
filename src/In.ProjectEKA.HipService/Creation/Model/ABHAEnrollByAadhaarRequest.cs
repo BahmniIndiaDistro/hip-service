@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using In.ProjectEKA.HipService.Common;
+using In.ProjectEKA.HipService.Common.Model;
 
 namespace In.ProjectEKA.HipService.Creation.Model;
 

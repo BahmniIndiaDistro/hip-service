@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipService.Common;
+using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Creation.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.OpenMrs;
@@ -50,7 +51,7 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 string encryptedAadhaar = EncryptionService.Encrypt(aadhaarOtpGenerationRequest.aadhaar);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest("",
-                    new List<ABHAEnrollmentScope>() { ABHAEnrollmentScope.ABHA_ENROL }, ABHAEnrollmentLoginHint.AADHAAR,
+                    new List<ABHAScope>() { ABHAScope.ABHA_ENROL }, ABHALoginHint.AADHAAR,
                     encryptedAadhaar, OTPSystem.AADHAAR);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
                            gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_REQUEST_OTP, abhaEnrollmentOtpRequest,
@@ -132,9 +133,9 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 string encryptedMobileNumber = EncryptionService.Encrypt(mobileNumber);
                 ABHAEnrollmentOTPRequest abhaEnrollmentOtpRequest = new ABHAEnrollmentOTPRequest(txnId,
-                    new List<ABHAEnrollmentScope>()
-                        { ABHAEnrollmentScope.ABHA_ENROL, ABHAEnrollmentScope.MOBILE_VERIFY },
-                    ABHAEnrollmentLoginHint.MOBILE,
+                    new List<ABHAScope>()
+                        { ABHAScope.ABHA_ENROL, ABHAScope.MOBILE_VERIFY },
+                    ABHALoginHint.MOBILE,
                     encryptedMobileNumber, OTPSystem.ABDM);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
                            gatewayConfiguration.AbhaNumberServiceUrl, ENROLLMENT_REQUEST_OTP,
@@ -174,9 +175,9 @@ namespace In.ProjectEKA.HipService.Creation
             {
                 string encryptedOTP = EncryptionService.Encrypt(otpVerifyRequest.otp);
                 EnrollmentAuthByAbdmRequest enrollmentAuthByAbdmRequest = new EnrollmentAuthByAbdmRequest(txnId,
-                    new List<ABHAEnrollmentScope>()
+                    new List<ABHAScope>()
                     {
-                        ABHAEnrollmentScope.ABHA_ENROL, ABHAEnrollmentScope.MOBILE_VERIFY
+                        ABHAScope.ABHA_ENROL, ABHAScope.MOBILE_VERIFY
                     },
                     encryptedOTP);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,

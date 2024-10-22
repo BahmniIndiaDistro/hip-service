@@ -42,7 +42,35 @@ namespace In.ProjectEKA.HipService.Verification
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
         }
-
+        
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_REQUEST_OTP)]
+        public async Task<ActionResult> RequestOtp([FromHeader(Name = CORRELATION_ID)] string correlationId,[FromBody] VerificationRequestOtp verificationRequestOtp)
+        {
+            try
+            {
+                ABHALoginRequestOTP abhaLoginRequestOtp =
+                    VerificationRequestMapper.mapAbhaLoginOTPRequest(verificationRequestOtp);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ABHA_LOGIN_REQUEST_OTP, abhaLoginRequestOtp,
+                           correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (ArgumentException argumentException)
+            {
+                return BadRequest(argumentException.Message);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                                   "verification request otp" + exception.StackTrace);
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
         [Route(SEARCH_HEALTHID)]
         public async Task<ActionResult> SearchHealthId(
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] SearchHealthIdRequest searchHealthIdRequest)
