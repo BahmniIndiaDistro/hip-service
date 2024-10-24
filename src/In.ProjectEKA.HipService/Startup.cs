@@ -137,7 +137,7 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton<DataEntryFactory>()
                 .AddSingleton<DataFlowMessageHandler>()
                 .AddSingleton(HttpClient)
-                .AddScoped<IHealthCheckClient>(_ => new OpenMrsHealthCheckClient(new Dictionary<string, string>
+                .AddSingleton<IHealthCheckClient>(_ => new OpenMrsHealthCheckClient(new Dictionary<string, string>
                     {
                         {"OpenMRS-FHIR", Constants.PATH_OPENMRS_FHIR},
                         {"OpenMRS-REST", Constants.PATH_OPENMRS_REST}
@@ -161,8 +161,8 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton(new OpenMrsClient(HttpClient,
                     Configuration.GetSection("OpenMrs").Get<OpenMrsConfiguration>()))
                 .AddSingleton(Configuration.GetSection("Jwt").Get<JwtConfiguration>())
-                .AddScoped<IOpenMrsClient, OpenMrsClient>()
-                .AddScoped<IOpenMrsPatientData, OpenMrsPatientData>()
+                .AddSingleton<IOpenMrsClient, OpenMrsClient>()
+                .AddSingleton<IOpenMrsPatientData, OpenMrsPatientData>()
                 .AddScoped<IUserAuthRepository, UserAuthRepository>()
                 .AddSingleton<ICollectHipService, CollectHipService>()
                 .AddScoped<IPatientDal, FhirDiscoveryDataSource>()
