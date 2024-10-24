@@ -174,7 +174,7 @@ namespace In.ProjectEKA.HipService.Verification
                     ? HealthIdNumberTokenDictionary[sessionId]
                     : null;
                 string txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
-                VerifyABHAAccountRequest verifyABHAAccountGatewayRequest = new VerifyABHAAccountRequest("91-6132-8864-3430", txnId);
+                VerifyABHAAccountRequest verifyABHAAccountGatewayRequest = new VerifyABHAAccountRequest(verifyABHAAccountRequest.ABHANumber, txnId);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
                            gatewayConfiguration.AbhaNumberServiceUrl, VERIFY_ABHA_ACCOUNT, verifyABHAAccountGatewayRequest,
                            correlationId,null, $"{tokenRequest.tokenType} {tokenRequest.token}"))
@@ -199,25 +199,27 @@ namespace In.ProjectEKA.HipService.Verification
 
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
-        [Route(SEARCH_HEALTHID)]
-        public async Task<ActionResult> SearchHealthId(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] SearchHealthIdRequest searchHealthIdRequest)
+        
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_ABHAADDRESS_SEARCH)]
+        public async Task<ActionResult> SearchAbhaAddress(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] SearchAbhaAddressRequest searchAbhaAddressRequest)
         {
             try
             {
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification,
-                    "Request for search healthId to gateway: {@GatewayResponse}", searchHealthIdRequest);
+                    "Request for search Abha address to gateway: {@GatewayResponse}", searchAbhaAddressRequest);
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification, $"correlationId: {{correlationId}}," +
-                                        $" healthId: {{healthId}}",
-                     correlationId, searchHealthIdRequest.healthId);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, SEARCH_HEALTHID, searchHealthIdRequest, correlationId))
+                                            $" healthId: {{healthId}}",
+                    correlationId, searchAbhaAddressRequest.abhaAddress);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl, SEARCH_ABHA_ADDRESS, searchAbhaAddressRequest, correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        var resp = JsonConvert.DeserializeObject<SearchHealthIdResponse>(responseContent);
+                        var resp = JsonConvert.DeserializeObject<SearchAbhaAddressResponse>(responseContent);
                         return Accepted(resp);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -227,7 +229,7 @@ namespace In.ProjectEKA.HipService.Verification
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Verification, exception, "Error happened for " +
-                                                               "search healthId request" + exception.StackTrace);
+                                                                   "search Abha Address request" + exception.StackTrace);
             }
             
             return StatusCode(StatusCodes.Status500InternalServerError);

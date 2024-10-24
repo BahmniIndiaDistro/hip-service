@@ -110,7 +110,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string VERIFY_ABHA_ACCOUNT = "/" + VERSION_V3 + "/profile/login/verify/user";
         public const string ABHA_ACCOUNT = "/" + VERSION_V3 + "/profile/account";
         public const string ABHA_PATIENT_PROFILE = "/" + VERSION_V2 + "/account/profile";
-        public const string SEARCH_HEALTHID = "/" + VERSION_V2 + "/search/searchHealthIdToLogin";
+        public const string SEARCH_ABHA_ADDRESS = "/login/abha/search";
         public const string AUTH_INIT_VERIFY = "/" + VERSION_V2 + "/auth/init";
         public const string CONFIRM_OTP_VERIFY = "/" + VERSION_V2 + "/hip/confirmOTP";
         public const string CONFIRM_WITH_MOBILE_OTP = "/" + VERSION_V2 + "/auth/confirmWithMobileOTP";
