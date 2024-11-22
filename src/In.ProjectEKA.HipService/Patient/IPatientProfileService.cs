@@ -6,7 +6,7 @@ namespace In.ProjectEKA.HipService.Patient
 {
     public interface IPatientProfileService
     {
-        Task<int> SavePatient(ShareProfileRequest shareProfileRequest);
+        Task<int> SavePatient(ShareProfileRequest shareProfileRequest, string requestId, string timestamp);
         bool IsValidRequest(ShareProfileRequest shareProfileRequest);
         Task<List<PatientQueue>> GetPatientQueue();
         Task linkToken(PatientDemographics patientDemographics);

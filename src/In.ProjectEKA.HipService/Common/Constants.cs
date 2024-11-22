@@ -86,9 +86,9 @@ namespace In.ProjectEKA.HipService.Common
         public const string DEEPLINK_URL = "https://link.to.health.records";
         public const string PATH_PATIENT_NOTIFY = "/" + CURRENT_VERSION + "/patients/status/notify";
         public const string PATH_PATIENT_ON_NOTIFY = "/" + CURRENT_VERSION + "/patients/status/on-notify";
-        public const string PATH_PROFILE_SHARE = "/" + UPDATED_VERSION + "/patients/profile/share";
-        public const string PATH_PROFILE_ON_SHARE = "/" + UPDATED_VERSION + "/patients/profile/on-share";
-        public const string PATH_PROFILE_FETCH = "/" + CURRENT_VERSION + "/patients/profile/fetch";
+        public const string PATH_PROFILE_SHARE = "/api/" + VERSION_V3 + "/hip/patient/share";
+        public const string PATH_PROFILE_ON_SHARE = "/api/hiecm/patient-share/"+VERSION_V3 +"/on-share";
+        public const string GET_PATIENT_QUEUE = "/" + VERSION_V3 + "/hip/getPatientQueue";
 
         public const string ABHA_SERVICE_CERT_URL = "/" + VERSION_V3 + "/profile/public/certificate";
         public const string ENROLLMENT_REQUEST_OTP = "/" + VERSION_V3 + "/enrollment/request/otp";

@@ -1,4 +1,5 @@
 using In.ProjectEKA.HipService.Common;
+using Microsoft.AspNetCore.Authorization;
 
 namespace In.ProjectEKA.HipService.Patient
 {
@@ -48,7 +49,7 @@ namespace In.ProjectEKA.HipService.Patient
 
         [Route(PATH_PROFILE_SHARE)]
         public async Task<ActionResult> StoreDetails([FromHeader(Name = CORRELATION_ID)] string correlationId,
-            [FromBody] ShareProfileRequest shareProfileRequest)
+            [FromBody] ShareProfileRequest shareProfileRequest, [FromHeader(Name = "request-id")] string requestId, [FromHeader(Name = "timestamp")] string timestamp)
         {
             var cmSuffix = _gatewayConfiguration.CmSuffix;
             var status = Status.SUCCESS; 
@@ -62,14 +63,12 @@ namespace In.ProjectEKA.HipService.Patient
             int token = 0;
             if(error == null)
             {
-                token = await _patientProfileService.SavePatient(shareProfileRequest);
+                token = await _patientProfileService.SavePatient(shareProfileRequest,requestId, timestamp);
             }
 
             var gatewayResponse = new ProfileShareConfirmation(
-                Guid.NewGuid().ToString(),
-                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
-                new ProfileShareAcknowledgement(status.ToString(),shareProfileRequest.Profile.PatientDemographics.HealthId,token.ToString()), error,
-                new Resp(shareProfileRequest.RequestId));
+                new ProfileShareAcknowledgement(status.ToString(),shareProfileRequest.Profile.Patient.AbhaAddress,new ProfileShareAckProfile(shareProfileRequest.Metadata.Context,token.ToString(),"1800")), error,
+                new Resp(requestId));
             Task.Run(async () =>
             {
                 await Task.Delay(500);
@@ -77,8 +76,6 @@ namespace In.ProjectEKA.HipService.Patient
                     gatewayResponse,
                     cmSuffix,
                     correlationId);
-                if(error == null)
-                    await _patientProfileService.linkToken(shareProfileRequest.Profile.PatientDemographics);
             });
             if (error == null)
             {
@@ -87,7 +84,8 @@ namespace In.ProjectEKA.HipService.Patient
             return BadRequest();
         }
         
-        [Route(PATH_PROFILE_FETCH)]
+        [Authorize(AuthenticationSchemes = BAHMNI_AUTH)]
+        [Route(GET_PATIENT_QUEUE)]
         public async Task<ActionResult> GetDetails()
         {
             var patientQueueResult = await _patientProfileService.GetPatientQueue();

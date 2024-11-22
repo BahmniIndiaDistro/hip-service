@@ -5,34 +5,35 @@ namespace In.ProjectEKA.HipService.Patient.Model
 {
     public class PatientDemographics
     {
-        public string HealthId { get; }
-        public string HealthIdNumber { get; }
+        public string AbhaAddress { get; }
+        public string AbhaNumber { get; }
         public string Name { get; }
         public string Gender { get; }
         public Address Address { get; }
         public int YearOfBirth { get; }
         public int? DayOfBirth { get; }
         public int? MonthOfBirth { get; }
-        public List<Identifier> Identifiers { get; }
+        public string PhoneNumber { get; }
 
         public PatientDemographics(string name,
             string gender,
-            string healthId,
+            string abhaAddress,
             Address address,
             int yearOfBirth,
             int? dayOfBirth,
             int? monthOfBirth,
-            List<Identifier> identifiers, string healthIdNumber)
+            string abhaNumber,
+            string phoneNumber)
         {
             Name = name;
             Gender = gender;
-            HealthId = healthId;
+            AbhaAddress = abhaAddress;
             Address = address;
             YearOfBirth = yearOfBirth;
             DayOfBirth = dayOfBirth;
             MonthOfBirth = monthOfBirth;
-            Identifiers = identifiers;
-            HealthIdNumber = healthIdNumber;
+            PhoneNumber = phoneNumber;
+            AbhaNumber = abhaNumber;
         }
     }
 }
