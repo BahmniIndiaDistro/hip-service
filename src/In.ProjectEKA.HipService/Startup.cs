@@ -214,7 +214,8 @@ namespace In.ProjectEKA.HipService
                 .AddJwtBearer(Constants.GATEWAY_AUTH, options =>
                 {
                     // Need to validate Audience and Issuer properly
-                    options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/{Constants.CURRENT_VERSION}";
+                    options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/api/hiecm/gateway/v3/";
+                    options.BackchannelHttpHandler = new GatewayAuthHttpHandler(Configuration);
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,

@@ -17,7 +17,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string APP_PATH_CREATE_ABHA_ADDRESS = "/" + VERSION_V3 + "/hip/createAbhaAddress";
         public const string APP_PATH_GET_ABHA_CARD = "/" + VERSION_V3 + "/hip/getAbhaCard";
         
-        public const string PATH_SESSIONS = CURRENT_VERSION + "/sessions";
+        public const string PATH_SESSIONS =  "api/hiecm/gateway/"+VERSION_V3+"/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = CURRENT_VERSION + "/care-contexts/discover";
         public const string PATH_CONSENTS_HIP = CURRENT_VERSION + "/consents/hip/notify";
         public const string PATH_LINKS_LINK_INIT = CURRENT_VERSION + "/links/link/init";

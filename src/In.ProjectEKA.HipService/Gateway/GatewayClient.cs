@@ -39,7 +39,8 @@ namespace In.ProjectEKA.HipService.Gateway
                 var json = JsonConvert.SerializeObject(new
                 {
                     clientId = configuration.ClientId,
-                    clientSecret = configuration.ClientSecret
+                    clientSecret = configuration.ClientSecret,
+                    grantType = "client_credentials"
                 }, new JsonSerializerSettings
                 {
                     NullValueHandling = NullValueHandling.Ignore,
@@ -56,6 +57,9 @@ namespace In.ProjectEKA.HipService.Gateway
                 };
                 if (correlationId != null)
                     message.Headers.Add(Constants.CORRELATION_ID, correlationId);
+                message.Headers.Add("REQUEST-ID", Guid.NewGuid().ToString());
+                message.Headers.Add("TIMESTAMP", DateTime.Now.ToString(Constants.TIMESTAMP_FORMAT));
+                message.Headers.Add("X-CM-ID", configuration.CmSuffix);
                 var responseMessage = await httpClient.SendAsync(message).ConfigureAwait(false);
                 var response = await responseMessage.Content.ReadAsStringAsync();
 
