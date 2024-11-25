@@ -9,6 +9,5 @@ namespace In.ProjectEKA.HipService.Patient
         Task<int> SavePatient(ShareProfileRequest shareProfileRequest, string requestId, string timestamp);
         bool IsValidRequest(ShareProfileRequest shareProfileRequest);
         Task<List<PatientQueue>> GetPatientQueue();
-        Task linkToken(PatientDemographics patientDemographics);
     }
 }

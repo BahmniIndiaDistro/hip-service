@@ -83,19 +83,6 @@ namespace In.ProjectEKA.HipService.Patient
             }
         }
 
-        public async Task linkToken(PatientDemographics patientDemographics)
-        {
-            var dob = new Date(patientDemographics.YearOfBirth, patientDemographics.MonthOfBirth ?? 1,
-                patientDemographics.DayOfBirth ?? 1).ToString();
-            var ndhmDemograhics = new NdhmDemographics(patientDemographics.AbhaAddress, patientDemographics.Name,
-                patientDemographics.Gender,
-                dob, patientDemographics.PhoneNumber);
-            var request = new HttpRequestMessage(HttpMethod.Post, hipConfiguration.Value.Url + PATH_DEMOGRAPHICS);
-            request.Content = new StringContent(JsonConvert.SerializeObject(ndhmDemograhics), Encoding.UTF8,
-                "application/json");
-            await httpClient.SendAsync(request).ConfigureAwait(false);
-        }
-
   
     }
 }
