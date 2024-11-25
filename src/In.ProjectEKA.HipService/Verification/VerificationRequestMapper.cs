@@ -48,6 +48,42 @@ public static class VerificationRequestMapper
                 OTPSystem.ABDM
             );
         }
+
         throw new ArgumentException("Either AbhaNumber or MobileNumber should be present and not both");
+    }
+
+    public static ABHALoginRequestOTP mapAbhaAddressLoginRequestOTP(
+        AbhaAddressVerificationRequestOtp abhaAddressVerificationRequestOtp)
+    {
+        if (abhaAddressVerificationRequestOtp.AbhaAddress != null)
+        {
+            string encryptedAbhaAddress = EncryptionService.Encrypt(abhaAddressVerificationRequestOtp.AbhaAddress);
+            List<ABHAScope> scopes = new List<ABHAScope>();
+            OTPSystem otpSystem;
+            if (abhaAddressVerificationRequestOtp.AuthMethod == AuthMode.AADHAAR_OTP)
+            {
+                scopes = new List<ABHAScope> { ABHAScope.ABHA_ADDRESS_LOGIN, ABHAScope.AADHAAR_VERIFY };
+                otpSystem = OTPSystem.AADHAAR;
+            }
+            else if (abhaAddressVerificationRequestOtp.AuthMethod == AuthMode.MOBILE_OTP)
+            {
+                scopes = new List<ABHAScope> { ABHAScope.ABHA_ADDRESS_LOGIN, ABHAScope.MOBILE_VERIFY };
+                otpSystem = OTPSystem.ABDM;
+            }
+            else
+            {
+                throw new ArgumentException("Invalid AuthMethod");
+            }
+
+            return new ABHALoginRequestOTP(
+                scopes,
+                ABHALoginHint.ABHA_Address,
+                encryptedAbhaAddress,
+                otpSystem
+            );
+        }
+
+        throw new ArgumentException("Abha Address is missing.");
+        
     }
 }
