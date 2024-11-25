@@ -68,22 +68,18 @@ namespace In.ProjectEKA.HipServiceTest.Patient
         private void ShouldSaveAPatient()
         {
             var requestId = Guid.NewGuid().ToString();
-            var timestamp = DateTime.Now.ToUniversalTime();
+            var timestamp = DateTime.Now.ToUniversalTime().ToString();
             var identifier = new Identifier("MOBILE", "9999999999");
             var address = new Address("string", "string", "string", "string");
-            var patient = new PatientDemographics("test t", "M", "test@sbx", address, 2000, 0, 0,
-                new List<Identifier>() {identifier}, "1234-5678");
-            var profile = new Profile("12345", patient);
-            var shareProfileRequest = new ShareProfileRequest(requestId, timestamp, profile);
+            var patient = new PatientDemographics("test t", "M", "test@sbx", address, 2000, 0, 0,"91-1184-2524-4233","9123456789");
+            var profile = new Profile( patient);
+            var shareProfileMetadata = new ShareProfileMetadata("12345", "1","test@hpr.abdm","71.254","78.325");
+            var shareProfileRequest = new ShareProfileRequest("PROFILE_SHARE", shareProfileMetadata, profile);
             var correlationId = Uuid.Generate().ToString();
             var cmSuffix = "ncg";
             _patientProfileService.Setup(d => d.IsValidRequest(shareProfileRequest)).Returns(true);
-            var profileShareConfirmation = new ProfileShareConfirmation(
-                Guid.NewGuid().ToString(),
-                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
-                new ProfileShareAcknowledgement("test@sbx",
-                    Status.SUCCESS.ToString(),"1"), null,
-                new Resp(requestId));
+            var profileShareConfirmation = new ProfileShareConfirmation(new ProfileShareAcknowledgement(
+                    Status.SUCCESS.ToString(),"test@sbx",new ProfileShareAckProfile(shareProfileMetadata.Context,"1","1800")),null,new Resp(Guid.NewGuid().ToString()));
             _gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_PROFILE_ON_SHARE,
@@ -91,7 +87,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
                 .Returns(Task.FromResult(""));
             Assert.Equal(
                 ((Microsoft.AspNetCore.Mvc.AcceptedResult) _patientController
-                    .StoreDetails(correlationId, shareProfileRequest).Result).StatusCode,
+                    .StoreDetails(correlationId, shareProfileRequest,requestId,timestamp).Result).StatusCode,
                 StatusCodes.Status202Accepted);
         }
 
@@ -99,22 +95,20 @@ namespace In.ProjectEKA.HipServiceTest.Patient
         private void ShouldThrowBadRequest()
         {
             var requestId = Guid.NewGuid().ToString();
-            var timestamp = DateTime.Now.ToUniversalTime();
+            var timestamp = DateTime.Now.ToUniversalTime().ToString();
             var identifier = new Identifier("MOBILE", "9999999999");
             var address = new Address("string", "string", "string", "string");
             var patient = new PatientDemographics(null, "M", "test@sbx", address, 2000, 0, 0,
-                new List<Identifier>() {identifier}, "1234-5678");
-            var profile = new Profile("12345", patient);
-            var shareProfileRequest = new ShareProfileRequest(requestId, timestamp, profile);
+                "91-1184-2524-4233","9123456789");
+            var shareProfileMetadata = new ShareProfileMetadata("12345", "1","test@hpr.abdm","71.254","78.325");
+            var profile = new Profile(patient);
+            var shareProfileRequest = new ShareProfileRequest("PROFILE_SHARE", shareProfileMetadata, profile);
             var correlationId = Uuid.Generate().ToString();
             var cmSuffix = "ncg";
             _patientProfileService.Setup(d => d.IsValidRequest(shareProfileRequest)).Returns(false);
             var profileShareConfirmation = new ProfileShareConfirmation(
-                Guid.NewGuid().ToString(),
-                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
-                new ProfileShareAcknowledgement("test@sbx",
-                    Status.SUCCESS.ToString(),"1"), null,
-                new Resp(requestId));
+                new ProfileShareAcknowledgement(
+                    Status.SUCCESS.ToString(),"test@sbx",new ProfileShareAckProfile(shareProfileMetadata.Context,"1","1800")),null, new Resp(Guid.NewGuid().ToString()));
             _gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_PROFILE_ON_SHARE,
@@ -122,7 +116,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
                 .Returns(Task.FromResult(""));
             Assert.Equal(
                 ((Microsoft.AspNetCore.Mvc.BadRequestResult) _patientController
-                    .StoreDetails(correlationId, shareProfileRequest).Result).StatusCode,
+                    .StoreDetails(correlationId, shareProfileRequest,requestId,timestamp).Result).StatusCode,
                 StatusCodes.Status400BadRequest);
         }
     }
