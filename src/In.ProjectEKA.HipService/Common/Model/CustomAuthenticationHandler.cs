@@ -104,11 +104,11 @@ namespace In.ProjectEKA.HipService.Common.Model
                 request = new HttpRequestMessage(HttpMethod.Get, redirectUrl);
                 response = await httpClient.SendAsync(request).ConfigureAwait(false);
             }
-
-//            if (!response.IsSuccessStatusCode)
-//            {
-//                return AuthenticateResult.Fail(unauthorizedError);
-//            }
+            
+            if (!response.IsSuccessStatusCode)  
+            { 
+                return AuthenticateResult.Fail(unauthorizedError);
+            }
 
             Request.HttpContext.Items[SESSION_ID] = sessionId;
             var claims = new List<Claim>

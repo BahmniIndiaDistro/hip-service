@@ -37,17 +37,17 @@ namespace In.ProjectEKA.HipService.Common
                 httpRequestMessage.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);
             }
 
-            if (token != null) // our token to authenticate with ABDM gateway
+            if (token != null)
                 httpRequestMessage.Headers.Add(HeaderNames.Authorization, token);
-            if (xtoken != null) //patient token
+            if (xtoken != null)
                 httpRequestMessage.Headers.Add("X-Token", xtoken);
             if (tToken != null)
                 httpRequestMessage.Headers.Add("T-token", tToken);
-            if (cmSuffix != null)// Consent Manager ID
+            if (cmSuffix != null)
                 httpRequestMessage.Headers.Add("X-CM-ID", cmSuffix);
-            if (correlationId != null) // Track request end to end
+            if (correlationId != null)
                 httpRequestMessage.Headers.Add(CORRELATION_ID, correlationId);
-            if (transactionId != null) // To follow the sequence of our request
+            if (transactionId != null)
                 httpRequestMessage.Headers.Add("Transaction_Id", transactionId);
             httpRequestMessage.Headers.Add("REQUEST-ID", Guid.NewGuid().ToString());
             httpRequestMessage.Headers.Add("TIMESTAMP", DateTime.Now.ToString(TIMESTAMP_FORMAT));
