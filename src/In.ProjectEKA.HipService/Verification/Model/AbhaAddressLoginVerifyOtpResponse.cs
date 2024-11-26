@@ -7,7 +7,7 @@ public class AbhaAddressLoginVerifyOTPResponse
     public string authResult { get; set; }
     public string message { get; set; }
     public List<User> users { get; set; }
-    public List<Token> tokens { get; set; }
+    public Token tokens { get; set; }
 }
 
 public class User
