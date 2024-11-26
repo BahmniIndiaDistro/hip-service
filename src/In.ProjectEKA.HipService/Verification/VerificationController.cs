@@ -340,8 +340,8 @@ namespace In.ProjectEKA.HipService.Verification
                     var responseContent = await response?.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
-                        ABHAProfileResponse abhaProfileResponse = JsonConvert.DeserializeObject<ABHAProfileResponse>(responseContent);
-                        return Ok(abhaProfileResponse);
+                        AbhaAddressProfileResponse abhaAddressProfileResponse = JsonConvert.DeserializeObject<AbhaAddressProfileResponse>(responseContent);
+                        return Ok(abhaAddressProfileResponse);
                     }
 
                     logger.LogError(LogEvents.Creation, "Error happened for ABHA patient profile with error response" +
