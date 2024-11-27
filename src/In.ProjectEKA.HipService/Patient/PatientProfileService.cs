@@ -36,13 +36,11 @@ namespace In.ProjectEKA.HipService.Patient
             this.hipConfiguration = hipConfiguration;
         }
 
-        public async Task<int> SavePatient(ShareProfileRequest shareProfileRequest)
+        public async Task<int> SavePatient(ShareProfileRequest shareProfileRequest, string requestId, string timestamp)
         {
-            var requesId = shareProfileRequest.RequestId;
-            var timeStamp = shareProfileRequest.Timestamp.ToString();
-            var hipCode = shareProfileRequest.Profile.HipCode;
-            var patient = shareProfileRequest.Profile.PatientDemographics;
-            var response = await Save(new PatientQueue(requesId, timeStamp, patient, hipCode));
+            var hipCode = shareProfileRequest.Metadata.HipId;
+            var patient = shareProfileRequest.Profile.Patient;
+            var response = await Save(new PatientQueue(requestId, timestamp, patient, hipCode));
             if(response.HasValue)
                 Log.Information("Patient saved to queue");
             return response.ValueOrDefault();
@@ -65,8 +63,8 @@ namespace In.ProjectEKA.HipService.Patient
         public bool IsValidRequest(ShareProfileRequest shareProfileRequest)
         {
             var profile = shareProfileRequest?.Profile;
-            var demographics = profile?.PatientDemographics;
-            return demographics is {HealthId: { }, Identifiers: { }, Name: { },Gender:{}} && Enum.IsDefined(typeof(Gender), demographics.Gender) && demographics.YearOfBirth != 0;
+            var demographics = profile?.Patient;
+            return demographics is {AbhaAddress: { }, Name: { },Gender:{}} && Enum.IsDefined(typeof(Gender), demographics.Gender) && demographics.YearOfBirth != 0;
         }
         public async Task<List<PatientQueue>> GetPatientQueue()
         {
@@ -83,19 +81,6 @@ namespace In.ProjectEKA.HipService.Patient
                 Log.Fatal(exception, exception.StackTrace);
                 return new List<PatientQueue>();
             }
-        }
-
-        public async Task linkToken(PatientDemographics patientDemographics)
-        {
-            var dob = new Date(patientDemographics.YearOfBirth, patientDemographics.MonthOfBirth ?? 1,
-                patientDemographics.DayOfBirth ?? 1).ToString();
-            var ndhmDemograhics = new NdhmDemographics(patientDemographics.HealthId, patientDemographics.Name,
-                patientDemographics.Gender,
-                dob, patientDemographics.Identifiers[0].value);
-            var request = new HttpRequestMessage(HttpMethod.Post, hipConfiguration.Value.Url + PATH_DEMOGRAPHICS);
-            request.Content = new StringContent(JsonConvert.SerializeObject(ndhmDemograhics), Encoding.UTF8,
-                "application/json");
-            await httpClient.SendAsync(request).ConfigureAwait(false);
         }
 
   

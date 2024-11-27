@@ -17,7 +17,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string APP_PATH_CREATE_ABHA_ADDRESS = "/" + VERSION_V3 + "/hip/createAbhaAddress";
         public const string APP_PATH_GET_ABHA_CARD = "/" + VERSION_V3 + "/hip/getAbhaCard";
         
-        public const string PATH_SESSIONS = CURRENT_VERSION + "/sessions";
+        public const string PATH_SESSIONS =  "api/hiecm/gateway/"+VERSION_V3+"/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = CURRENT_VERSION + "/care-contexts/discover";
         public const string PATH_CONSENTS_HIP = CURRENT_VERSION + "/consents/hip/notify";
         public const string PATH_LINKS_LINK_INIT = CURRENT_VERSION + "/links/link/init";
@@ -86,9 +86,9 @@ namespace In.ProjectEKA.HipService.Common
         public const string DEEPLINK_URL = "https://link.to.health.records";
         public const string PATH_PATIENT_NOTIFY = "/" + CURRENT_VERSION + "/patients/status/notify";
         public const string PATH_PATIENT_ON_NOTIFY = "/" + CURRENT_VERSION + "/patients/status/on-notify";
-        public const string PATH_PROFILE_SHARE = "/" + UPDATED_VERSION + "/patients/profile/share";
-        public const string PATH_PROFILE_ON_SHARE = "/" + UPDATED_VERSION + "/patients/profile/on-share";
-        public const string PATH_PROFILE_FETCH = "/" + CURRENT_VERSION + "/patients/profile/fetch";
+        public const string PATH_PROFILE_SHARE = "/api/" + VERSION_V3 + "/hip/patient/share";
+        public const string PATH_PROFILE_ON_SHARE = "/api/hiecm/patient-share/"+VERSION_V3 +"/on-share";
+        public const string GET_PATIENT_QUEUE = "/" + VERSION_V3 + "/hip/getPatientQueue";
 
         public const string ABHA_SERVICE_CERT_URL = "/" + VERSION_V3 + "/profile/public/certificate";
         public const string ENROLLMENT_REQUEST_OTP = "/" + VERSION_V3 + "/enrollment/request/otp";

@@ -2,6 +2,7 @@ using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Creation;
 using In.ProjectEKA.HipService.Patient;
 using In.ProjectEKA.HipService.Patient.Database;
+using In.ProjectEKA.HipService.Patient.jobs;
 using In.ProjectEKA.HipService.SmsNotification;
 using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Database;
@@ -167,6 +168,7 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton<ICollectHipService, CollectHipService>()
                 .AddScoped<IPatientDal, FhirDiscoveryDataSource>()
                 .AddScoped<IPhoneNumberRepository, OpenMrsPhoneNumberRepository>()
+                .AddScoped<CleanPatientQueueJob>()
                 .AddSingleton<EncryptionService>()
                 .AddTransient<IDataFlow, DataFlow.DataFlow>()
                 .AddRouting(options => options.LowercaseUrls = true)
@@ -214,7 +216,8 @@ namespace In.ProjectEKA.HipService
                 .AddJwtBearer(Constants.GATEWAY_AUTH, options =>
                 {
                     // Need to validate Audience and Issuer properly
-                    options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/{Constants.CURRENT_VERSION}";
+                    options.Authority = $"{Configuration.GetValue<string>("Gateway:url")}/api/hiecm/gateway/v3/";
+                    options.BackchannelHttpHandler = new GatewayAuthHttpHandler(Configuration);
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
@@ -273,6 +276,12 @@ namespace In.ProjectEKA.HipService
                     CancellationCheckInterval = TimeSpan.FromMinutes(
                         Configuration.GetSection("BackgroundJobs:cancellationCheckInterval").Get<int>())
                 });
+            RecurringJob.AddOrUpdate<CleanPatientQueueJob>(
+                "cleanup-patient-queue",
+                job => job.CleanPatientQueue(),
+                Cron.Hourly
+            );
+
 
             using var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope();
             var linkContext = serviceScope.ServiceProvider.GetService<LinkPatientContext>();
