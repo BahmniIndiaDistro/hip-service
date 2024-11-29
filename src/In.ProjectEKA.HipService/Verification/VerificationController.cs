@@ -356,6 +356,32 @@ namespace In.ProjectEKA.HipService.Verification
 
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+
+        [HttpGet]
+        [Route(APP_PATH_VERIFICATION_ABHAADDRESS_CARD)]
+        public async Task<IActionResult> getPngCard(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+
+            try
+            {
+                var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,
+                    gatewayConfiguration.AbhaAddressServiceUrl, ABHA_ADDRESS_GET_CARD,
+                    null, correlationId,
+                    $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}");
+                var stream = await response.Content.ReadAsStreamAsync();
+                return File(stream, "image/png");
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for Abha-card generation");
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+
         
         
         [Route(AUTH_INIT_VERIFY)]

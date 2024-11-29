@@ -24,7 +24,8 @@ namespace In.ProjectEKA.HipService.Common
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_REQUEST_OTP = "/" + VERSION_V3 + "/hip/verification/abhaAddress/requestOtp";
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_VERIFY_OTP = "/" + VERSION_V3 + "/hip/verification/abhaAddress/verifyOtp";
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_PROFILE = "/" + VERSION_V3 + "/hip/verification/abhaAddress/getProfile";
-        
+        public const string APP_PATH_VERIFICATION_ABHAADDRESS_CARD = "/" + VERSION_V3 + "/hip/verification/abhaAddress/getCard";
+
         public const string PATH_SESSIONS = CURRENT_VERSION + "/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = CURRENT_VERSION + "/care-contexts/discover";
         public const string PATH_CONSENTS_HIP = CURRENT_VERSION + "/consents/hip/notify";
@@ -114,6 +115,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string ABHA_ADDRESS_REQUEST_OTP = "/login/abha/request/otp";
         public const string ABHA_ADDRESS_VERIFY_OTP = "/login/abha/verify";
         public const string ABHA_ADDRESS_GET_PROFILE = "/login/profile/abha-profile";
+        public const string ABHA_ADDRESS_GET_CARD = "/login/profile/abha/phr-card";
         public const string AUTH_INIT_VERIFY = "/" + VERSION_V2 + "/auth/init";
         public const string CONFIRM_OTP_VERIFY = "/" + VERSION_V2 + "/hip/confirmOTP";
         public const string CONFIRM_WITH_MOBILE_OTP = "/" + VERSION_V2 + "/auth/confirmWithMobileOTP";
