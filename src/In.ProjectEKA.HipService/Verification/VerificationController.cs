@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Hangfire;
@@ -42,26 +44,183 @@ namespace In.ProjectEKA.HipService.Verification
             this.gatewayConfiguration = gatewayConfiguration;
             this.abhaService = abhaService;
         }
+        
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_REQUEST_OTP)]
+        public async Task<ActionResult> RequestOtp([FromHeader(Name = CORRELATION_ID)] string correlationId,[FromBody] VerificationRequestOtp verificationRequestOtp)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+            try
+            {
+                ABHALoginRequestOTP abhaLoginRequestOtp =
+                    VerificationRequestMapper.mapAbhaLoginOTPRequest(verificationRequestOtp);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ABHA_LOGIN_REQUEST_OTP, abhaLoginRequestOtp,
+                           correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        AadhaarOTPGenerationResponse generationResponse =
+                            JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
+                        TxnDictionary[sessionId] = generationResponse?.txnId;
+                        HealthIdLoginScopeDictionary[sessionId] = abhaLoginRequestOtp.Scope;
+                        return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.message));
+                    }
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (ArgumentException argumentException)
+            {
+                return BadRequest(argumentException.Message);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                                   "verification request otp" + exception.StackTrace);
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
 
-        [Route(SEARCH_HEALTHID)]
-        public async Task<ActionResult> SearchHealthId(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] SearchHealthIdRequest searchHealthIdRequest)
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_VERIFY_OTP)]
+        public async Task<ActionResult> VerifyOtp([FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromBody] VerificationVerifyOtpRequest verifyOtpRequest)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+            string txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            List<string> scopes = HealthIdLoginScopeDictionary.ContainsKey(sessionId)
+                ? HealthIdLoginScopeDictionary[sessionId]
+                : null;
+            try
+            {
+                string encryptedOTP = EncryptionService.Encrypt(verifyOtpRequest.otp);
+                ABHALoginVerifyOTPRequest abhaLoginVerifyOtp =
+                    new ABHALoginVerifyOTPRequest(txnId, scopes, encryptedOTP);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ABHA_LOGIN_VERIFY_OTP, abhaLoginVerifyOtp,
+                           correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        ABHALoginVerifyOTPResponse gatewayResponse =
+                            JsonConvert.DeserializeObject<ABHALoginVerifyOTPResponse>(responseContent);
+                        HealthIdNumberTokenDictionary[sessionId] = new TokenRequest(gatewayResponse.Token);
+                        VerificationVerifyOtpResponse verificationResponse = new VerificationVerifyOtpResponse
+                        {
+                            TxnId = gatewayResponse.TxnId,
+                            AuthResult = gatewayResponse.AuthResult,
+                            Message = gatewayResponse.Message,
+                            Accounts = gatewayResponse.Accounts
+                        };
+                        return Ok(verificationResponse);
+                    }
+
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                                   "verification verify otp" + exception.StackTrace);
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [HttpGet]
+        [Route(APP_PATH_VERIFICATION_ABHA_PROFILE)]
+        public async Task<ActionResult> GetABHAProfile([FromHeader(Name = CORRELATION_ID)] string correlationId)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+            try
+            {
+                TokenRequest tokenRequest = HealthIdNumberTokenDictionary.ContainsKey(sessionId)
+                    ? HealthIdNumberTokenDictionary[sessionId]
+                    : null;
+                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,
+                           gatewayConfiguration.AbhaNumberServiceUrl, ABHA_ACCOUNT, null, correlationId,
+                           $"{tokenRequest.tokenType} {tokenRequest.token}"))
+                {
+                    var responseContent = await response?.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        ABHAProfileResponse abhaProfileResponse = JsonConvert.DeserializeObject<ABHAProfileResponse>(responseContent);
+                        return Ok(abhaProfileResponse);
+                    }
+
+                    logger.LogError(LogEvents.Creation, "Error happened for ABHA patient profile with error response" +
+                                                         responseContent);
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for ABHA patient profile");
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_VERIFY_ABHA_ACCOUNT)]
+        public async Task<ActionResult> VerifyABHAAccount([FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromBody] VerifyABHAAccountRequest verifyABHAAccountRequest)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+            try
+            {
+                TokenRequest tokenRequest = HealthIdNumberTokenDictionary.ContainsKey(sessionId)
+                    ? HealthIdNumberTokenDictionary[sessionId]
+                    : null;
+                string txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+                VerifyABHAAccountRequest verifyABHAAccountGatewayRequest = new VerifyABHAAccountRequest(verifyABHAAccountRequest.ABHANumber, txnId);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaNumberServiceUrl, VERIFY_ABHA_ACCOUNT, verifyABHAAccountGatewayRequest,
+                           correlationId,null, $"{tokenRequest.tokenType} {tokenRequest.token}"))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        TokenResponse tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseContent);
+                        HealthIdNumberTokenDictionary[sessionId] = new TokenRequest(tokenResponse.token);
+                        return Ok();
+                    }
+
+                    logger.LogError(LogEvents.Creation, "Error happened for verify ABHA account with error response" +
+                                                         responseContent);
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for verify ABHA account");
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_ABHAADDRESS_SEARCH)]
+        public async Task<ActionResult> SearchAbhaAddress(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] SearchAbhaAddressRequest searchAbhaAddressRequest)
         {
             try
             {
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification,
-                    "Request for search healthId to gateway: {@GatewayResponse}", searchHealthIdRequest);
+                    "Request for search Abha address to gateway: {@GatewayResponse}", searchAbhaAddressRequest);
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification, $"correlationId: {{correlationId}}," +
-                                        $" healthId: {{healthId}}",
-                     correlationId, searchHealthIdRequest.healthId);
-                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaNumberServiceUrl, SEARCH_HEALTHID, searchHealthIdRequest, correlationId))
+                                            $" healthId: {{healthId}}",
+                    correlationId, searchAbhaAddressRequest.abhaAddress);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,gatewayConfiguration.AbhaAddressServiceUrl, SEARCH_ABHA_ADDRESS, searchAbhaAddressRequest, correlationId))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        var resp = JsonConvert.DeserializeObject<SearchHealthIdResponse>(responseContent);
+                        var resp = JsonConvert.DeserializeObject<SearchAbhaAddressResponse>(responseContent);
                         return Accepted(resp);
                     }
                     return StatusCode((int)response.StatusCode,responseContent);
@@ -71,12 +230,158 @@ namespace In.ProjectEKA.HipService.Verification
             catch (Exception exception)
             {
                 logger.LogError(LogEvents.Verification, exception, "Error happened for " +
-                                                               "search healthId request" + exception.StackTrace);
+                                                                   "search Abha Address request" + exception.StackTrace);
             }
             
             return StatusCode(StatusCodes.Status500InternalServerError);
             
         }
+        
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_ABHAADDRESS_REQUEST_OTP)]
+        public async Task<ActionResult> AbhaAddressRequestOtp([FromHeader(Name = CORRELATION_ID)] string correlationId,[FromBody] AbhaAddressVerificationRequestOtp abhaAddressverificationRequestOtp)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+            try
+            {
+                ABHALoginRequestOTP abhaLoginRequestOtp =
+                    VerificationRequestMapper.mapAbhaAddressLoginRequestOTP(abhaAddressverificationRequestOtp);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaAddressServiceUrl, ABHA_ADDRESS_REQUEST_OTP, abhaLoginRequestOtp,
+                           correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        AadhaarOTPGenerationResponse generationResponse =
+                            JsonConvert.DeserializeObject<AadhaarOTPGenerationResponse>(responseContent);
+                        TxnDictionary[sessionId] = generationResponse?.txnId;
+                        HealthIdLoginScopeDictionary[sessionId] = abhaLoginRequestOtp.Scope;
+                        return Accepted(new AadhaarOTPGenerationResponse(generationResponse?.message));
+                    }
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (ArgumentException argumentException)
+            {
+                return BadRequest(argumentException.Message);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                                   "verification request otp" + exception.StackTrace);
+            }
+            
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+        [HttpPost]
+        [Route(APP_PATH_VERIFICATION_ABHAADDRESS_VERIFY_OTP)]
+        public async Task<ActionResult> AbhaAddressVerifyOtp([FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromBody] VerificationVerifyOtpRequest verifyOtpRequest)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+            string txnId = TxnDictionary.ContainsKey(sessionId) ? TxnDictionary[sessionId] : null;
+            List<string> scopes = HealthIdLoginScopeDictionary.ContainsKey(sessionId)
+                ? HealthIdLoginScopeDictionary[sessionId]
+                : null;
+            try
+            {
+                string encryptedOtp = EncryptionService.Encrypt(verifyOtpRequest.otp);
+                ABHALoginVerifyOTPRequest abhaLoginVerifyOtp =
+                    new ABHALoginVerifyOTPRequest(txnId, scopes, encryptedOtp);
+                using (var response = await gatewayClient.CallABHAService(HttpMethod.Post,
+                           gatewayConfiguration.AbhaAddressServiceUrl, ABHA_ADDRESS_VERIFY_OTP, abhaLoginVerifyOtp,
+                           correlationId))
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        AbhaAddressLoginVerifyOTPResponse gatewayResponse =
+                            JsonConvert.DeserializeObject<AbhaAddressLoginVerifyOTPResponse>(responseContent);
+                        HealthIdNumberTokenDictionary[sessionId] =
+                            new TokenRequest(gatewayResponse.tokens.token);
+                        AbhaAddressVerifyOtpResponse abhaAddressVerifyOtpResponse = new AbhaAddressVerifyOtpResponse()
+                        {
+                            AuthResult = gatewayResponse.authResult,
+                            Message = gatewayResponse.message,
+                            Users = gatewayResponse.users
+                        };
+                        return Ok(abhaAddressVerifyOtpResponse);
+                    }
+
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Verification, exception, "Error happened for " +
+                                                                   "verification verify otp" + exception.StackTrace);
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        
+         
+        [HttpGet]
+        [Route(APP_PATH_VERIFICATION_ABHAADDRESS_PROFILE)] 
+        public async Task<ActionResult> GetAbhaAddressProfile([FromHeader(Name = CORRELATION_ID)] string correlationId)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+            try
+            {
+                TokenRequest tokenRequest = HealthIdNumberTokenDictionary.ContainsKey(sessionId)
+                    ? HealthIdNumberTokenDictionary[sessionId]
+                    : null;
+                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,
+                           gatewayConfiguration.AbhaAddressServiceUrl, ABHA_ADDRESS_GET_PROFILE, null, correlationId,
+                           $"{tokenRequest.tokenType} {tokenRequest.token}"))
+                {
+                    var responseContent = await response?.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        AbhaAddressProfileResponse abhaAddressProfileResponse = JsonConvert.DeserializeObject<AbhaAddressProfileResponse>(responseContent);
+                        return Ok(abhaAddressProfileResponse);
+                    }
+
+                    logger.LogError(LogEvents.Creation, "Error happened for ABHA patient profile with error response" +
+                                                        responseContent);
+                    return StatusCode((int)response.StatusCode, responseContent);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for ABHA patient profile");
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+        [HttpGet]
+        [Route(APP_PATH_VERIFICATION_ABHAADDRESS_CARD)]
+        public async Task<IActionResult> getPngCard(
+            [FromHeader(Name = CORRELATION_ID)] string correlationId)
+        {
+            string sessionId = HttpContext.Items[SESSION_ID] as string;
+
+            try
+            {
+                var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get,
+                    gatewayConfiguration.AbhaAddressServiceUrl, ABHA_ADDRESS_GET_CARD,
+                    null, correlationId,
+                    $"{HealthIdNumberTokenDictionary[sessionId].tokenType} {HealthIdNumberTokenDictionary[sessionId].token}");
+                var stream = await response.Content.ReadAsStreamAsync();
+                return File(stream, "image/png");
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Creation, exception, "Error happened for Abha-card generation");
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+
         
         
         [Route(AUTH_INIT_VERIFY)]
@@ -320,7 +625,7 @@ namespace In.ProjectEKA.HipService.Verification
         
         [Route(GET_AUTHORIZED_TOKEN)]
         public async Task<ActionResult> GetAuthorizedToken(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AuthorizedTokenRequest authorizedTokenRequest)
+            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] VerifyABHAAccountRequest verifyAbhaAccountRequest)
         {
             string sessionId = HttpContext.Items[SESSION_ID] as string;
 
@@ -334,10 +639,10 @@ namespace In.ProjectEKA.HipService.Verification
                 logger.Log(LogLevel.Information,
                     LogEvents.Verification, $"correlationId: {{correlationId}}," +
                                             $" ABHA Number: {{abhaNumber}}",
-                    correlationId, authorizedTokenRequest.healthId);
+                    correlationId, verifyAbhaAccountRequest.ABHANumber);
                 using (var response = await gatewayClient.CallABHAService(HttpMethod.Post, gatewayConfiguration.AbhaNumberServiceUrl,
                     GET_AUTHORIZED_TOKEN,
-                    new AuthorizedTokenRequest(authorizedTokenRequest.healthId, txnId), correlationId, null, tToken))
+                    new VerifyABHAAccountRequest(verifyAbhaAccountRequest.ABHANumber, txnId), correlationId, null, tToken))
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)

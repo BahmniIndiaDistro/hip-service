@@ -1,4 +1,4 @@
-namespace In.ProjectEKA.HipService.Creation.Model;
+namespace In.ProjectEKA.HipService.Common.Model;
 
 public class ABHAAuthMethods
 {

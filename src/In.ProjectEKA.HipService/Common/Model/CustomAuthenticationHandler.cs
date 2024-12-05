@@ -104,9 +104,9 @@ namespace In.ProjectEKA.HipService.Common.Model
                 request = new HttpRequestMessage(HttpMethod.Get, redirectUrl);
                 response = await httpClient.SendAsync(request).ConfigureAwait(false);
             }
-
-            if (!response.IsSuccessStatusCode)
-            {
+            
+            if (!response.IsSuccessStatusCode)  
+            { 
                 return AuthenticateResult.Fail(unauthorizedError);
             }
 
