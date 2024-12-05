@@ -50,7 +50,7 @@ namespace In.ProjectEKA.HipService.Common
             if (transactionId != null)
                 httpRequestMessage.Headers.Add("Transaction_Id", transactionId);
             httpRequestMessage.Headers.Add("REQUEST-ID", Guid.NewGuid().ToString());
-            httpRequestMessage.Headers.Add("TIMESTAMP", DateTime.Now.ToString(TIMESTAMP_FORMAT));
+            httpRequestMessage.Headers.Add("TIMESTAMP", DateTime.UtcNow.ToString(TIMESTAMP_FORMAT));
             return httpRequestMessage;
         }
 
