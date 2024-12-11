@@ -300,7 +300,7 @@ namespace In.ProjectEKA.HipService.Verification
                         AbhaAddressLoginVerifyOTPResponse gatewayResponse =
                             JsonConvert.DeserializeObject<AbhaAddressLoginVerifyOTPResponse>(responseContent);
                         HealthIdNumberTokenDictionary[sessionId] =
-                            new TokenRequest(gatewayResponse.tokens.token);
+                            new TokenRequest(gatewayResponse.tokens?.token);
                         AbhaAddressVerifyOtpResponse abhaAddressVerifyOtpResponse = new AbhaAddressVerifyOtpResponse()
                         {
                             AuthResult = gatewayResponse.authResult,
