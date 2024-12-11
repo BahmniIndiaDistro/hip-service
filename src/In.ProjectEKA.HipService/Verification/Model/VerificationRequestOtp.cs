@@ -4,19 +4,15 @@ namespace In.ProjectEKA.HipService.Verification.Model;
 
 public class VerificationRequestOtp
 {
-    public string AbhaNumber { get; }
-    public string MobileNumber { get; }
+    public string Identifier { get; }
+    
+    public IdentifierType IdentifierType { get; }
     public AuthMode? AuthMethod { get; }
 
-    public VerificationRequestOtp(string abhaNumber, string mobileNumber, AuthMode authMethod)
+    public VerificationRequestOtp(string identifier, IdentifierType identifierType, AuthMode authMethod)
     {
-        if (string.IsNullOrWhiteSpace(abhaNumber) && string.IsNullOrWhiteSpace(mobileNumber) ||
-            !string.IsNullOrWhiteSpace(abhaNumber) && !string.IsNullOrWhiteSpace(mobileNumber))
-        {
-            throw new ArgumentException("Either AbhaNumber or MobileNumber or Abha Address must be provided.");
-        }
-        AbhaNumber = abhaNumber;
-        MobileNumber = mobileNumber;
+        Identifier = identifier;
+        IdentifierType = identifierType;
         AuthMethod = authMethod;
     }
 }
