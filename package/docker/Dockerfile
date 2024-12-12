@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0.401 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 WORKDIR /app
 
 # Copy csproj and restore as distinct layers
@@ -17,15 +17,7 @@ WORKDIR /app/src/In.ProjectEKA.HipService
 RUN dotnet publish -c Release -o /app
 
 # Build runtime image
-FROM alpine:latest
-
-RUN apk update
-
-# Install .NET Dependencies
-RUN apk add bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib
-
-# Install .NET Runtime
-RUN apk add aspnetcore6-runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
 
 RUN mkdir app
 
