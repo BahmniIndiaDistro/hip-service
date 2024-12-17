@@ -10,9 +10,9 @@ public static class VerificationRequestMapper
 {
     public static ABHALoginRequestOTP mapAbhaLoginOTPRequest(VerificationRequestOtp verificationRequestOtp)
     {
-        if (verificationRequestOtp.AbhaNumber != null && verificationRequestOtp.MobileNumber == null)
+        string encryptedIdentifier = EncryptionService.Encrypt(verificationRequestOtp.Identifier);
+        if (verificationRequestOtp.IdentifierType.Equals(IdentifierType.ABHA_NUMBER))
         {
-            string encryptedAbhaNumber = EncryptionService.Encrypt(verificationRequestOtp.AbhaNumber);
             List<ABHAScope> scopes = new List<ABHAScope>();
             OTPSystem otpSystem;
             if (verificationRequestOtp.AuthMethod == AuthMode.AADHAAR_OTP)
@@ -33,23 +33,31 @@ public static class VerificationRequestMapper
             return new ABHALoginRequestOTP(
                 scopes,
                 ABHALoginHint.ABHA_NUMBER,
-                encryptedAbhaNumber,
+                encryptedIdentifier,
                 otpSystem
             );
         }
 
-        if (verificationRequestOtp.MobileNumber != null && verificationRequestOtp.AbhaNumber == null)
+        if (verificationRequestOtp.IdentifierType.Equals(IdentifierType.MOBILE_NUMBER))
         {
-            string encryptedMobileNumber = EncryptionService.Encrypt(verificationRequestOtp.MobileNumber);
             return new ABHALoginRequestOTP(
                 new List<ABHAScope> { ABHAScope.ABHA_LOGIN, ABHAScope.MOBILE_VERIFY },
                 ABHALoginHint.MOBILE,
-                encryptedMobileNumber,
+                encryptedIdentifier,
                 OTPSystem.ABDM
             );
         }
+        if (verificationRequestOtp.IdentifierType.Equals(IdentifierType.AADHAAR_NUMBER))
+        {
+            return new ABHALoginRequestOTP(
+                new List<ABHAScope> { ABHAScope.ABHA_LOGIN, ABHAScope.AADHAAR_VERIFY },
+                ABHALoginHint.AADHAAR,
+                encryptedIdentifier,
+                OTPSystem.AADHAAR
+            );
+        }
 
-        throw new ArgumentException("Either AbhaNumber or MobileNumber should be present and not both");
+        throw new ArgumentException("Invalid Identifier Type");
     }
 
     public static ABHALoginRequestOTP mapAbhaAddressLoginRequestOTP(
