@@ -19,8 +19,8 @@ namespace In.ProjectEKA.HipServiceTest.Discovery.Builder
             Gender = Gender.M,
             YearOfBirth = 1976,
             CareContexts = new List<CareContextRepresentation> {
-                new CareContextRepresentation("NCP1111", "National Cancer program"),
-                new CareContextRepresentation("NCP1111", "National Cancer program - Episode 2")
+                new CareContextRepresentation("NCP1111", "National Cancer program", null, new []{HiType.Prescription}),
+                new CareContextRepresentation("NCP1111", "National Cancer program - Episode 2", null, new []{HiType.Prescription, HiType.DiagnosticReport})
             }
         };
         public static readonly User JohnDoe = new User

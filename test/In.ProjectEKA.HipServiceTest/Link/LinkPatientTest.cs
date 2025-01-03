@@ -225,7 +225,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
                     "id", verifiedIdentifiers: new List<Identifier>()
                     {
                         new Identifier(IdentifierType.MOBILE, "9999999999"),
-                        new Identifier(IdentifierType.NDHM_HEALTH_NUMBER, "123456718910")
+                        new Identifier(IdentifierType.ABHA_NUMBER, "123456718910")
                     }, unverifiedIdentifiers: null,
                     "name", HipLibrary.Patient.Model.Gender.M, 2000);
             DiscoveryReqMap.PatientInfoMap.Add(testLinkRequest.ConsentManagerUserId, patientEnquiry);

@@ -202,7 +202,7 @@ namespace In.ProjectEKA.HipService.Link
         private async void LinkAbhaIdentifier(string patientUuid, string abhaAddress)
         {
             var patient = PatientInfoMap[abhaAddress];
-            var abhaNumberIdentifier =  patient?.VerifiedIdentifiers.FirstOrDefault(id => id.Type == IdentifierType.NDHM_HEALTH_NUMBER);
+            var abhaNumberIdentifier =  patient?.VerifiedIdentifiers.FirstOrDefault(id => id.Type == IdentifierType.ABHA_NUMBER);
             var json = JsonConvert.SerializeObject(new PatientAbhaIdentifier(abhaNumberIdentifier?.Value, abhaAddress), new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,

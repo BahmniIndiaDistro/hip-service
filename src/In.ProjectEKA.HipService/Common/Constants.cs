@@ -28,8 +28,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_CARD = "/" + VERSION_V3 + "/hip/verification/abhaAddress/getCard";
 
         public const string PATH_SESSIONS =  "api/hiecm/gateway/"+VERSION_V3+"/sessions";
-
-        public const string PATH_CARE_CONTEXTS_DISCOVER = CURRENT_VERSION + "/care-contexts/discover";
+        public const string PATH_CARE_CONTEXTS_DISCOVER = "/api/"+VERSION_V3 + "/hip/patient/care-context/discover";
         public const string PATH_CONSENTS_HIP = CURRENT_VERSION + "/consents/hip/notify";
         public const string PATH_LINKS_LINK_INIT = CURRENT_VERSION + "/links/link/init";
         public const string PATH_LINKS_LINK_CONFIRM = CURRENT_VERSION + "/links/link/confirm";
@@ -43,7 +42,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_ON_ADD_CONTEXTS = "/" + CURRENT_VERSION + "/links/link/on-add-contexts";
         public const string PATH_ON_NOTIFY_CONTEXTS = "/" + CURRENT_VERSION + "/links/context/on-notify";
         public static readonly string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
-        public static readonly string PATH_ON_DISCOVER = "/" + CURRENT_VERSION + "/care-contexts/on-discover";
+        public static readonly string PATH_ON_DISCOVER = "/api/hiecm/user-initiated-linking/"+VERSION_V3+"/patient/care-context/on-discover";
         public static readonly string PATH_ON_LINK_INIT = "/" + CURRENT_VERSION + "/links/link/on-init";
         public static readonly string PATH_ON_LINK_CONFIRM = "/" + CURRENT_VERSION + "/links/link/on-confirm";
         public static readonly string PATH_CONSENT_ON_NOTIFY = "/" + CURRENT_VERSION + "/consents/hip/on-notify";
@@ -64,6 +63,8 @@ namespace In.ProjectEKA.HipService.Common
         public static readonly string PATH_OPENMRS_UPDATE_IDENTIFIER = "ws/rest/v1/hip/existingPatients/update";
 
         public const string CORRELATION_ID = "CORRELATION-ID";
+        public const string REQUEST_ID = "REQUEST-ID";
+        public const string TIMESTAMP = "TIMESTAMP";
         public const string PATH_PATIENT_PROFILE_ON_SHARE = "/" + CURRENT_VERSION + "/patients/profile/on-share";
         public const string PATH_FETCH_AUTH_MODES = "/" + CURRENT_VERSION + "/users/auth/fetch-modes";
         public const string PATH_ADD_PATIENT_CONTEXTS = "/" + CURRENT_VERSION + "/links/link/add-contexts";

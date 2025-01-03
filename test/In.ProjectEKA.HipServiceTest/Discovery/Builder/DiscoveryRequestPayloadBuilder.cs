@@ -14,8 +14,6 @@ namespace In.ProjectEKA.HipServiceTest.Discovery.Builder
     using static Builder.TestBuilders;
     public class DiscoveryRequestPayloadBuilder
     {
-        string _requestId;
-        private DateTime _requestTime;
         string _transactionId;
         string _patientId;
         string _patientName;
@@ -23,17 +21,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery.Builder
         ushort? _patientYearOfBirth;
         IEnumerable<Identifier> _patientVerifiedIdentifiers;
         IEnumerable<Identifier> _patientUnverifiedIdentifiers;
-
-        public DiscoveryRequestPayloadBuilder WithRequestId()
-        {
-            _requestId = "3fa85f64 - 5717 - 4562 - b3fc - 2c963f66afa6";
-            return this;
-        }
-        public DiscoveryRequestPayloadBuilder WithRequestId(string requestId)
-        {
-            _requestId = requestId;
-            return this;
-        }
+        
         public DiscoveryRequestPayloadBuilder WithTransactionId()
         {
             _transactionId = "4fa85f64 - 5717 - 4562 - b3fc - 2c963f66afa6";
@@ -102,16 +90,10 @@ namespace In.ProjectEKA.HipServiceTest.Discovery.Builder
             return this;
         }
     
-
-        public DiscoveryRequestPayloadBuilder RequestedOn(DateTime requestTime)
-        {
-            _requestTime = requestTime;
-            return this;
-        }
+        
 
         public DiscoveryRequestPayloadBuilder WithMissingParameters(string[] requestParametersToSet)
         {
-            WithRequestId();
             WithTransactionId();
             WithPatientId();
             WithPatientName();
@@ -121,7 +103,6 @@ namespace In.ProjectEKA.HipServiceTest.Discovery.Builder
             {
                 switch (p)
                 {
-                    case "RequestId": { _requestId = null; break; }
                     case "TransactionId": { _transactionId = null; break; }
                     case "PatientId": { _patientId = null; break; }
                     case "PatientName": { _patientName = null; break; }
@@ -138,9 +119,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery.Builder
                 new PatientEnquiry(
                     _patientId, _patientVerifiedIdentifiers, _patientUnverifiedIdentifiers,
                     _patientName, _patientGender, _patientYearOfBirth),
-                _requestId,
-                _transactionId,
-                _requestTime);
+                _transactionId);
         }
 
         public StringContent BuildSerializedFormat()
@@ -149,9 +128,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery.Builder
                 new PatientEnquiry(
                     _patientId, verifiedIdentifiers: null, unverifiedIdentifiers: null,
                     _patientName, _patientGender, yearOfBirth: null),
-                _requestId,
-                _transactionId,
-                DateTime.Now);
+                _transactionId);
             var json = JsonConvert.SerializeObject(requestObject, new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,

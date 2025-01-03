@@ -123,10 +123,15 @@ namespace In.ProjectEKA.HipService.Gateway
                 {
                     try
                     {
-                        await httpClient
-                            .SendAsync(CreateHttpRequest(HttpMethod.Post,gatewayUrl, representation, accessToken,
+                        Log.Information("Initiating Request to Gateway for URI {@uri}", gatewayUrl);
+                        Log.Debug("Request Payload {@payload}", representation);
+                        var responseMessage = await httpClient
+                            .SendAsync(CreateHttpRequest(HttpMethod.Post, gatewayUrl, representation, accessToken,
                                 cmSuffix, correlationId))
                             .ConfigureAwait(false);
+                        Log.Information("Response Status from Gateway for URI {@uri} is {@status}", gatewayUrl,
+                            responseMessage.StatusCode);
+                        Log.Debug("Response Payload {@payload}", responseMessage.Content.ReadAsStringAsync());
                     }
                     catch (Exception exception)
                     {
