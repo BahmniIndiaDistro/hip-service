@@ -5,17 +5,20 @@ namespace In.ProjectEKA.HipService.Link
 
     public class PatientLinkReference
     {
-        public PatientLinkReference(string id, string referenceNumber, IEnumerable<CareContextEnquiry> careContexts)
+        public PatientLinkReference(string referenceNumber, IEnumerable<CareContextEnquiry> careContexts, string hiType, int count)
         {
-            Id = id;
             ReferenceNumber = referenceNumber;
             CareContexts = careContexts;
+            HiType = hiType;
+            Count = count;
         }
-
-        public string Id { get; }
 
         public string ReferenceNumber { get; }
 
         public IEnumerable<CareContextEnquiry> CareContexts { get; }
+        
+        public string HiType { get; }
+        
+        public int Count { get; }
     }
 }
