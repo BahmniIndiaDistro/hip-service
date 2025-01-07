@@ -82,19 +82,18 @@ namespace In.ProjectEKA.HipServiceTest.Link
             const string token = "1234";
             var cmId = "ncg";
             var careContext = new[] {new CareContextRepresentation("129", Faker().Random.Word())};
-            var expectedResponse = new PatientLinkConfirmationRepresentation(new LinkConfirmationRepresentation("4",
+            var expectedResponse = new PatientLinkConfirmationRepresentation(new List<LinkConfirmationRepresentation>(){new LinkConfirmationRepresentation("4",
                 Faker().Random.Word()
-                , careContext));
+                , careContext, HiType.Prescription.ToString(), 1)});
             var correlationId = Uuid.Generate().ToString();
             link.Setup(e => e.VerifyAndLinkCareContext(It.Is<LinkConfirmationRequest>(p =>
                 p.Token == "1234" &&
                 p.LinkReferenceNumber == linkReferenceNumber)))
                 .ReturnsAsync((expectedResponse,cmId,null));
 
-            var linkPatientRequest = new LinkPatientRequest(Faker().Random.Hash(),
-                It.IsAny<string>(),
+            var linkPatientRequest = new LinkPatientRequest(
                 new LinkConfirmation(linkReferenceNumber, token));
-            var response = linkController.LinkPatientFor(correlationId, linkPatientRequest);
+            var response = linkController.LinkPatientFor(correlationId, Uuid.Generate().ToString(),new Date().ToString(),linkPatientRequest);
 
             backgroundJobClient.Verify(client => client.Create(
                 It.Is<Job>(job => job.Method.Name == "LinkPatientCareContextFor" && job.Args[0] == linkPatientRequest),

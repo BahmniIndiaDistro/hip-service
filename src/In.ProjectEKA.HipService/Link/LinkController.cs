@@ -69,9 +69,11 @@ namespace In.ProjectEKA.HipService.Link
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         public AcceptedResult LinkPatientFor(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] LinkPatientRequest request)
         {
-            backgroundJob.Enqueue(() => LinkPatientCareContextFor(request, correlationId));
+            backgroundJob.Enqueue(() => LinkPatientCareContextFor(request, correlationId, requestId));
             return Accepted();
         }
 
@@ -132,25 +134,23 @@ namespace In.ProjectEKA.HipService.Link
         }
 
         [NonAction]
-        public async Task LinkPatientCareContextFor(LinkPatientRequest request, String correlationId)
+        public async Task LinkPatientCareContextFor(LinkPatientRequest request, String correlationId, string requestId)
         {
             try
             {
                 var (patientLinkResponse, cmId, error) = await linkPatient
                     .VerifyAndLinkCareContext(new LinkConfirmationRequest(request.Confirmation.Token,
                         request.Confirmation.LinkRefNumber));
-                var linkedPatientRepresentation = new LinkConfirmationRepresentation();
+                var linkedPatientRepresentation = new List<LinkConfirmationRepresentation>();
                 if (patientLinkResponse != null || cmId != "")
                 {
-                    linkedPatientRepresentation = patientLinkResponse.Patient;
+                    linkedPatientRepresentation = patientLinkResponse.Patient.ToList();
                 }
 
                 var response = new GatewayLinkConfirmResponse(
-                    Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                     linkedPatientRepresentation,
                     error?.Error,
-                    new Resp(request.RequestId));
+                    new Resp(requestId));
                 await gatewayClient.SendDataToGateway(PATH_ON_LINK_CONFIRM, response, cmId, correlationId);
             }
             catch(Exception exception)
