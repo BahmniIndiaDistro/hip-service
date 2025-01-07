@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient;
+using In.ProjectEKA.HipService.Logger;
 
 namespace In.ProjectEKA.HipService.OpenMrs
 {
@@ -16,7 +17,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
 
         public async Task<string> GetPhoneNumber(string patientReferenceNumber)
         {
-            var openmrsRestPatientPath = $"{DiscoveryPathConstants.OnRestPatientPath}/{patientReferenceNumber}";
+            var openmrsRestPatientPath = $"{DiscoveryPathConstants.OnRestPatientPath}/{patientReferenceNumber}?v=full";
 
             var response = await openMrsClient.GetAsync(openmrsRestPatientPath);
             var content = await response.Content.ReadAsStringAsync();
@@ -26,13 +27,11 @@ namespace In.ProjectEKA.HipService.OpenMrs
 
             var person = root.GetProperty("person");
             var attributes = person.GetProperty("attributes");
-
             for (int i = 0; i < attributes.GetArrayLength(); i++)
             {
-                var display = attributes[i].GetProperty("display");
-                var strlist = display.ToString().Split(" = ");
-                if (strlist[0] == openMrsConfiguration.PhoneNumber) {
-                    return strlist[1];
+                var attributeTypeDisplay = attributes[i].GetProperty("attributeType").GetProperty("display").ToString();
+                if (attributeTypeDisplay == openMrsConfiguration.PhoneNumber) {
+                    return attributes[i].GetProperty("value").ToString();
                 }
             }
 
