@@ -18,7 +18,7 @@ namespace In.ProjectEKA.HipService.UserAuth
         public static Dictionary<string, string> HealthIdToAccessToken = new Dictionary<string, string>();
         public static Dictionary<Guid, AuthNotifyStatus> TransactionIdToAuthNotifyStatus = new Dictionary<Guid, AuthNotifyStatus>();
         public static Dictionary<Guid, AuthConfirmPatient> TransactionIdToPatientDetails = new Dictionary<Guid, AuthConfirmPatient>();
-        public static Dictionary<ErrorCode, int> ErrorCodeToStatusCode = new Dictionary<ErrorCode, int>()
+        public static Dictionary<string, int> ErrorCodeToStatusCode = new Dictionary<string, int>()
         {
             {ErrorCode.BadRequest, StatusCodes.Status400BadRequest},
             {ErrorCode.GatewayTimedOut, StatusCodes.Status504GatewayTimeout},

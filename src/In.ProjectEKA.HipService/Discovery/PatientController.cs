@@ -70,6 +70,10 @@ namespace In.ProjectEKA.HipService.Discovery
                 var (response, error) = await patientDiscovery.PatientFor(request);
                 Log.Information("PatientFor executed successfully" + response);
                 List<PatientDiscoveryRepresentation> patientDiscoveryRepresentation = PatientDiscoveryMapper.Map(response?.Patient);
+                if(error == null && (patientDiscoveryRepresentation == null || patientDiscoveryRepresentation.Count == 0))
+                {
+                    error = new ErrorRepresentation(new Error(ErrorCode.CareContextNotFound, "No care context found"));
+                }
                 var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
                     patientDiscoveryRepresentation,
                     response?.Patient?.MatchedBy,

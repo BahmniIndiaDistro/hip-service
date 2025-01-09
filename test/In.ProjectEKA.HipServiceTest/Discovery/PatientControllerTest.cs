@@ -127,7 +127,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             "No Matching Record Found or More than one Record Found")]
         [InlineData(ErrorCode.MultiplePatientsFound, HttpStatusCode.NotFound,
             "No Matching Record Found or More than one Record Found")]
-        public async void ShouldSendWhenNoSingleMatchWasFound(ErrorCode errorCode, HttpStatusCode expectedStatusCode,
+        public async void ShouldSendWhenNoSingleMatchWasFound(string errorCode, HttpStatusCode expectedStatusCode,
             string expectedResponseDescription)
         {
             var correlationId = Uuid.Generate().ToString();
@@ -281,7 +281,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldNotSendFoundPatientDetailsWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldNotSendFoundPatientDetailsWhenNoPatientWasFound(string errorCode)
         {
             var correlationId = Uuid.Generate().ToString();
             var requestId = Uuid.Generate().ToString();
@@ -301,7 +301,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldNotSendAnyMatchedFieldWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldNotSendAnyMatchedFieldWhenNoPatientWasFound(string errorCode)
         {
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
@@ -320,7 +320,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldSendTransactionIdEvenWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldSendTransactionIdEvenWhenNoPatientWasFound(string errorCode)
         {
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
@@ -341,7 +341,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             "No Matching Record Found or More than one Record Found")]
         [InlineData(ErrorCode.MultiplePatientsFound, HttpStatusCode.NotFound,
             "No Matching Record Found or More than one Record Found")]
-        public async void ShouldSendRequestStatusWith404WhenNoPatientWasFound(ErrorCode errorCode,
+        public async void ShouldSendRequestStatusWith404WhenNoPatientWasFound(string errorCode,
             HttpStatusCode expectedStatusCode, string expectedResponseDescription)
         {
             //Given
@@ -362,7 +362,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldSendTheErrorDetailsWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldSendTheErrorDetailsWhenNoPatientWasFound(string errorCode)
         {
             var correlationId = Uuid.Generate().ToString();
             var requestId = Uuid.Generate().ToString();
@@ -434,7 +434,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             discoveryRepresentation = discovery;
         }
 
-        private void AndTheUserDoesNotMatchAnyPatientBecauseOf(ErrorCode errorCode,
+        private void AndTheUserDoesNotMatchAnyPatientBecauseOf(string errorCode,
             out ErrorRepresentation errorRepresentation)
         {
             var error = new ErrorRepresentation(new Error(ErrorCode.NoPatientFound, "unusedMessage"));

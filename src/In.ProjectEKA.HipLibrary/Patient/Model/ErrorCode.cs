@@ -1,31 +1,31 @@
 namespace In.ProjectEKA.HipLibrary.Patient.Model
 {
-    public enum ErrorCode
+    public static class ErrorCode
     {
-        NoPatientFound = 3404,
-        MultiplePatientsFound = 3403,
-        CareContextNotFound = 3402,
-        OtpInValid = 3405,
-        OtpExpired = 3406,
-        OtpGenerationFailed = 3501,
-        NoLinkRequestFound = 3413,
-        ServerInternalError = 3500,
-        DiscoveryRequestNotFound = 3407,
-        ContextArtefactIdNotFound = 3416,
-        InvalidToken = 3401,
-        HealthInformationNotFound = 3502,
-        LinkExpired = 3408,
-        ExpiredKeyPair = 3410,
-        FailedToGetLinkedCareContexts = 3507,
-        DuplicateDiscoveryRequest = 3409,
-        DuplicateRequestId = 3429,
-        CareContextConfiguration = 3430,
-        OpenMrsConnection = 3431,
-        HeartBeat = 3432,
-        InvalidHealthId = 3433,
-        DuplicateAuthConfirmRequest = 3434,
-        GatewayTimedOut = 3435,
-        BadRequest = 3400,
-        ConsentNotGranted = 1428
+        public const string NoPatientFound = "ABDM-1010";
+        public const string MultiplePatientsFound = "3403";
+        public const string CareContextNotFound = "ABDM-1012";
+        public const string OtpInValid = "ABDM-1035";
+        public const string OtpExpired = "ABDM-1035";
+        public const string OtpGenerationFailed = "3501";
+        public const string NoLinkRequestFound = "3413";
+        public const string ServerInternalError = "3500";
+        public const string DiscoveryRequestNotFound = "3407";
+        public const string ContextArtefactIdNotFound = "3416";
+        public const string InvalidToken = "3401";
+        public const string HealthInformationNotFound = "3502";
+        public const string LinkExpired = "3408";
+        public const string ExpiredKeyPair = "3410";
+        public const string FailedToGetLinkedCareContexts = "3507";
+        public const string DuplicateDiscoveryRequest = "3409";
+        public const string DuplicateRequestId = "3429";
+        public const string CareContextConfiguration = "3430";
+        public const string OpenMrsConnection = "3431";
+        public const string HeartBeat = "3432";
+        public const string InvalidHealthId = "3433";
+        public const string DuplicateAuthConfirmRequest = "3434";
+        public const string GatewayTimedOut = "3435";
+        public const string BadRequest = "3400";
+        public const string ConsentNotGranted = "1428";
     }
 }

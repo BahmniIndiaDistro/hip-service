@@ -142,7 +142,7 @@ namespace In.ProjectEKA.HipService.Link
                     .VerifyAndLinkCareContext(new LinkConfirmationRequest(request.Confirmation.Token,
                         request.Confirmation.LinkRefNumber));
                 var linkedPatientRepresentation = new List<LinkConfirmationRepresentation>();
-                if (patientLinkResponse != null || cmId != "")
+                if (patientLinkResponse != null && cmId != "")
                 {
                     linkedPatientRepresentation = patientLinkResponse.Patient.ToList();
                 }
