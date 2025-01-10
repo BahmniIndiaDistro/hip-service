@@ -33,7 +33,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_CONSENTS_HIP = "/api/"+ VERSION_V3 +"/consent/request/hip/notify";
         public const string PATH_LINKS_LINK_INIT = CURRENT_VERSION + "/links/link/init";
         public const string PATH_LINKS_LINK_CONFIRM = CURRENT_VERSION + "/links/link/confirm";
-        public const string PATH_HEALTH_INFORMATION_HIP_REQUEST = CURRENT_VERSION + "/health-information/hip/request";
+        public const string PATH_HEALTH_INFORMATION_HIP_REQUEST = "/api/"+ VERSION_V3 +"/hip/health-information/request";
         public const string PATH_HEART_BEAT = CURRENT_VERSION + "/heartbeat";
         public const string PATH_READINESS = CURRENT_VERSION + "/readiness";
 
@@ -48,8 +48,8 @@ namespace In.ProjectEKA.HipService.Common
         public static readonly string PATH_ON_LINK_CONFIRM = "/" + CURRENT_VERSION + "/links/link/on-confirm";
         public static readonly string PATH_CONSENT_ON_NOTIFY = "/api/hiecm/consent/"+ VERSION_V3 +"/request/hip/on-notify";
 
-        public static readonly string PATH_HEALTH_INFORMATION_ON_REQUEST = "/" + CURRENT_VERSION +
-                                                                           "/health-information/hip/on-request";
+        public static readonly string PATH_HEALTH_INFORMATION_ON_REQUEST =
+            "/api/hiecm/data-flow/" + VERSION_V3 + "/health-information/hip/on-request";
 
         public static readonly string PATH_HEALTH_INFORMATION_NOTIFY_GATEWAY = "/" + CURRENT_VERSION +
                                                                                "/health-information/notify";
