@@ -5,17 +5,11 @@ namespace In.ProjectEKA.HipService.Consent
 
     public class ConsentArtefactRepresentation
     {
-        public ConsentArtefactRepresentation(Notification notification, DateTime timestamp, string requestId)
+        public ConsentArtefactRepresentation(Notification notification)
         {
             Notification = notification;
-            Timestamp = timestamp;
-            RequestId = requestId;
         }
 
         public Notification Notification { get; }
-
-        public DateTime Timestamp { get; }
-
-        public string RequestId { get; }
     }
 }

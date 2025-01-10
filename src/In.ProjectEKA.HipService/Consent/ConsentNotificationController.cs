@@ -1,5 +1,6 @@
 // ReSharper disable MemberCanBePrivate.Global
 
+using System.ComponentModel.DataAnnotations;
 using In.ProjectEKA.HipService.Common;
 
 namespace In.ProjectEKA.HipService.Consent
@@ -34,15 +35,17 @@ namespace In.ProjectEKA.HipService.Consent
 
         [HttpPost(PATH_CONSENTS_HIP)]
         public AcceptedResult ConsentNotification(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, 
+            [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] ConsentArtefactRepresentation consentArtefact)
         {
-            backgroundJob.Enqueue(() => StoreConsent(consentArtefact, correlationId));
+            backgroundJob.Enqueue(() => StoreConsent(consentArtefact, correlationId, requestId));
             return Accepted();
         }
         
         [NonAction]
-        public async Task StoreConsent(ConsentArtefactRepresentation consentArtefact, String correlationId)
+        public async Task StoreConsent(ConsentArtefactRepresentation consentArtefact, String correlationId, String requestId)
         {
             var notification = consentArtefact.Notification;
 
@@ -56,11 +59,9 @@ namespace In.ProjectEKA.HipService.Consent
                 await consentRepository.AddAsync(consent);
                 var cmSuffix = consent.ConsentArtefact.ConsentManager.Id;
                 var gatewayResponse = new GatewayConsentRepresentation(
-                    Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                     new ConsentUpdateResponse(ConsentUpdateStatus.OK.ToString(), notification.ConsentId),
                     null,
-                    new Resp(consentArtefact.RequestId));
+                    new Resp(requestId));
                 await gatewayClient.SendDataToGateway(PATH_CONSENT_ON_NOTIFY, gatewayResponse, cmSuffix, correlationId);
             }
             else
@@ -71,11 +72,9 @@ namespace In.ProjectEKA.HipService.Consent
                     var consent = await consentRepository.GetFor(notification.ConsentId);
                     var cmSuffix = consent.ConsentArtefact.ConsentManager.Id;
                     var gatewayResponse = new GatewayConsentRepresentation(
-                        Guid.NewGuid(),
-                        DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                         new ConsentUpdateResponse(ConsentUpdateStatus.OK.ToString(), notification.ConsentId),
                         null,
-                        new Resp(consentArtefact.RequestId));
+                        new Resp(requestId));
                     await gatewayClient.SendDataToGateway(PATH_CONSENT_ON_NOTIFY, gatewayResponse, cmSuffix, correlationId);
                 }
             }

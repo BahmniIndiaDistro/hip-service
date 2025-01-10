@@ -4,12 +4,13 @@ namespace In.ProjectEKA.HipService.Consent.Model
 
     public class Notification
     {
-        public Notification(ConsentArtefact consentDetail, string consentId, string signature, ConsentStatus status)
+        public Notification(ConsentArtefact consentDetail, string consentId, string signature, ConsentStatus status, bool grantAcknowledgement)
         {
             ConsentDetail = consentDetail;
             ConsentId = consentId;
             Signature = signature;
             Status = status;
+            GrantAcknowledgement = grantAcknowledgement;
         }
 
         public ConsentArtefact ConsentDetail { get; }
@@ -19,5 +20,7 @@ namespace In.ProjectEKA.HipService.Consent.Model
         public string Signature { get; }
 
         public ConsentStatus Status { get; }
+        
+        public bool GrantAcknowledgement { get; }
     }
 }
