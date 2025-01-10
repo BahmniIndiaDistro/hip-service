@@ -5,16 +5,11 @@ namespace In.ProjectEKA.HipService.Gateway.Model
 
     public class GatewayDataNotificationRequest
     {
-        public GatewayDataNotificationRequest(Guid requestId, string timestamp,
-            DataFlowNotificationRequest notification)
+        public GatewayDataNotificationRequest(DataFlowNotificationRequest notification)
         {
-            RequestId = requestId;
-            Timestamp = timestamp;
             Notification = notification;
         }
-
-        public Guid RequestId { get; }
-        public string Timestamp { get; }
+        
         public DataFlowNotificationRequest Notification { get; }
     }
 }

@@ -21,8 +21,7 @@ namespace In.ProjectEKA.HipService.DataFlow
         public virtual async Task NotifyGateway(string cmSuffix, DataNotificationRequest dataNotificationRequest,
             string correlationId)
         {
-            var notificationRequest = new GatewayDataNotificationRequest(Guid.NewGuid(),
-                DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
+            var notificationRequest = new GatewayDataNotificationRequest(
                 new DataFlowNotificationRequest(
                     dataNotificationRequest.TransactionId,
                     dataNotificationRequest.ConsentId,
