@@ -42,7 +42,7 @@ namespace In.ProjectEKA.HipService.Discovery
             this.logger = logger;
         }
 
-        private ValueTuple<DiscoveryRepresentation, ErrorRepresentation> GetError(ErrorCode errorCode,
+        private ValueTuple<DiscoveryRepresentation, ErrorRepresentation> GetError(string errorCode,
             string errorMessage)
         {
             return (null, new ErrorRepresentation(new Error(errorCode, errorMessage)));

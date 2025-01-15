@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace In.ProjectEKA.HipService.Gateway.Model
 {
     using System;
@@ -5,27 +7,19 @@ namespace In.ProjectEKA.HipService.Gateway.Model
 
     public class GatewayLinkConfirmResponse
     {
-        public GatewayLinkConfirmResponse(Guid requestId,
-            string timestamp,
-            LinkConfirmationRepresentation patient,
+        public GatewayLinkConfirmResponse(
+            IEnumerable<LinkConfirmationRepresentation> patient,
             Error error,
-            Resp resp)
+            Resp response)
         {
-            RequestId = requestId;
-            Timestamp = timestamp;
             Patient = patient;
             Error = error;
-            Resp = resp;
+            Response = response;
         }
-
-        public Guid RequestId { get; }
-
-        public string Timestamp { get; }
-
-        public LinkConfirmationRepresentation Patient { get; }
+        public IEnumerable<LinkConfirmationRepresentation> Patient { get; }
 
         public Error Error { get; }
 
-        public Resp Resp { get; }
+        public Resp Response { get; }
     }
 }

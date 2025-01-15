@@ -1,12 +1,14 @@
+using System.Collections.Generic;
+
 namespace In.ProjectEKA.HipLibrary.Patient.Model
 {
     public class PatientLinkConfirmationRepresentation
     {
-        public PatientLinkConfirmationRepresentation(LinkConfirmationRepresentation patient)
+        public PatientLinkConfirmationRepresentation(IEnumerable<LinkConfirmationRepresentation> patient)
         {
             Patient = patient;
         }
 
-        public LinkConfirmationRepresentation Patient { get; }
+        public IEnumerable<LinkConfirmationRepresentation> Patient { get; }
     }
 }

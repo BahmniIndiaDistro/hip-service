@@ -6,26 +6,20 @@ namespace In.ProjectEKA.HipService.Gateway.Model
     public class GatewayLinkResponse
     {
         public GatewayLinkResponse(LinkEnquiryRepresentation link,
-            Error error, Resp resp, string transactionId, string timestamp, Guid requestId)
+            Error error, Resp response, string transactionId)
         {
             Link = link;
             Error = error;
-            Resp = resp;
+            Response = response;
             TransactionId = transactionId;
-            Timestamp = timestamp;
-            RequestId = requestId;
         }
 
         public LinkEnquiryRepresentation Link { get; }
-
-        public Guid RequestId { get; }
-
-        public string Timestamp { get; }
-
+        
         public string TransactionId { get; }
 
         public Error Error { get; }
 
-        public Resp Resp { get; }
+        public Resp Response { get; }
     }
 }

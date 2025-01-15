@@ -23,7 +23,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             };
             var repository = new OpenMrsPhoneNumberRepository(openmrsClientMock.Object,openmrsConfiguration);
             var patientId = "some-patient-id";
-            var path = $"{Endpoints.OpenMrs.OnPatientPath}/{patientId}";
+            var path = $"{Endpoints.OpenMrs.OnPatientPath}/{patientId}?v=full";
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(path))
@@ -54,7 +54,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             };
             var repository = new OpenMrsPhoneNumberRepository(openmrsClientMock.Object,openmrsConfiguration);
             var patientId = "some-patient-id";
-            var path = $"{Endpoints.OpenMrs.OnPatientPath}/{patientId}";
+            var path = $"{Endpoints.OpenMrs.OnPatientPath}/{patientId}?v=full";
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(path))
@@ -136,37 +136,84 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                                 ""rel"": ""self"",
                                 ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/person/81bcb347-3ed7-4b8e-a0fd-5b72eabed934/attribute/852a9e8d-c956-4a03-a310-98365f49ad5a""
                             }
-                        ]
+                        ],
+                        ""attributeType"": {
+                              ""uuid"": ""f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                              ""display"": ""General"",
+                              ""links"": [
+                                {
+                                  ""rel"": ""self"",
+                                  ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/personattributetype/f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                                  ""resourceAlias"": ""personattributetype""
+                                }
+                              ]
+                         }
                     },
                     {
                         ""uuid"": ""df4af84e-bc10-4620-b8f0-df1a355cba55"",
-                        ""display"": ""phoneNumber = +91-9999999988"",
+                        ""display"": ""+91-9999999988"",
+                        ""value"": ""+91-9999999988"",
                         ""links"": [
                             {
                                 ""rel"": ""self"",
                                 ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/person/81bcb347-3ed7-4b8e-a0fd-5b72eabed934/attribute/df4af84e-bc10-4620-b8f0-df1a355cba55""
                             }
-                        ]
+                        ],
+                        ""attributeType"": {
+                              ""uuid"": ""f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                              ""display"": ""phoneNumber"",
+                              ""links"": [
+                                {
+                                  ""rel"": ""self"",
+                                  ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/personattributetype/f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                                  ""resourceAlias"": ""personattributetype""
+                                }
+                              ]
+                         }
                     },
                     {
                         ""uuid"": ""df4af84e-bc10-4620-b8f0-df1a355cba54"",
-                        ""display"": ""alternatePhoneNumber = +91-9999999999"",
+                        ""display"": ""+91-9999999999"",
+                        ""value"": ""+91-9999999999"",
                         ""links"": [
                             {
                                 ""rel"": ""self"",
                                 ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/person/81bcb347-3ed7-4b8e-a0fd-5b72eabed934/attribute/df4af84e-bc10-4620-b8f0-df1a355cba54""
                             }
-                        ]
+                        ],
+                        ""attributeType"": {
+                              ""uuid"": ""f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                              ""display"": ""alternatePhoneNumber"",
+                              ""links"": [
+                                {
+                                  ""rel"": ""self"",
+                                  ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/personattributetype/f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                                  ""resourceAlias"": ""personattributetype""
+                                }
+                              ]
+                         }
                     },
                     {
                         ""uuid"": ""a190a81d-1b75-411e-a358-779e62301dbb"",
-                        ""display"": ""landHolding = 2"",
+                        ""display"": ""2"",
+                        ""value"": ""2"",
                         ""links"": [
                             {
                                 ""rel"": ""self"",
                                 ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/person/81bcb347-3ed7-4b8e-a0fd-5b72eabed934/attribute/a190a81d-1b75-411e-a358-779e62301dbb""
                             }
-                        ]
+                        ],
+                        ""attributeType"": {
+                              ""uuid"": ""f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                              ""display"": ""landHolding"",
+                              ""links"": [
+                                {
+                                  ""rel"": ""self"",
+                                  ""uri"": ""http://qa-01.bahmni-covid19.in/openmrs/ws/rest/v1/personattributetype/f2538c6f-a1b3-46ba-bc9d-e4d8b131d5f9"",
+                                  ""resourceAlias"": ""personattributetype""
+                                }
+                              ]
+                         }
                     }
                 ],
                 ""voided"": false,

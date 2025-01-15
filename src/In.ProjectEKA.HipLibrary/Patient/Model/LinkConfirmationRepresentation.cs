@@ -9,11 +9,13 @@ namespace In.ProjectEKA.HipLibrary.Patient.Model
         }
 
         public LinkConfirmationRepresentation(string referenceNumber, string display,
-            IEnumerable<CareContextRepresentation> careContexts)
+            IEnumerable<CareContextRepresentation> careContexts, string hiType, int count)
         {
             ReferenceNumber = referenceNumber;
             Display = display;
             CareContexts = careContexts;
+            HiType = hiType;
+            Count = count;
         }
 
         public string ReferenceNumber { get; }
@@ -21,5 +23,9 @@ namespace In.ProjectEKA.HipLibrary.Patient.Model
         public string Display { get; }
 
         public IEnumerable<CareContextRepresentation> CareContexts { get; }
+        
+        public string HiType { get; }
+        
+        public int Count { get; }
     }
 }

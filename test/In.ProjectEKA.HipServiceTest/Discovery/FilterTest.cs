@@ -189,11 +189,9 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
                 .WithPatientName(name)
                 .WithPatientYearOfBirth(yearOfBirth)
                 .WithPatientGender(gender)
-                .WithRequestId(Faker().Random.String())
                 .WithVerifiedIdentifiers(IdentifierType.MOBILE, phoneNumber)
                 .WithUnverifiedIdentifiers(IdentifierType.MOBILE, phoneNumber)  
                 .WithTransactionId(RandomString())
-                .RequestedOn(DateTime.Now)
                 .Build();
         }
 

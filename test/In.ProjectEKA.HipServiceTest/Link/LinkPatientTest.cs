@@ -36,7 +36,10 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 Name = TestBuilders.Faker().Random.Word(),
                 CareContexts = new List<CareContextRepresentation>
                 {
-                    new CareContextRepresentation("129", "National Cancer program")
+                    new CareContextRepresentation("129", "National Cancer program","VISIT",new []
+                        {
+                            HiType.Prescription
+                        })
                 }
             };
 
@@ -225,7 +228,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
                     "id", verifiedIdentifiers: new List<Identifier>()
                     {
                         new Identifier(IdentifierType.MOBILE, "9999999999"),
-                        new Identifier(IdentifierType.NDHM_HEALTH_NUMBER, "123456718910")
+                        new Identifier(IdentifierType.ABHA_NUMBER, "123456718910")
                     }, unverifiedIdentifiers: null,
                     "name", HipLibrary.Patient.Model.Gender.M, 2000);
             DiscoveryReqMap.PatientInfoMap.Add(testLinkRequest.ConsentManagerUserId, patientEnquiry);
@@ -250,19 +253,20 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 })
                 .Verifiable();
             var expectedLinkResponse = new PatientLinkConfirmationRepresentation(
+                new List<LinkConfirmationRepresentation>(){
                 new LinkConfirmationRepresentation(
                     testPatient.Identifier,
                     $"{testPatient.Name}",
                     new[] {new CareContextRepresentation("129", "National Cancer program")
-                    }));
+                    }, HiType.Prescription.ToString(), 1)});
 
             var (response,cmId,_) = await linkPatient.VerifyAndLinkCareContext(patientLinkRequest);
 
             patientVerification.Verify();
             linkRepository.Verify();
             guidGenerator.Verify();
-            response.Patient.ReferenceNumber.Should().BeEquivalentTo(expectedLinkResponse.Patient.ReferenceNumber);
-            response.Patient.Display.Should().BeEquivalentTo(expectedLinkResponse.Patient.Display);
+            response.Patient.ToList()[0].ReferenceNumber.Should().BeEquivalentTo(expectedLinkResponse.Patient.ToList()[0].ReferenceNumber);
+            response.Patient.ToList()[0].Display.Should().BeEquivalentTo(expectedLinkResponse.Patient.ToList()[0].Display);
         }
 
         [Fact]

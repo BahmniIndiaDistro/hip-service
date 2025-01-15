@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Hl7.Fhir.Model;
 
 namespace In.ProjectEKA.HipServiceTest.Link
@@ -48,18 +50,20 @@ namespace In.ProjectEKA.HipServiceTest.Link
             var correlationId = Uuid.Generate().ToString();
             var linkRequest = new LinkReferenceRequest(
                 transactionId,
-                new PatientLinkReference(
-                    id,
-                    patientReference,
-                    new[] {new CareContextEnquiry(programRefNo)}),
-                faker.Random.Hash());
+                "test@sbx",
+                new List<PatientLinkReference>()
+                {
+                    new PatientLinkReference(patientReference,
+                        new[] {new CareContextEnquiry(programRefNo)}, HiType.Prescription.ToString(),1)
+                }
+                    );
 
             discoveryRequestRepository.Setup(x => x.RequestExistsFor(linkRequest.TransactionId,
                 id,
-                linkRequest.Patient.ReferenceNumber))
+                linkRequest.Patient.ToList()[0].ReferenceNumber))
                 .ReturnsAsync(true);
 
-            var linkedResult = linkController.LinkFor(correlationId, linkRequest);
+            var linkedResult = linkController.LinkFor(correlationId,Uuid.Generate().ToString(),new Date().ToString(), linkRequest);
 
             backgroundJobClient.Verify(client => client.Create(
                 It.Is<Job>(job => job.Method.Name == "LinkPatient" && job.Args[0] == linkRequest),
@@ -78,19 +82,18 @@ namespace In.ProjectEKA.HipServiceTest.Link
             const string token = "1234";
             var cmId = "ncg";
             var careContext = new[] {new CareContextRepresentation("129", Faker().Random.Word())};
-            var expectedResponse = new PatientLinkConfirmationRepresentation(new LinkConfirmationRepresentation("4",
+            var expectedResponse = new PatientLinkConfirmationRepresentation(new List<LinkConfirmationRepresentation>(){new LinkConfirmationRepresentation("4",
                 Faker().Random.Word()
-                , careContext));
+                , careContext, HiType.Prescription.ToString(), 1)});
             var correlationId = Uuid.Generate().ToString();
             link.Setup(e => e.VerifyAndLinkCareContext(It.Is<LinkConfirmationRequest>(p =>
                 p.Token == "1234" &&
                 p.LinkReferenceNumber == linkReferenceNumber)))
                 .ReturnsAsync((expectedResponse,cmId,null));
 
-            var linkPatientRequest = new LinkPatientRequest(Faker().Random.Hash(),
-                It.IsAny<string>(),
+            var linkPatientRequest = new LinkPatientRequest(
                 new LinkConfirmation(linkReferenceNumber, token));
-            var response = linkController.LinkPatientFor(correlationId, linkPatientRequest);
+            var response = linkController.LinkPatientFor(correlationId, Uuid.Generate().ToString(),new Date().ToString(),linkPatientRequest);
 
             backgroundJobClient.Verify(client => client.Create(
                 It.Is<Job>(job => job.Method.Name == "LinkPatientCareContextFor" && job.Args[0] == linkPatientRequest),

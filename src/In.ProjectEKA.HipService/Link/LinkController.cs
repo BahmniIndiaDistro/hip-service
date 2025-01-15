@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using In.ProjectEKA.HipService.Patient.Model;
 
 namespace In.ProjectEKA.HipService.Link
@@ -42,9 +45,11 @@ namespace In.ProjectEKA.HipService.Link
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         public AcceptedResult LinkFor(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] LinkReferenceRequest request)
         {
-            backgroundJob.Enqueue(() => LinkPatient(request, correlationId));
+            backgroundJob.Enqueue(() => LinkPatient(request, correlationId, requestId));
             return Accepted();
         }
 
@@ -64,28 +69,34 @@ namespace In.ProjectEKA.HipService.Link
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         public AcceptedResult LinkPatientFor(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] LinkPatientRequest request)
         {
-            backgroundJob.Enqueue(() => LinkPatientCareContextFor(request, correlationId));
+            backgroundJob.Enqueue(() => LinkPatientCareContextFor(request, correlationId, requestId));
             return Accepted();
         }
 
         [NonAction]
-        public async Task LinkPatient(LinkReferenceRequest request, string correlationId)
+        public async Task LinkPatient(LinkReferenceRequest request, string correlationId, string requestId)
         {
-            var cmUserId = request.Patient.Id;
+            var cmUserId = request.AbhaAddress;
             var cmSuffix = cmUserId.Substring(cmUserId.LastIndexOf("@", StringComparison.Ordinal) + 1);
+            var patientReferenceNumber = request.Patient?.ToList()[0].ReferenceNumber;
+            var careContexts = request.Patient.SelectMany(record => record.CareContexts)
+                .DistinctBy(c => c.ReferenceNumber)
+                .ToList();
             var patient = new LinkEnquiry(
                 cmSuffix,
                 cmUserId,
-                request.Patient.ReferenceNumber,
-                request.Patient.CareContexts);
+                patientReferenceNumber,
+                careContexts);
             try
             {
                 var doesRequestExists = await discoveryRequestRepository.RequestExistsFor(
                     request.TransactionId,
-                    request.Patient?.Id,
-                    request.Patient?.ReferenceNumber);
+                    request.AbhaAddress,
+                    patientReferenceNumber);
 
                 ErrorRepresentation errorRepresentation = null;
                 if (!doesRequestExists)
@@ -95,7 +106,7 @@ namespace In.ProjectEKA.HipService.Link
                 }
 
                 var patientReferenceRequest =
-                    new PatientLinkEnquiry(request.TransactionId, request.RequestId, patient);
+                    new PatientLinkEnquiry(request.TransactionId, requestId, patient);
                 var patientLinkEnquiryRepresentation = new PatientLinkEnquiryRepresentation();
 
                 var (linkReferenceResponse, error) = errorRepresentation != null
@@ -111,10 +122,8 @@ namespace In.ProjectEKA.HipService.Link
                 var response = new GatewayLinkResponse(
                     linkedPatientRepresentation,
                     error?.Error,
-                    new Resp(request.RequestId),
-                    request.TransactionId,
-                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
-                    Guid.NewGuid());
+                    new Resp(requestId),
+                    request.TransactionId);
 
                 await gatewayClient.SendDataToGateway(PATH_ON_LINK_INIT, response, cmSuffix, correlationId);
             }
@@ -125,25 +134,23 @@ namespace In.ProjectEKA.HipService.Link
         }
 
         [NonAction]
-        public async Task LinkPatientCareContextFor(LinkPatientRequest request, String correlationId)
+        public async Task LinkPatientCareContextFor(LinkPatientRequest request, String correlationId, string requestId)
         {
             try
             {
                 var (patientLinkResponse, cmId, error) = await linkPatient
                     .VerifyAndLinkCareContext(new LinkConfirmationRequest(request.Confirmation.Token,
                         request.Confirmation.LinkRefNumber));
-                var linkedPatientRepresentation = new LinkConfirmationRepresentation();
-                if (patientLinkResponse != null || cmId != "")
+                var linkedPatientRepresentation = new List<LinkConfirmationRepresentation>();
+                if (patientLinkResponse != null && cmId != "")
                 {
-                    linkedPatientRepresentation = patientLinkResponse.Patient;
+                    linkedPatientRepresentation = patientLinkResponse.Patient.ToList();
                 }
 
                 var response = new GatewayLinkConfirmResponse(
-                    Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                     linkedPatientRepresentation,
                     error?.Error,
-                    new Resp(request.RequestId));
+                    new Resp(requestId));
                 await gatewayClient.SendDataToGateway(PATH_ON_LINK_CONFIRM, response, cmId, correlationId);
             }
             catch(Exception exception)

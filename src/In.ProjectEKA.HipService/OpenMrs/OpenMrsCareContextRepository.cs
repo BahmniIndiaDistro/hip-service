@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -41,6 +42,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
                 var careContextType = root[i].GetProperty("careContextType").ToString();
                 var careContextName = root[i].GetProperty("careContextName").GetString();
                 var careContextReferenceNumber = root[i].GetProperty("careContextReference").ToString();
+                var hiTypes = ParseHiTypesOfCareContext(root[i].GetProperty("hiTypes"));
                 if (careContextType.Equals("PROGRAM"))
                 {
                     careContextName = careContextName + "(ID Number:" + careContextReferenceNumber + ")";
@@ -48,10 +50,20 @@ namespace In.ProjectEKA.HipService.OpenMrs
                 }
                 
                 careContexts.Add(new CareContextRepresentation(careContextReferenceNumber,careContextName,
-                    careContextType));
+                    careContextType,hiTypes));
             }
 
             return careContexts;
+        }
+        
+        private List<HiType> ParseHiTypesOfCareContext(JsonElement hiTypes)
+        {
+            var hiTypesList = new List<HiType>();
+            for (var i = 0; i < hiTypes.GetArrayLength(); i++)
+            {
+                hiTypesList.Add((HiType)Enum.Parse(typeof(HiType),hiTypes[i].ToString(), true));
+            }
+            return hiTypesList;
         }
     }
 }
