@@ -43,7 +43,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Fact]
         private void ShouldReturnAPatient()
         {
-            var patient1 = new PatientEnquiryRepresentation("123", "Jack", new List<CareContextRepresentation>(), new List<string>
+            var patient1 = new PatientEnquiryRepresentation("123", "Jack", new List<CareContextRepresentation>(){new CareContextRepresentation("ref2","display","VISIT",new List<HiType>(){HiType.Prescription})}, new List<string>
             {
                 Match.Name.ToString()
             });

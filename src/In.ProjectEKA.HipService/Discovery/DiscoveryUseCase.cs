@@ -15,7 +15,12 @@ namespace In.ProjectEKA.HipService.Discovery
                 return (null, new ErrorRepresentation(new Error(ErrorCode.NoPatientFound, "No patient found")));
 
             if (patients.Count() == 1)
-                return (patients.First(), null);
+            {
+                var patient = patients.First();
+                if (patient.CareContexts == null || !patient.CareContexts.Any())
+                    return (null, new ErrorRepresentation(new Error(ErrorCode.CareContextNotFound, "No care context found")));
+                return (patient, null);
+            }
 
             return (null,
                 new ErrorRepresentation(new Error(ErrorCode.MultiplePatientsFound, "Multiple patients found")));

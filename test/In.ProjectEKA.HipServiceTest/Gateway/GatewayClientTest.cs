@@ -33,15 +33,21 @@ namespace In.ProjectEKA.HipServiceTest.Gateway
             var gatewayConfiguration = new GatewayConfiguration {Url = "http://someUrl"};
             var authenticationUri = new Uri($"{gatewayConfiguration.Url}/{PATH_SESSIONS}");
             var expectedUri = new Uri($"{gatewayConfiguration.Url}{PATH_ON_DISCOVER}");
-            var patientEnquiryRepresentation = new PatientEnquiryRepresentation(
-                "123",
-                "Jack",
-                new List<CareContextRepresentation>(),
-                new List<string>());
+            var patientDiscoveryRepresentations = new List<PatientDiscoveryRepresentation>
+            {
+                new PatientDiscoveryRepresentation(
+                    "123",
+                    "Jack",
+                    new List<CareContextRepresentation>
+                    {
+                        new CareContextRepresentation("ref1","display1")
+                    },
+                    HiType.Prescription.ToString(),
+                    1)
+            };
             var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
-                patientEnquiryRepresentation,
-                Guid.NewGuid(),
-                DateTime.Now.ToString(DateTimeFormat),
+                patientDiscoveryRepresentations,
+                new List<string>(),
                 "transactionId",
                 null,
                 new DiscoveryResponse("requestId", HttpStatusCode.OK, "uselessMessage"));
@@ -87,15 +93,21 @@ namespace In.ProjectEKA.HipServiceTest.Gateway
             var httpClient = new HttpClient(handlerMock.Object);
             var gatewayConfiguration = new GatewayConfiguration {Url = "http://someUrl"};
             var authenticationUri = new Uri($"{gatewayConfiguration.Url}/{PATH_SESSIONS}");
-            var patientEnquiryRepresentation = new PatientEnquiryRepresentation(
-                "123",
-                "Jack",
-                new List<CareContextRepresentation>(),
-                new List<string>());
+            var patientDiscoveryRepresentations = new List<PatientDiscoveryRepresentation>
+            {
+                new PatientDiscoveryRepresentation(
+                    "123",
+                    "Jack",
+                    new List<CareContextRepresentation>
+                    {
+                        new CareContextRepresentation("ref1","display1")
+                    },
+                    HiType.Prescription.ToString(),
+                    1)
+            };
             var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
-                patientEnquiryRepresentation,
-                Guid.NewGuid(),
-                DateTime.Now.ToString(DateTimeFormat),
+                patientDiscoveryRepresentations,
+                new List<string>(),
                 "transactionId",
                 null,
                 new DiscoveryResponse("requestId", HttpStatusCode.OK, "uselessMessage"));

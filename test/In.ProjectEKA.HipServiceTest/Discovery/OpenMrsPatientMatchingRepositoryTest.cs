@@ -53,7 +53,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
                 new PatientEnquiry(
                     "id", verifiedIdentifiers: null, unverifiedIdentifiers: null,
                     patientName, patientGender, patientYob);
-            var request = new DiscoveryRequest(patientEnquiry,"requestId", "transactionId", DateTime.Now);
+            var request = new DiscoveryRequest(patientEnquiry, "transactionId");
             var repo = new OpenMrsPatientMatchingRepository(patientDal.Object);
 
             var result = repo.Where(request);
@@ -73,7 +73,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
                 new PatientEnquiry(
                     "id", verifiedIdentifiers: null, unverifiedIdentifiers: null,
                     patientSearchedName, patientGender, patientYob);
-            var request = new DiscoveryRequest(patientEnquiry,"requestId", "transactionId", DateTime.Now);
+            var request = new DiscoveryRequest(patientEnquiry, "transactionId");
             var repo = new OpenMrsPatientMatchingRepository(patientDal.Object);
 
             var patient = repo.Where(request).Result.Single();
@@ -94,7 +94,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
                 new PatientEnquiry(
                     "id", verifiedIdentifiers: null, unverifiedIdentifiers: null,
                     patientSearchedName, patientGender, patientYob);
-            var request = new DiscoveryRequest(patientEnquiry, "requestId", "transactionId", DateTime.Now);
+            var request = new DiscoveryRequest(patientEnquiry, "transactionId");
             var repo = new OpenMrsPatientMatchingRepository(patientDal.Object);
 
             var patient = repo.Where(request).Result.Single();

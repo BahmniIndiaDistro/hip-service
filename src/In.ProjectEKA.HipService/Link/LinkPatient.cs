@@ -164,11 +164,19 @@ namespace In.ProjectEKA.HipService.Link
                         .Select(context => new CareContextRepresentation(context.CareContextName,
                             patient.CareContexts.First(info => info.ReferenceNumber == context.CareContextName)
                                 .Display));
-                    var patientLinkResponse = new PatientLinkConfirmationRepresentation(
-                        new LinkConfirmationRepresentation(
-                            linkEnquires.PatientReferenceNumber,
+                    var linkConfirmationRepresentations = patient.CareContexts
+                        .Where(info => representations.Any(context => context.ReferenceNumber == info.ReferenceNumber))
+                        .Where(cc => cc.HiTypes != null && cc.HiTypes.Any())
+                        .SelectMany(cc => cc.HiTypes.Select(hiType => new { HiType = hiType, CareContext = cc }))
+                        .GroupBy(x => x.HiType)
+                        .Select(group => new LinkConfirmationRepresentation(linkEnquires.PatientReferenceNumber,
                             $"{patient.Name}",
-                            representations));
+                            group.Select(x => new CareContextRepresentation(x.CareContext.ReferenceNumber, x.CareContext.Display))
+                                .ToList(),
+                            group.Key.ToString(),
+                            group.Count()))
+                        .ToList();
+                    var patientLinkResponse = new PatientLinkConfirmationRepresentation(linkConfirmationRepresentations);
                     var resp = await SaveLinkedAccounts(linkEnquires, patient.Uuid);
                     if (resp)
                     {
@@ -202,7 +210,7 @@ namespace In.ProjectEKA.HipService.Link
         private async void LinkAbhaIdentifier(string patientUuid, string abhaAddress)
         {
             var patient = PatientInfoMap[abhaAddress];
-            var abhaNumberIdentifier =  patient?.VerifiedIdentifiers.FirstOrDefault(id => id.Type == IdentifierType.NDHM_HEALTH_NUMBER);
+            var abhaNumberIdentifier =  patient?.VerifiedIdentifiers.FirstOrDefault(id => id.Type == IdentifierType.ABHA_NUMBER);
             var json = JsonConvert.SerializeObject(new PatientAbhaIdentifier(abhaNumberIdentifier?.Value, abhaAddress), new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,

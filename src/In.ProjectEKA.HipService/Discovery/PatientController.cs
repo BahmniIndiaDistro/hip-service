@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using In.ProjectEKA.HipService.Discovery.Mapper;
 
 namespace In.ProjectEKA.HipService.Discovery
 {
@@ -43,18 +45,20 @@ namespace In.ProjectEKA.HipService.Discovery
 
         public AcceptedResult DiscoverPatientCareContexts(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
+            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] DiscoveryRequest request)
         {
-            Log.Information($"discovery request received for {request.Patient.Id} with {request.RequestId}.");
+            Log.Information($"discovery request received for {request.Patient.Id} with {requestId}.");
             Log.Information("Started Execution");
             Log.Information("calling GetPatientCareContext Method, Patient Name -> " + request.Patient.Name);
             Log.Information("Correlation Id -----> " + correlationId);
-            backgroundJob.Enqueue(() => GetPatientCareContext(request, correlationId));
+            backgroundJob.Enqueue(() => GetPatientCareContext(request, correlationId, requestId));
             return Accepted();
         }
 
         [NonAction]
-        public async Task GetPatientCareContext(DiscoveryRequest request, string correlationId)
+        public async Task GetPatientCareContext(DiscoveryRequest request, string correlationId, string requestId)
         {
             Log.Information("In GetPatientCareContext Method -----> ");
             var patientId = request.Patient.Id;
@@ -65,13 +69,17 @@ namespace In.ProjectEKA.HipService.Discovery
             {
                 var (response, error) = await patientDiscovery.PatientFor(request);
                 Log.Information("PatientFor executed successfully" + response);
+                List<PatientDiscoveryRepresentation> patientDiscoveryRepresentation = PatientDiscoveryMapper.Map(response?.Patient);
+                if(error == null && (patientDiscoveryRepresentation == null || patientDiscoveryRepresentation.Count == 0))
+                {
+                    error = new ErrorRepresentation(new Error(ErrorCode.CareContextNotFound, "No care context found"));
+                }
                 var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
-                    response?.Patient,
-                    Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
+                    patientDiscoveryRepresentation,
+                    response?.Patient?.MatchedBy,
                     request.TransactionId, //TODO: should be reading transactionId from contract
                     error?.Error,
-                    new DiscoveryResponse(request.RequestId,
+                    new DiscoveryResponse(requestId,
                         error == null ? HttpStatusCode.OK : HttpStatusCode.NotFound,
                         error == null ? SuccessMessage : ErrorMessage));
                 if (!PatientInfoMap.ContainsKey(patientId))
@@ -81,7 +89,7 @@ namespace In.ProjectEKA.HipService.Discovery
                 
                 Log.Information("new GatewayDiscoveryRepresentation" + gatewayDiscoveryRepresentation);
                 Log.Information("Sending data to gateway");
-                Log.Information($"Response about to be send for {request.RequestId} with {@response?.Patient}");
+                Log.Information($"Response about to be send for {requestId} with {@response?.Patient}");
                 await gatewayClient.SendDataToGateway(PATH_ON_DISCOVER, gatewayDiscoveryRepresentation, cmSuffix,
                     correlationId);
             }
@@ -89,15 +97,14 @@ namespace In.ProjectEKA.HipService.Discovery
             {
                 var gatewayDiscoveryRepresentation = new GatewayDiscoveryRepresentation(
                     null,
-                    Guid.NewGuid(),
-                    DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
+                    null,
                     request.TransactionId, //TODO: should be reading transactionId from contract
                     new Error(ErrorCode.ServerInternalError, "Unreachable external service"),
-                    new DiscoveryResponse(request.RequestId, HttpStatusCode.InternalServerError,
+                    new DiscoveryResponse(requestId, HttpStatusCode.InternalServerError,
                         "Unreachable external service"));
                 await gatewayClient.SendDataToGateway(PATH_ON_DISCOVER, gatewayDiscoveryRepresentation, cmSuffix,
                     correlationId);
-                logger.LogError(LogEvents.Discovery, exception, $"Error happened for {request.RequestId}");
+                logger.LogError(LogEvents.Discovery, exception, $"Error happened for {requestId}");
             }
         }
     }

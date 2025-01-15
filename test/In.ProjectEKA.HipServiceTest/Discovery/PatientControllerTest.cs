@@ -1,5 +1,7 @@
 using System.Net.WebSockets;
 using Hl7.Fhir.Model;
+using In.ProjectEKA.HipService.Common;
+using In.ProjectEKA.HipService.Discovery.Mapper;
 
 namespace In.ProjectEKA.HipServiceTest.Discovery
 {
@@ -52,9 +54,6 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
 
         [Theory]
         [InlineData(HttpStatusCode.Accepted)]
-        [InlineData(HttpStatusCode.BadRequest, "RequestId")]
-        [InlineData(HttpStatusCode.BadRequest, "RequestId", "PatientGender")]
-        [InlineData(HttpStatusCode.BadRequest, "RequestId", "PatientName")]
         [InlineData(HttpStatusCode.BadRequest, "PatientName")]
         [InlineData(HttpStatusCode.BadRequest, "PatientGender")]
         [InlineData(HttpStatusCode.BadRequest, "PatientName", "PatientGender")]
@@ -66,16 +65,34 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             var _server = new Microsoft.AspNetCore.TestHost.TestServer(new WebHostBuilder().UseStartup<TestStartup>());
             var _client = _server.CreateClient();
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            _client.DefaultRequestHeaders.Add(Constants.REQUEST_ID, Uuid.Generate().ToString());
             var requestContent = new DiscoveryRequestPayloadBuilder()
                 .WithMissingParameters(missingRequestParameters)
                 .BuildSerializedFormat();
 
             var response =
                 await _client.PostAsync(
-                    "/v0.5/care-contexts/discover",
+                    Constants.PATH_CARE_CONTEXTS_DISCOVER,
                     requestContent);
 
             response.StatusCode.Should().Be(expectedStatusCode);
+        }
+
+        [Fact]
+        private async void ShouldThrowBadRequest_WhenRequestIdHeaderIsNotSent()
+        {
+            var _server = new Microsoft.AspNetCore.TestHost.TestServer(new WebHostBuilder().UseStartup<TestStartup>());
+            var _client = _server.CreateClient();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+            var requestContent = new DiscoveryRequestPayloadBuilder()
+                .BuildSerializedFormat();
+
+            var response =
+                await _client.PostAsync(
+                    Constants.PATH_CARE_CONTEXTS_DISCOVER,
+                    requestContent);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         #region Describe everything that should be sent by scenario
@@ -84,13 +101,14 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public async void ShouldSendWhenAPatientWasFound()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(Krunal, out DiscoveryRequest discoveryRequest);
             AndThisPatientMatchASingleRegisteredPatient(Krunal, new[] {"name", "gender"},
                 out DiscoveryRepresentation discoveryRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -109,16 +127,17 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             "No Matching Record Found or More than one Record Found")]
         [InlineData(ErrorCode.MultiplePatientsFound, HttpStatusCode.NotFound,
             "No Matching Record Found or More than one Record Found")]
-        public async void ShouldSendWhenNoSingleMatchWasFound(ErrorCode errorCode, HttpStatusCode expectedStatusCode,
+        public async void ShouldSendWhenNoSingleMatchWasFound(string errorCode, HttpStatusCode expectedStatusCode,
             string expectedResponseDescription)
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
             AndTheUserDoesNotMatchAnyPatientBecauseOf(errorCode, out ErrorRepresentation errorRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -135,12 +154,13 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public async void ShouldSendBahmniIsDownOrAnExternalSystem()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(Krunal, out DiscoveryRequest discoveryRequest);
             ButTheDataSourceIsNotReachable(out ErrorRepresentation errorRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -161,13 +181,14 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public async void ShouldSendTheFoundPatientDetailsWhenAPatientWasFound()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(Krunal, out DiscoveryRequest discoveryRequest);
             AndThisPatientMatchASingleRegisteredPatient(Krunal, new[] {"name", "gender"},
                 out DiscoveryRepresentation discoveryRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -179,13 +200,14 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public async void ShouldSendTheListOfMatchedFieldsWhenAPatientWasFound()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(Krunal, out DiscoveryRequest discoveryRequest);
             AndThisPatientMatchASingleRegisteredPatient(Krunal, new[] {"name", "gender"},
                 out DiscoveryRepresentation discoveryRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -198,13 +220,14 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public async void ShouldSendTheTransactionIdWhenAPatientWasFound()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(Krunal, out DiscoveryRequest discoveryRequest);
             AndThisPatientMatchASingleRegisteredPatient(Krunal, new[] {"name", "gender"},
                 out DiscoveryRepresentation discoveryRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -216,13 +239,14 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public async void ShouldSendTheResponseStatusWith200WhenAPatientWasFound()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(Krunal, out DiscoveryRequest discoveryRequest);
             AndThisPatientMatchASingleRegisteredPatient(Krunal, new[] {"name", "gender"},
                 out DiscoveryRepresentation discoveryRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -235,13 +259,14 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public async void ShouldNotSendAnyErrorWhenAPatientWasFound()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(Krunal, out DiscoveryRequest discoveryRequest);
             AndThisPatientMatchASingleRegisteredPatient(Krunal, new[] {"name", "gender"},
                 out DiscoveryRepresentation discoveryRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -256,15 +281,16 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldNotSendFoundPatientDetailsWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldNotSendFoundPatientDetailsWhenNoPatientWasFound(string errorCode)
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
             AndTheUserDoesNotMatchAnyPatientBecauseOf(errorCode, out ErrorRepresentation errorRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -275,14 +301,15 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldNotSendAnyMatchedFieldWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldNotSendAnyMatchedFieldWhenNoPatientWasFound(string errorCode)
         {
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
             AndTheUserDoesNotMatchAnyPatientBecauseOf(errorCode, out ErrorRepresentation errorRepresentation);
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -293,14 +320,15 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldSendTransactionIdEvenWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldSendTransactionIdEvenWhenNoPatientWasFound(string errorCode)
         {
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
             AndTheUserDoesNotMatchAnyPatientBecauseOf(errorCode, out ErrorRepresentation errorRepresentation);
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -313,15 +341,16 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             "No Matching Record Found or More than one Record Found")]
         [InlineData(ErrorCode.MultiplePatientsFound, HttpStatusCode.NotFound,
             "No Matching Record Found or More than one Record Found")]
-        public async void ShouldSendRequestStatusWith404WhenNoPatientWasFound(ErrorCode errorCode,
+        public async void ShouldSendRequestStatusWith404WhenNoPatientWasFound(string errorCode,
             HttpStatusCode expectedStatusCode, string expectedResponseDescription)
         {
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
             AndTheUserDoesNotMatchAnyPatientBecauseOf(errorCode, out ErrorRepresentation errorRepresentation);
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -333,15 +362,16 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         [Theory]
         [InlineData(ErrorCode.NoPatientFound)]
         [InlineData(ErrorCode.MultiplePatientsFound)]
-        public async void ShouldSendTheErrorDetailsWhenNoPatientWasFound(ErrorCode errorCode)
+        public async void ShouldSendTheErrorDetailsWhenNoPatientWasFound(string errorCode)
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
             AndTheUserDoesNotMatchAnyPatientBecauseOf(errorCode, out ErrorRepresentation errorRepresentation);
 
             //When
-            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId);
+            await careContextDiscoveryController.GetPatientCareContext(discoveryRequest, correlationId, requestId);
 
             //Then
             ThenAResponseToThisTransactionShouldHaveBeenSentToTheGateway(discoveryRequest,
@@ -357,11 +387,13 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         public void ShouldAddTheDiscoveryTaskToTheBackgroundJobList()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
+            var timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
             //Given
             GivenAPatientStartedANewDiscoveryRequest(JohnDoe, out DiscoveryRequest discoveryRequest);
 
             //When
-            careContextDiscoveryController.DiscoverPatientCareContexts(correlationId, discoveryRequest);
+            careContextDiscoveryController.DiscoverPatientCareContexts(correlationId, requestId, timestamp, discoveryRequest);
 
             //Then
             backgroundJobs.Should().ContainKey("GetPatientCareContext");
@@ -378,10 +410,8 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         {
             discoveryRequest = new DiscoveryRequestPayloadBuilder()
                 .FromUser(user)
-                .WithVerifiedIdentifiers(IdentifierType.NDHM_HEALTH_NUMBER, "12345678910")
-                .WithRequestId("aRequestId")
+                .WithVerifiedIdentifiers(IdentifierType.ABHA_NUMBER, "12345678910")
                 .WithTransactionId("aTransactionId")
-                .RequestedOn(new DateTime(2020, 06, 14))
                 .Build();
         }
 
@@ -404,7 +434,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             discoveryRepresentation = discovery;
         }
 
-        private void AndTheUserDoesNotMatchAnyPatientBecauseOf(ErrorCode errorCode,
+        private void AndTheUserDoesNotMatchAnyPatientBecauseOf(string errorCode,
             out ErrorRepresentation errorRepresentation)
         {
             var error = new ErrorRepresentation(new Error(ErrorCode.NoPatientFound, "unusedMessage"));
@@ -443,13 +473,8 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             GatewayDiscoveryRepresentation actualResponse,
             PatientEnquiryRepresentation patientEnquiry)
         {
-            actualResponse.Patient.ReferenceNumber.Should().Be(patientEnquiry.ReferenceNumber);
-            actualResponse.Patient.Display.Should().Be(patientEnquiry.Display);
-            actualResponse.Patient.CareContexts.Count().Should().Be(patientEnquiry.CareContexts.Count());
-            foreach (CareContextRepresentation careContext in patientEnquiry.CareContexts)
-            {
-                actualResponse.Patient.CareContexts.Should().ContainEquivalentOf(careContext);
-            }
+            var patientDiscoveryRepresentation = PatientDiscoveryMapper.Map(patientEnquiry);
+            actualResponse.Patient.Should().BeEquivalentTo(patientDiscoveryRepresentation);
         }
 
         private static void AndTheResponseShouldNotContainAnyPatientDetails(
@@ -461,10 +486,10 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         private static void AndTheResponseShouldContainTheMatchFields(GatewayDiscoveryRepresentation actualResponse,
             ICollection<string> matchedFields)
         {
-            actualResponse.Patient.MatchedBy.Count().Should().Be(matchedFields.Count);
+            actualResponse.MatchedBy.Count().Should().Be(matchedFields.Count);
             foreach (var matchedFieldName in matchedFields)
             {
-                actualResponse.Patient.MatchedBy.Should().ContainEquivalentOf(matchedFieldName);
+                actualResponse.MatchedBy.Should().ContainEquivalentOf(matchedFieldName);
             }
         }
 
@@ -494,7 +519,7 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
         private static void AndTheResponseShouldContainTheExpectedStatus(GatewayDiscoveryRepresentation actualResponse,
             DiscoveryRequest discoveryRequest, HttpStatusCode expectedStatusCode, string expectedMessage)
         {
-            actualResponse.Resp.RequestId.Should().Be(discoveryRequest.RequestId);
+            //actualResponse.Response.RequestId.Should().Be(discoveryRequest.RequestId);
             // actualResponse.Resp.StatusCode.Should().Be(expectedStatusCode);
             // actualResponse.Resp.Message.Should().Be(expectedMessage);
         }

@@ -17,8 +17,8 @@ namespace In.ProjectEKA.HipService.Discovery
             {
                 {IdentifierType.MOBILE, IdentifierTypeExt.Mobile},
                 {IdentifierType.MR, IdentifierTypeExt.Mr},
-                {IdentifierType.NDHM_HEALTH_NUMBER, IdentifierTypeExt.NdhmHealthNumber},
-                {IdentifierType.HEALTH_ID, IdentifierTypeExt.HealthId}
+                {IdentifierType.ABHA_NUMBER, IdentifierTypeExt.NdhmHealthNumber},
+                {IdentifierType.abhaAddress, IdentifierTypeExt.HealthId}
             };
 
         private static PatientWithRank<Patient> RankPatient(Patient patient, DiscoveryRequest request)
@@ -72,7 +72,9 @@ namespace In.ProjectEKA.HipService.Discovery
                         .Select(program =>
                             new CareContextRepresentation(
                                 program.ReferenceNumber,
-                                program.Display))
+                                program.Display,
+                                program.Type,
+                                program.HiTypes))
                         .ToList();
 
                     Log.Information("rankedPatient.Patient.Identifier ~~~~~~~~~~~~~~~~~~~~> " + rankedPatient.Patient.Identifier);
@@ -100,7 +102,9 @@ namespace In.ProjectEKA.HipService.Discovery
                 .Select(program =>
                     new CareContextRepresentation(
                         program.ReferenceNumber,
-                        program.Display)).ToList();
+                        program.Display,
+                        program.Type,
+                        program.HiTypes)).ToList();
             Log.Information("rankedPatient.Patient.Identifier ~~~~~~~~~~~~~~~~~~~~> " + patient.Identifier);
             Log.Information("rankedPatient.Patient.Name ~~~~~~~~~~~~~~~~~~~~> " + patient.Name);
             Log.Information("careContextRepresentations ~~~~~~~~~~~~~~~~~~~~> " + careContextRepresentations);

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace In.ProjectEKA.HipService.Gateway.Model
 {
     using System;
@@ -5,26 +7,23 @@ namespace In.ProjectEKA.HipService.Gateway.Model
 
     public class GatewayDiscoveryRepresentation
     {
-        public GatewayDiscoveryRepresentation(PatientEnquiryRepresentation patient,
-            Guid requestId,
-            string timestamp,
+        public GatewayDiscoveryRepresentation(IEnumerable<PatientDiscoveryRepresentation> patient,
+            IEnumerable<string> matchedBy,
             string transactionId,
             Error error,
-            DiscoveryResponse resp)
+            DiscoveryResponse response)
         {
             Patient = patient;
-            RequestId = requestId;
-            Timestamp = timestamp;
+            MatchedBy = matchedBy;
             TransactionId = transactionId;
             Error = error;
-            Resp = resp;
+            Response = response;
         }
 
-        public PatientEnquiryRepresentation Patient { get; }
-        public Guid RequestId { get; }
-        public string Timestamp { get; }
+        public IEnumerable<PatientDiscoveryRepresentation> Patient { get; }
+        public IEnumerable<string> MatchedBy { get; }
         public string TransactionId { get; }
         public Error Error { get; }
-        public Resp Resp { get; }
+        public Resp Response { get; }
     }
 }
