@@ -16,7 +16,7 @@ namespace In.ProjectEKA.HipServiceTest.Consent.Builder
             return new Notification(ConsentArtefact().Generate().Build(),
                                     faker.Random.Hash(),
                                     faker.Random.Hash(),
-                                    consentStatus);
+                                    consentStatus, false);
         }
         
         internal static Notification RevokedNotification(string patientId)
@@ -26,7 +26,7 @@ namespace In.ProjectEKA.HipServiceTest.Consent.Builder
             return new Notification(consentArtefactBuilder.Build(),
                 faker.Random.Hash(),
                 faker.Random.Hash(),
-                ConsentStatus.REVOKED);
+                ConsentStatus.REVOKED, false);
         }
 
 

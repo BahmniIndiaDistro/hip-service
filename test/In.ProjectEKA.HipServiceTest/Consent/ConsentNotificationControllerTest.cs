@@ -1,4 +1,5 @@
 using Hl7.Fhir.Model;
+using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Gateway;
 
 namespace In.ProjectEKA.HipServiceTest.Consent
@@ -68,9 +69,7 @@ namespace In.ProjectEKA.HipServiceTest.Consent
             const string consentMangerId = "consentMangerId";
             var notification = TestBuilder.Notification(consentStatus);
             var faker = new Faker();
-            consentNotification = new ConsentArtefactRepresentation(notification,
-                DateTime.Now,
-                faker.Random.Hash());
+            consentNotification = new ConsentArtefactRepresentation(notification);
             var consent =
                 new Consent(notification.ConsentDetail.ConsentId,
                     notification.ConsentDetail,
@@ -87,7 +86,9 @@ namespace In.ProjectEKA.HipServiceTest.Consent
         private void ShouldEnqueueConsentNotificationAndReturnAccepted()
         {
             var correlationId = Uuid.Generate().ToString();
-           var result = consentNotificationController.ConsentNotification(correlationId, consentNotification);
+            var requestId = Uuid.Generate().ToString();
+            var timestamp = DateTime.Now.ToString();
+           var result = consentNotificationController.ConsentNotification(correlationId, requestId, timestamp, consentNotification);
 
             backgroundJobClient.Verify(client => client.Create(
                 It.Is<Job>(job => job.Method.Name == "StoreConsent" && job.Args[0] == consentNotification),
@@ -100,7 +101,8 @@ namespace In.ProjectEKA.HipServiceTest.Consent
         async void ShouldStoreConsentArtefact()
         {
             var correlationId = Uuid.Generate().ToString();
-            await consentNotificationController.StoreConsent(consentNotification,correlationId);
+            var requestId = Uuid.Generate().ToString();
+            await consentNotificationController.StoreConsent(consentNotification,correlationId,requestId);
 
             consentRepository.Verify(cr => cr.AddAsync(
                 It.Is<Consent>(c => verifyActualConsentEqualsExpected(c))),
@@ -117,9 +119,10 @@ namespace In.ProjectEKA.HipServiceTest.Consent
         async void ShouldUpdateConsentArtefact(ConsentStatus consentStatus)
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             SetupConsentNotification(consentStatus);
 
-            await consentNotificationController.StoreConsent(consentNotification,correlationId);
+            await consentNotificationController.StoreConsent(consentNotification,correlationId,requestId);
 
             consentRepository.Verify(cr => cr.UpdateAsync(
                     consentNotification.Notification.ConsentId,
@@ -132,16 +135,17 @@ namespace In.ProjectEKA.HipServiceTest.Consent
         async void ShouldInvokeGatewayWhenRevokingConsent()
         {
             var correlationId = Uuid.Generate().ToString();
+            var requestId = Uuid.Generate().ToString();
             SetupConsentNotification(ConsentStatus.REVOKED);
 
-            await consentNotificationController.StoreConsent(consentNotification,correlationId);
+            await consentNotificationController.StoreConsent(consentNotification,correlationId,requestId);
 
             gatewayClient.Verify(g => g.SendDataToGateway(
-                        "/v0.5/consents/hip/on-notify",
+                    Constants.PATH_CONSENT_ON_NOTIFY,
                         It.Is<GatewayConsentRepresentation>(
                             c =>
                                 c.Acknowledgement.ConsentId == consentNotification.Notification.ConsentId
-                                && c.Resp.RequestId == consentNotification.RequestId),
+                                && c.Response.RequestId == requestId),
                         consentNotification.Notification.ConsentDetail.ConsentManager.Id,
                                 correlationId),
                 Times.Once);

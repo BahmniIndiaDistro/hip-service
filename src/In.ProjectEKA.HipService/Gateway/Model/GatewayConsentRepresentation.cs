@@ -6,20 +6,15 @@ namespace In.ProjectEKA.HipService.Gateway.Model
 
     public class GatewayConsentRepresentation
     {
-        public GatewayConsentRepresentation(Guid requestId, string timestamp,
-            ConsentUpdateResponse acknowledgement, Error error, Resp resp)
+        public GatewayConsentRepresentation(ConsentUpdateResponse acknowledgement, Error error, Resp response)
         {
-            RequestId = requestId;
-            Timestamp = timestamp;
             Acknowledgement = acknowledgement;
-            Resp = resp;
+            Response = response;
             Error = error;
         }
 
-        public Guid RequestId { get; }
-        public string Timestamp { get; }
         public ConsentUpdateResponse Acknowledgement { get; }
-        public Resp Resp { get; }
+        public Resp Response { get; }
         public Error Error { get; }
     }
 }

@@ -47,12 +47,10 @@ namespace In.ProjectEKA.HipService.Common
         public static readonly string PATH_ON_LINK_CONFIRM = "/api/hiecm/user-initiated-linking/"+VERSION_V3+"/link/care-context/on-confirm";
         public static readonly string PATH_CONSENT_ON_NOTIFY = "/" + CURRENT_VERSION + "/consents/hip/on-notify";
 
-        public static readonly string PATH_HEALTH_INFORMATION_ON_REQUEST = "/" + CURRENT_VERSION +
-                                                                           "/health-information/hip/on-request";
+        public static readonly string PATH_HEALTH_INFORMATION_ON_REQUEST =
+            "/api/hiecm/data-flow/" + VERSION_V3 + "/health-information/hip/on-request";
 
-        public static readonly string PATH_HEALTH_INFORMATION_NOTIFY_GATEWAY = "/" + CURRENT_VERSION +
-                                                                               "/health-information/notify";
-
+        public static readonly string PATH_HEALTH_INFORMATION_NOTIFY_GATEWAY = "/api/hiecm/data-flow/"+ VERSION_V3 +"/health-information/notify";
         public static readonly string PATH_AUTH_CONFIRM = "/" + CURRENT_VERSION + "/users/auth/confirm";
 
         public static readonly string PATH_OPENMRS_FHIR = "ws/fhir2/R4/metadata";

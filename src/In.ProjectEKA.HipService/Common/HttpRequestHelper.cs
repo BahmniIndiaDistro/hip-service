@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using Newtonsoft.Json.Converters;
+
 namespace In.ProjectEKA.HipService.Common
 {
     using System;
@@ -32,6 +35,10 @@ namespace In.ProjectEKA.HipService.Common
                     ContractResolver = new DefaultContractResolver
                     {
                         NamingStrategy = new CamelCaseNamingStrategy()
+                    },
+                    Converters = new List<JsonConverter>
+                    {
+                        new StringEnumConverter()
                     }
                 });
                 httpRequestMessage.Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json);

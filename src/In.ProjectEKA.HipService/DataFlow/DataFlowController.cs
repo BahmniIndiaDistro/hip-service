@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace In.ProjectEKA.HipService.DataFlow
 {
     using System;
@@ -87,16 +89,19 @@ namespace In.ProjectEKA.HipService.DataFlow
         [HttpPost(PATH_HEALTH_INFORMATION_HIP_REQUEST)]
         public AcceptedResult HealthInformationRequestFor(PatientHealthInformationRequest healthInformationRequest,
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
-            [FromHeader(Name = "X-GatewayID")] string gatewayId)
+            [FromHeader(Name = "X-GatewayID")] string gatewayId,
+            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = TIMESTAMP)] string timestamp)
+        
         {
             logger.Log(LogLevel.Information, LogEvents.DataFlow, "Data request received");
-            backgroundJob.Enqueue(() => HealthInformationOf(healthInformationRequest, gatewayId, correlationId));
+            backgroundJob.Enqueue(() => HealthInformationOf(healthInformationRequest, gatewayId, correlationId, requestId));
             return Accepted();
         }
 
         [NonAction]
         public async Task HealthInformationOf(PatientHealthInformationRequest healthInformationRequest,
-            string gatewayId, string correlationId)
+            string gatewayId, string correlationId, string requestId)
         {
             try
             {
@@ -112,12 +117,10 @@ namespace In.ProjectEKA.HipService.DataFlow
                 if (error != null)
                 {
                     gatewayResponse = new GatewayDataFlowRequestResponse(
-                        Guid.NewGuid(),
-                        DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                         new DataFlowRequestResponse(healthInformationRequest.TransactionId,
                             DataFlowRequestStatus.ERRORED.ToString()),
                         error.Error,
-                        new Resp(healthInformationRequest.RequestId));
+                        new Resp(requestId));
                     logger.Log(LogLevel.Error,
                         LogEvents.DataFlow,
                         "Response for data request {@GatewayResponse}",
@@ -126,12 +129,10 @@ namespace In.ProjectEKA.HipService.DataFlow
                 else
                 {
                     gatewayResponse = new GatewayDataFlowRequestResponse(
-                        Guid.NewGuid(),
-                        DateTime.Now.ToUniversalTime().ToString(DateTimeFormat),
                         new DataFlowRequestResponse(healthInformationRequest.TransactionId,
                             DataFlowRequestStatus.ACKNOWLEDGED.ToString()),
                         null,
-                        new Resp(healthInformationRequest.RequestId));
+                        new Resp(requestId));
                     logger.Log(LogLevel.Information,
                         LogEvents.DataFlow,
                         "Response for data request {@GatewayResponse}",

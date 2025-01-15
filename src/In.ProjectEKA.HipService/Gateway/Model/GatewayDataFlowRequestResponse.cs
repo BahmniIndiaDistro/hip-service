@@ -7,23 +7,17 @@ namespace In.ProjectEKA.HipService.Gateway.Model
     public class GatewayDataFlowRequestResponse
     {
         public GatewayDataFlowRequestResponse(
-            Guid requestId,
-            string timestamp,
             DataFlowRequestResponse hiRequest,
             Error error,
-            Resp resp)
+            Resp response)
         {
-            RequestId = requestId;
-            Timestamp = timestamp;
             HiRequest = hiRequest;
             Error = error;
-            Resp = resp;
+            Response = response;
         }
-
-        public Guid RequestId { get; }
-        public string Timestamp { get; }
+        
         public DataFlowRequestResponse HiRequest { get; }
         public Error Error { get; }
-        public Resp Resp { get; }
+        public Resp Response { get; }
     }
 }
