@@ -48,6 +48,12 @@ namespace In.ProjectEKA.HipService.Link
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AddContextsRequest addContextsRequest)
         {
             await careContextService.SetAccessToken(addContextsRequest.ConsentManagerUserId);
+            if (!UserAuthMap.HealthIdToAccessToken.ContainsKey(addContextsRequest.ConsentManagerUserId))
+            {
+                Log.Error("Unable to get link token for healthId: {healthId}",
+                    addContextsRequest.ConsentManagerUserId);
+                throw new Exception("Unable to get link token");
+            }
             var linkToken = UserAuthMap.HealthIdToAccessToken[addContextsRequest.ConsentManagerUserId];
             var cmSuffix = gatewayConfiguration.CmSuffix;
             var requestId = Guid.NewGuid();
