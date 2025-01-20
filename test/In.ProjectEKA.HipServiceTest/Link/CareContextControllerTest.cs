@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using Hl7.Fhir.Model;
 using In.ProjectEKA.HipLibrary.Patient.Model;
+using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link;
 using In.ProjectEKA.HipService.Link.Model;
@@ -34,49 +35,51 @@ namespace In.ProjectEKA.HipServiceTest.Link
         {
             CmSuffix = "sbx"
         };
+        private readonly BahmniConfiguration bahmniConfiguration = new BahmniConfiguration()
+        {
+            Id = "bahmni"
+        };
 
         public CareContextControllerTest()
         {
             careContextController =
                 new CareContextController(gatewayClient.Object,
-                    logger.Object, gatewayConfiguration, careContextService.Object, linkPatientRepository.Object);
+                    logger.Object, gatewayConfiguration, careContextService.Object, linkPatientRepository.Object,bahmniConfiguration);
         }
 
         [Fact]
         private void ShouldAddContext()
         {
-            var timeStamp = DateTime.Now.ToUniversalTime();
             var requestId = Guid.NewGuid();
             var cmSuffix = "sbx";
             var careContextRepresentation = new CareContextRepresentation("anc", "xyz");
             var careContexts = new List<CareContextRepresentation>();
             careContexts.Add(careContextRepresentation);
-            var addCareContextPatient = new AddCareContextsPatient("1234", "qwqwqw", careContexts);
-            var careContextLink = new AddCareContextsLink("1222", addCareContextPatient);
-            var addContextsAcknowledgement = new AddContextsAcknowledgement("success");
             var error = new Error(ErrorCode.GatewayTimedOut, "Gateway timed out");
             var resp = new Resp("123");
             var correlationId = Uuid.Generate().ToString();
+            var linkConfirmationRepresentation =
+                new LinkConfirmationRepresentation("1234", "qwqwqw", careContexts, "Prescription", 1);
 
             var gatewayAddContextsRequestRepresentation =
-                new GatewayAddContextsRequestRepresentation(requestId, timeStamp.ToString(DateTimeFormat), careContextLink);
+                new GatewayAddContextsRequestRepresentation("doctest@sbx",new List<LinkConfirmationRepresentation>(){linkConfirmationRepresentation});
 
             var onAddContextRequest =
-                new HipLinkContextConfirmation(requestId.ToString(), timeStamp, addContextsAcknowledgement, error,
+                new HipLinkContextConfirmation( "doctest@sbx","Successfully Linked care context", error,
                     resp);
             var addContextRequest = new AddContextsRequest("abc", careContexts, "pqr","abcd@sbx");
 
-            careContextService.Setup(a => a.AddContextsResponse(addContextRequest,"sbx"))
+            careContextService.Setup(a => a.AddContextsResponse(addContextRequest,"sbx",requestId))
                 .Returns(Task.FromResult(new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
                     (gatewayAddContextsRequestRepresentation, null)));
 
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_ADD_PATIENT_CONTEXTS,
-                            gatewayAddContextsRequestRepresentation, cmSuffix, correlationId))
+                            gatewayAddContextsRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask)
-                .Callback<string, GatewayAddContextsRequestRepresentation, string, string>
-                ((path, gr, suffix, corId)
+                .Callback<string, GatewayAddContextsRequestRepresentation, string, string,string, string,string>
+                ((path, gr, suffix, corId,hipId,requestId,linkToken)
                     => careContextController.Accepted(onAddContextRequest));
         }
 
@@ -93,7 +96,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
             hiTypes.Add("Medication");
             var notifyContextRequest = new NotifyContextRequest("123", "swjs", "wew", hiTypes, "456");
             var onNotifyContextRequest =
-                new HipLinkContextConfirmation(requestId.ToString(), timeStamp, addContextsAcknowledgement, error,
+                new HipLinkContextConfirmation("doctest@sbx", "Successfully Linked care context", error,
                     resp);
             var patient = new NotificationPatientContext("12");
             var notificationCareContext = new NotificationCareContext("abc", "qqwq");
@@ -113,10 +116,10 @@ namespace In.ProjectEKA.HipServiceTest.Link
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_NOTIFY_PATIENT_CONTEXTS,
-                            gatewayNotificationContextsRequestRepresentation, cmSuffix, correlationId))
+                            gatewayNotificationContextsRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask)
-                .Callback<string, GatewayNotificationContextRepresentation, string, string>
-                ((path, gr, suffix, corId)
+                .Callback<string, GatewayNotificationContextRepresentation, string, string,string, string,string>
+                ((path, gr, suffix, corId,hipId,requestId,linkToken)
                     => careContextController.Accepted(onNotifyContextRequest));
         }
 

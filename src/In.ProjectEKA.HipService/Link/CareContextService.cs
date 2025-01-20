@@ -4,11 +4,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Common.Model;
+using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link.Model;
+using In.ProjectEKA.HipService.Logger;
 using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
@@ -25,13 +28,16 @@ namespace In.ProjectEKA.HipService.Link
     {
         private readonly HttpClient httpClient;
         private readonly IUserAuthRepository userAuthRepository;
+        private readonly IUserAuthService  userAuthService;
         private readonly BahmniConfiguration bahmniConfiguration;
         private readonly ILinkPatientRepository linkPatientRepository;
         private readonly LinkPatient linkPatient;
         private readonly IOptions<HipConfiguration> hipConfiguration;
-        
+        private readonly IGatewayClient gatewayClient;
+        private readonly GatewayConfiguration gatewayConfiguration;        
         public CareContextService(HttpClient httpClient, IUserAuthRepository userAuthRepository,
-            BahmniConfiguration bahmniConfiguration, ILinkPatientRepository linkPatientRepository, LinkPatient linkPatient, IOptions<HipConfiguration> hipConfiguration)
+            BahmniConfiguration bahmniConfiguration, ILinkPatientRepository linkPatientRepository, LinkPatient linkPatient, IOptions<HipConfiguration> hipConfiguration, IGatewayClient gatewayClient, GatewayConfiguration gatewayConfiguration,
+            IUserAuthService userAuthService)
         {
             this.httpClient = httpClient;
             this.userAuthRepository = userAuthRepository;
@@ -39,19 +45,17 @@ namespace In.ProjectEKA.HipService.Link
             this.linkPatientRepository = linkPatientRepository;
             this.linkPatient = linkPatient;
             this.hipConfiguration = hipConfiguration;
+            this.gatewayClient = gatewayClient;
+            this.gatewayConfiguration = gatewayConfiguration;
+            this.userAuthService = userAuthService;
         }
 
         public async Task<Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>> AddContextsResponse(
-            AddContextsRequest addContextsRequest, string cmSuffix)
+            AddContextsRequest addContextsRequest, string cmSuffix, Guid requestId)
         {
-            var accessToken = UserAuthMap.HealthIdToAccessToken[addContextsRequest.ConsentManagerUserId];
-            var referenceNumber = addContextsRequest.ReferenceNumber;
             var careContexts = addContextsRequest.CareContexts;
-            var display = addContextsRequest.Display;
-            var patient = new AddCareContextsPatient(referenceNumber, display, careContexts);
-            var link = new AddCareContextsLink(accessToken, patient);
-            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
-            var requestId = Guid.NewGuid();
+            var abhaAddress = addContextsRequest.ConsentManagerUserId;
+            
             if (!await linkPatient.SaveInitiatedLinkRequest(requestId.ToString(), null, requestId.ToString())
                 .ConfigureAwait(false))
                 return new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
@@ -59,6 +63,17 @@ namespace In.ProjectEKA.HipService.Link
             var careContextReferenceNumbers = addContextsRequest.CareContexts
                 .Select(context => context.ReferenceNumber)
                 .ToArray();
+            var linkConfirmationRepresentations = careContexts
+                .Where(cc => cc.HiTypes != null && cc.HiTypes.Any())
+                .SelectMany(cc => cc.HiTypes.Select(hiType => new { HiType = hiType, CareContext = cc }))
+                .GroupBy(x => x.HiType)
+                .Select(group => new LinkConfirmationRepresentation(addContextsRequest.ReferenceNumber,
+                    addContextsRequest.Display,
+                    group.Select(x => new CareContextRepresentation(x.CareContext.ReferenceNumber, x.CareContext.Display))
+                        .ToList(),
+                    group.Key.ToString(),
+                    group.Count()))
+                .ToList();
             var (_, exception1) = await linkPatientRepository.SaveRequestWith(
                     requestId.ToString(),
                     cmSuffix,
@@ -71,7 +86,7 @@ namespace In.ProjectEKA.HipService.Link
                 (null, new ErrorRepresentation(new Error(ErrorCode.ServerInternalError,
                     ErrorMessage.DatabaseStorageError)));
             return new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
-                (new GatewayAddContextsRequestRepresentation(requestId, timeStamp, link), null);
+                (new GatewayAddContextsRequestRepresentation( abhaAddress,linkConfirmationRepresentations), null);
         }
         
         public async Task SetAccessToken(string healthId)

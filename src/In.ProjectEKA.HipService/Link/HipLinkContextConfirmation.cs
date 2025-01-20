@@ -6,20 +6,18 @@ namespace In.ProjectEKA.HipService.Link
 
     public class HipLinkContextConfirmation
     {
-        public HipLinkContextConfirmation(string requestId, DateTime timestamp,
-            AddContextsAcknowledgement acknowledgement, Error error, Resp resp)
+        public HipLinkContextConfirmation(string abhaAddress, string status, Error error, Resp response)
         {
-            RequestId = requestId;
-            Timestamp = timestamp;
-            Acknowledgement = acknowledgement;
+            AbhaAddress = abhaAddress;
+            Status = status;
             Error = error;
-            Resp = resp;
+            Response = response;
         }
 
-        public string RequestId { get; }
-        public DateTime Timestamp { get; }
+        public string AbhaAddress { get; }
+        public string Status { get; }
         public Error Error { get; }
-        public Resp Resp { get; }
-        public AddContextsAcknowledgement Acknowledgement { get; }
+        public Resp Response { get; }
+       
     }
 }

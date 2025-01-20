@@ -62,10 +62,10 @@ namespace In.ProjectEKA.HipServiceTest.SmsNotification
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_SMS_NOTIFY,
-                            gatewaySmsNotifyRequestRepresentation, cmSuffix, correlationId))
+                            gatewaySmsNotifyRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask)
-                .Callback<string, GatewaySmsNotifyRepresentation, string, string>
-                ((path, gr, suffix, corId)
+                .Callback<string, GatewaySmsNotifyRepresentation, string, string,string, string,string>
+                ((path, gr, suffix, corId,hipId,requestId,linkToken)
                     => smsNotificationController.Accepted(onSmsContextRequest));
         }
 
@@ -86,10 +86,10 @@ namespace In.ProjectEKA.HipServiceTest.SmsNotification
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_SMS_NOTIFY,
-                            gatewaySmsNotifyRequestRepresentation, cmSuffix, correlationId))
+                            gatewaySmsNotifyRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask)
-                .Callback<string, GatewaySmsNotifyRepresentation, string, string>
-                ((path, gr, suffix, corId)
+                .Callback<string, GatewaySmsNotifyRepresentation, string, string,string, string,string>
+                ((path, gr, suffix, corId,hipId,requestId,linkToken)
                     => smsNotificationController.Problem());
         }
 

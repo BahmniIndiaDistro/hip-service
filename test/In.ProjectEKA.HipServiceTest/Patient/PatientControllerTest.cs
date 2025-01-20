@@ -58,7 +58,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
             _gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_PATIENT_ON_NOTIFY,
-                            hipPatientNotifyConfirmation, cmSuffix, correlationId))
+                            hipPatientNotifyConfirmation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.FromResult(""));
             Assert.Equal(_patientController.NotifyHip(correlationId, hipPatientStatusNotification).Result.StatusCode,
                 StatusCodes.Status202Accepted);
@@ -83,7 +83,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
             _gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_PROFILE_ON_SHARE,
-                            profileShareConfirmation, cmSuffix, correlationId))
+                            profileShareConfirmation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.FromResult(""));
             Assert.Equal(
                 ((Microsoft.AspNetCore.Mvc.AcceptedResult) _patientController
@@ -112,7 +112,7 @@ namespace In.ProjectEKA.HipServiceTest.Patient
             _gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_PROFILE_ON_SHARE,
-                            profileShareConfirmation, cmSuffix, correlationId))
+                            profileShareConfirmation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.FromResult(""));
             Assert.Equal(
                 ((Microsoft.AspNetCore.Mvc.BadRequestResult) _patientController

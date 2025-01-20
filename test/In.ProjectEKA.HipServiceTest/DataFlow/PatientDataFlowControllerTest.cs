@@ -90,7 +90,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             gatewayClient.Setup(
                 client =>
                     client.SendDataToGateway(PATH_HEALTH_INFORMATION_ON_REQUEST,
-                        It.IsAny<GatewayDataFlowRequestResponse>(), "ncg", correlationId));
+                        It.IsAny<GatewayDataFlowRequestResponse>(), "ncg", correlationId,null,null,null));
 
             await patientDataFlowController.HealthInformationOf(request, correlationId, gatewayId, requestId);
 

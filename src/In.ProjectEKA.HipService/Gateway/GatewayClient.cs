@@ -16,7 +16,7 @@ namespace In.ProjectEKA.HipService.Gateway
 
     public interface IGatewayClient
     {
-        Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix,string correlationId);
+        Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix,string correlationId, string hipId = null, string requestId = null, string linkToken = null);
         Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string baseUrl, string urlPath, T representation,
             string correlationId, string xtoken = null, string tToken = null, string transactionId = null);
     }
@@ -83,9 +83,9 @@ namespace In.ProjectEKA.HipService.Gateway
             }
         }
 
-        public virtual async Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix, string correlationId)
+        public virtual async Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix, string correlationId, string hipId = null,string requestId=null, string linkToken = null)
         {
-            await PostTo(configuration.Url + urlPath, response, cmSuffix, correlationId).ConfigureAwait(false);
+            await PostTo(configuration.Url + urlPath, response, cmSuffix, correlationId, hipId,requestId,linkToken).ConfigureAwait(false);
         }
 
         public virtual async Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string baseUrl,string urlPath,
@@ -114,7 +114,7 @@ namespace In.ProjectEKA.HipService.Gateway
             return response;
         }
 
-        private async Task PostTo<T>(string gatewayUrl, T representation, string cmSuffix, string correlationId)
+        private async Task PostTo<T>(string gatewayUrl, T representation, string cmSuffix, string correlationId, string hipId, string requestId, string linkToken = null)
         {
             try
             {
@@ -127,7 +127,7 @@ namespace In.ProjectEKA.HipService.Gateway
                         Log.Debug("Request Payload {@payload}", representation);
                         var responseMessage = await httpClient
                             .SendAsync(CreateHttpRequest(HttpMethod.Post, gatewayUrl, representation, accessToken,
-                                cmSuffix, correlationId))
+                                cmSuffix, correlationId, hipId: hipId,requestId:requestId,linkToken:linkToken))
                             .ConfigureAwait(false);
                         Log.Information("Response Status from Gateway for URI {@uri} is {@status}", gatewayUrl,
                             responseMessage.StatusCode);

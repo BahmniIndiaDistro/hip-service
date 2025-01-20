@@ -535,10 +535,10 @@ namespace In.ProjectEKA.HipServiceTest.Discovery
             gatewayClientMock
                 .Setup(gatewayClient => gatewayClient.SendDataToGateway(
                     It.IsAny<string>(), It.IsAny<GatewayDiscoveryRepresentation>(), It.IsAny<string>(),
-                    It.IsAny<string>())
+                    It.IsAny<string>(),null,null,null)
                 )
-                .Callback<string, GatewayDiscoveryRepresentation, string, string>(
-                    (urlPath, response, cmSuffix, correlationId) =>
+                .Callback<string, GatewayDiscoveryRepresentation, string, string,string,string,string>(
+                    (urlPath, response, cmSuffix, correlationId,hipId,requestId,linkToken) =>
                     {
                         responsesSentToGateway.TryAdd(response.TransactionId, response);
                     });

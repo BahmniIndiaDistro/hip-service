@@ -2,13 +2,16 @@ using System;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common;
+using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link.Model;
 using In.ProjectEKA.HipService.Logger;
+using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace In.ProjectEKA.HipService.Link
 {
@@ -22,12 +25,14 @@ namespace In.ProjectEKA.HipService.Link
         private readonly ILogger<CareContextController> logger;
         private readonly ICareContextService careContextService;
         private readonly ILinkPatientRepository linkPatientRepository;
+        private readonly BahmniConfiguration bahmniConfiguration;
 
         public CareContextController(IGatewayClient gatewayClient,
             ILogger<CareContextController> logger,
             GatewayConfiguration gatewayConfiguration,
             ICareContextService careContextService,
-            ILinkPatientRepository linkPatientRepository
+            ILinkPatientRepository linkPatientRepository,
+            BahmniConfiguration bahmniConfiguration
         )
         {
             this.gatewayClient = gatewayClient;
@@ -35,6 +40,7 @@ namespace In.ProjectEKA.HipService.Link
             this.gatewayConfiguration = gatewayConfiguration;
             this.careContextService = careContextService;
             this.linkPatientRepository = linkPatientRepository;
+            this.bahmniConfiguration = bahmniConfiguration;
         }
 
         [Route(PATH_ADD_CONTEXTS)]
@@ -42,12 +48,13 @@ namespace In.ProjectEKA.HipService.Link
             [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AddContextsRequest addContextsRequest)
         {
             await careContextService.SetAccessToken(addContextsRequest.ConsentManagerUserId);
+            var linkToken = UserAuthMap.HealthIdToAccessToken[addContextsRequest.ConsentManagerUserId];
             var cmSuffix = gatewayConfiguration.CmSuffix;
+            var requestId = Guid.NewGuid();
             var (gatewayAddContextsRequestRepresentation, error) =
-               await careContextService.AddContextsResponse(addContextsRequest,cmSuffix);
+               await careContextService.AddContextsResponse(addContextsRequest,cmSuffix,requestId);
             if (error != null)
                 return StatusCode(StatusCodes.Status400BadRequest, error);
-            Guid requestId = gatewayAddContextsRequestRepresentation.RequestId;
             try
             {
                 logger.Log(LogLevel.Information,
@@ -55,18 +62,16 @@ namespace In.ProjectEKA.HipService.Link
                     "Request for add-context to gateway: {@GatewayResponse}",
                     gatewayAddContextsRequestRepresentation.dump(gatewayAddContextsRequestRepresentation));
                 logger.Log(LogLevel.Information, LogEvents.AddContext, $"cmSuffix: {{cmSuffix}}," +
-                                                                     $" correlationId: {{correlationId}}, " +
-                                                                     $"requestId: {{requestId}}",
-                    cmSuffix, correlationId, requestId);
+                                                                     $" correlationId: {{correlationId}}",
+                    cmSuffix, correlationId);
                 await gatewayClient.SendDataToGateway(PATH_ADD_PATIENT_CONTEXTS,
                     gatewayAddContextsRequestRepresentation,
-                    cmSuffix, correlationId);
+                    cmSuffix, correlationId,linkToken:linkToken, requestId: requestId.ToString(), hipId:bahmniConfiguration.Id);
                 return Accepted();
             }
             catch (Exception exception)
             {
-                logger.LogError(LogEvents.AddContext, exception, "Error happened for requestId: {RequestId} for" +
-                                                                 " add-care context request", requestId);
+                logger.LogError(LogEvents.AddContext, exception, "Error happened for add-care context request");
             }
 
             return StatusCode(StatusCodes.Status504GatewayTimeout,
@@ -106,17 +111,15 @@ namespace In.ProjectEKA.HipService.Link
         }
 
         [HttpPost(PATH_ON_NOTIFY_CONTEXTS)]
-        public AcceptedResult HipLinkOnNotifyContexts(HipLinkContextConfirmation confirmation)
+        public AcceptedResult HipLinkOnNotifyContexts(HipLinkOnNotifyConfirmation confirmation)
         {
-            Log.Information("Link on-notify context received." +
-                            $" RequestId:{confirmation.RequestId}, " +
-                            $" Timestamp:{confirmation.Timestamp}");
+            Log.Information("Link on-notify context received.");
             if (confirmation.Error != null)
                 Log.Information($" Error Code:{confirmation.Error.Code}," +
                                 $" Error Message:{confirmation.Error.Message}");
             else if (confirmation.Acknowledgement != null)
                 Log.Information($" Acknowledgment Status:{confirmation.Acknowledgement.Status}");
-            Log.Information($" Resp RequestId:{confirmation.Resp.RequestId}");
+            Log.Information($" Resp RequestId:{confirmation.Response.RequestId}");
             return Accepted();
         }
 
