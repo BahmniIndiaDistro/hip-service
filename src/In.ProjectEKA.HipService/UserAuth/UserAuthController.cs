@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -284,6 +285,35 @@ namespace In.ProjectEKA.HipService.UserAuth
             Log.Information($" Error Code:{error.Error.Code}," +
                             $" Error Message:{error.Error.Message}");
             return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code,StatusCodes.Status400BadRequest), error);
+        }
+        
+        [Authorize]
+        [HttpPost(PATH_ON_GENERATE_TOKEN)]
+        public async Task<ActionResult> OnGenerateLinkToken(OnGenerateTokenRequest request,
+        [FromHeader(Name = REQUEST_ID), Required] string requestId,
+        [FromHeader(Name = TIMESTAMP)] string timestamp)
+        {
+            logger.Log(LogLevel.Information,
+                LogEvents.UserAuth, "On generate token request received." +
+                                    $" RequestId:{requestId}, " +
+                                    $" Timestamp:{timestamp}," +
+                                    $" ResponseRequestId:{request.Response.RequestId}, ");
+            if (request.Error != null)
+            {
+                RequestIdToErrorMessage.Add(Guid.Parse(request.Response.RequestId), request.Error);
+                logger.Log(LogLevel.Information,
+                    LogEvents.UserAuth, $" Error Code:{request.Error.Code}," +
+                                        $" Error Message:{request.Error.Message}.");
+            }
+            else if (request.LinkToken != null)
+            {
+                await userAuthService.HandleOnGenerateLinkToken(request);
+            }
+
+            logger.Log(LogLevel.Information,
+                LogEvents.UserAuth, $"Response RequestId:{request.Response.RequestId}");
+            
+            return Accepted();
         }
     }
 }

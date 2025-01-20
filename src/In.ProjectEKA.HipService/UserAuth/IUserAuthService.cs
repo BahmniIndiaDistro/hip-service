@@ -28,7 +28,12 @@ namespace In.ProjectEKA.HipService.UserAuth
         public Task<ErrorRepresentation> AuthNotify(AuthNotifyRequest request);
 
         public Task Dump(NdhmDemographics ndhmDemographics);
+        
+        public Task<Tuple<AuthConfirm, ErrorRepresentation>> HandleOnGenerateLinkToken(
+            OnGenerateTokenRequest onGenerateTokenRequest);
 
-     
+        public Error CheckAccessToken(string accessToken);
+
+
     }
 }

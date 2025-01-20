@@ -76,16 +76,54 @@ namespace In.ProjectEKA.HipService.Link
         
         public async Task SetAccessToken(string healthId)
         {
-            var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();
-            var request = new HttpRequestMessage(HttpMethod.Post,  hipConfiguration.Value.Url + PATH_DEMOGRAPHICS);
-            request.Content = new StringContent(JsonConvert.SerializeObject(demographics), Encoding.UTF8,
-                "application/json");
-            await httpClient.SendAsync(request).ConfigureAwait(false);
-            if (!UserAuthMap.HealthIdToAccessToken.TryGetValue(healthId, out _))
+            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(healthId))
             {
-                var (accessToken, error) = await userAuthRepository.GetAccessToken(healthId);
-                UserAuthMap.HealthIdToAccessToken.Add(healthId, accessToken);
+                var linkToken = UserAuthMap.HealthIdToAccessToken[healthId];
+                var error = userAuthService.CheckAccessToken(linkToken);
+                if (error == null)
+                    return;
             }
+            var (linkTokenFromDb,exception) = await userAuthRepository.GetAccessToken(healthId);
+            if (linkTokenFromDb != null)
+            {
+                 var error = userAuthService.CheckAccessToken(linkTokenFromDb);
+                 if (error == null)
+                 {
+                     UserAuthMap.HealthIdToAccessToken.Add(healthId, linkTokenFromDb);
+                     return;
+                 }
+            }
+            
+            var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();
+            var requestId = Guid.NewGuid();
+            if (demographics == null)
+                return;
+            var generateTokenPayload = new GenerateLinkTokenRequest(demographics.HealthId, demographics.Name,
+                demographics.Gender, demographics.DateOfBirth.Split("-").First());
+            
+            await gatewayClient.SendDataToGateway(PATH_GENERATE_TOKEN, generateTokenPayload, gatewayConfiguration.CmSuffix,
+                Guid.NewGuid().ToString(), bahmniConfiguration.Id, requestId.ToString() );
+            var i = 0;
+            do
+            {
+                Thread.Sleep(gatewayConfiguration.TimeOut + 8000);
+                if (UserAuthMap.RequestIdToErrorMessage.ContainsKey(requestId))
+                {
+                    var gatewayError = UserAuthMap.RequestIdToErrorMessage[requestId];
+                    UserAuthMap.RequestIdToErrorMessage.Remove(requestId);
+                    break;
+                }
+
+                if (UserAuthMap.RequestIdToAccessToken.ContainsKey(requestId))
+                {
+                    Log.Information(
+                        "Response about to be send for requestId: {RequestId} with accessToken: {AccessToken}",
+                        requestId, UserAuthMap.RequestIdToAccessToken[requestId]
+                    );
+                    break;
+                }
+                i++;
+            } while (i < gatewayConfiguration.Counter);
         }
 
         public Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation> NotificationContextResponse(

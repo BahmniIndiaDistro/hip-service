@@ -27,6 +27,9 @@ namespace In.ProjectEKA.HipService.Common
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_PROFILE = "/" + VERSION_V3 + "/hip/verification/abhaAddress/getProfile";
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_CARD = "/" + VERSION_V3 + "/hip/verification/abhaAddress/getCard";
 
+        public const string PATH_GENERATE_TOKEN = "/api/hiecm/"+ VERSION_V3 +"/token/generate-token";
+        public const string PATH_ON_GENERATE_TOKEN = "/api/"+ VERSION_V3 +"/hip/token/on-generate-token";
+
         public const string PATH_SESSIONS =  "api/hiecm/gateway/"+VERSION_V3+"/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = "/api/"+VERSION_V3 + "/hip/patient/care-context/discover";
         public const string PATH_CONSENTS_HIP = "/api/" + VERSION_V3 + "/consent/request/hip/notify";
