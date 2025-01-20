@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
@@ -53,7 +54,6 @@ namespace In.ProjectEKA.HipService.SmsNotification
                 _smsNotificationService.SmsNotifyRequest(smsNotifyRequest, bahmniConfiguration);
             if (error != null)
                 return StatusCode(StatusCodes.Status400BadRequest, error);
-            Guid requestId = gatewaySmsNotifyRequestRepresentation.requestId;
             var cmSuffix = gatewayConfiguration.CmSuffix;
 
             try
@@ -69,8 +69,7 @@ namespace In.ProjectEKA.HipService.SmsNotification
             }
             catch (Exception exception)
             {
-                logger.LogError(LogEvents.UserAuth, exception, "Error happened for requestId: {RequestId} for" +
-                                                               " sms Notify request", requestId);
+                logger.LogError(LogEvents.UserAuth, exception, "Error happened for sms Notify request");
             }
             return StatusCode(StatusCodes.Status504GatewayTimeout,
                 new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway timed out")));
@@ -80,13 +79,15 @@ namespace In.ProjectEKA.HipService.SmsNotification
         
         [Authorize]
         [HttpPost (PATH_SMS_ON_NOTIFY)]
-        public AcceptedResult SmsNotifyStatus(OnSmsNotifyRequest request)
+        public AcceptedResult SmsNotifyStatus(OnSmsNotifyRequest request,
+        [FromHeader(Name = REQUEST_ID), Required] string requestId,
+        [FromHeader(Name = TIMESTAMP)] string timestamp)
         {
             logger.Log(LogLevel.Information,
                 LogEvents.SmsNotify, "On Sms Notify request received." +
-                                    $" RequestId:{request.requestId}, " +
-                                    $" Timestamp:{request.timestamp}," +
-                                    $" ResponseRequestId:{request.resp.RequestId}, ");
+                                    $" RequestId:{requestId}, " +
+                                    $" Timestamp:{timestamp}," +
+                                    $" ResponseRequestId:{request.response.RequestId}, ");
             if (request.error != null)
             {
                 logger.Log(LogLevel.Information,

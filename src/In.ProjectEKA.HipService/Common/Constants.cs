@@ -86,8 +86,8 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_AUTH_ON_NOTIFY = "/" + CURRENT_VERSION + "/users/auth/on-notify";
 
         public const string PATH_HIP_SMS_NOTIFY = "/" + CURRENT_VERSION + "/hip/patients/sms/notify";
-        public const string PATH_SMS_NOTIFY = "/" + CURRENT_VERSION + "/patients/sms/notify2";
-        public const string PATH_SMS_ON_NOTIFY = "/" + CURRENT_VERSION + "/patients/sms/on-notify";
+        public const string PATH_SMS_NOTIFY = "/api/hiecm/hip/"+ VERSION_V3 +"/link/patient/links/sms/notify2";
+        public const string PATH_SMS_ON_NOTIFY = "/api/"+ VERSION_V3 +"/patients/sms/on-notify";
 
         public const string REPORTING_SESSION = "reporting_session";
         public const string OPENMRS_SESSION_ID_COOKIE_NAME = "JSESSIONID";

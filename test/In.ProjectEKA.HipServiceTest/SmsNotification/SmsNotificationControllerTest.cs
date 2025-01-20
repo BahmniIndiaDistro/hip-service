@@ -120,7 +120,7 @@ namespace In.ProjectEKA.HipServiceTest.SmsNotification
             var smsNotificationAcknowledgement = new SmsNotificationAcknowledgement("success");
 
             var onSmsNotify =
-                new OnSmsNotifyRequest(requestId, timeStamp, "Ok", error, resp);
+                new OnSmsNotifyRequest( "Ok", error, resp);
             if (onSmsNotify != null)
                 return true;
             return false;
@@ -150,7 +150,7 @@ namespace In.ProjectEKA.HipServiceTest.SmsNotification
             var smsNotificationAcknowledgement = new SmsNotificationAcknowledgement("success");
 
             var onSmsNotifyRequest =
-                new OnSmsNotifyRequest(requestId, timeStamp, "Ok", error, resp);
+                new OnSmsNotifyRequest("Ok", error, resp);
 
             return new AcceptedResult();
         }
