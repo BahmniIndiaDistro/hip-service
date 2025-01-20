@@ -102,7 +102,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
             var notificationCareContext = new NotificationCareContext("abc", "qqwq");
             var hipReference = new NotificationContextHip("1212");
             var gatewayNotificationContextsRequestRepresentation =
-                new GatewayNotificationContextRepresentation(requestId, timeStamp.ToString(DateTimeFormat),
+                new GatewayNotificationContextRepresentation(
                     new NotificationContext(patient, notificationCareContext, hiTypes, new DateTime().ToString(DateTimeFormat), hipReference));
 
             careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest))

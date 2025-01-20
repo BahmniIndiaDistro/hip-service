@@ -43,7 +43,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_ON_AUTH_INIT = "/" + CURRENT_VERSION + "/users/auth/on-init";
         public const string PATH_ON_FETCH_AUTH_MODES = "/" + CURRENT_VERSION + "/users/auth/on-fetch-modes";
         public const string PATH_ON_ADD_CONTEXTS = "/api/"+ VERSION_V3 +"/link/on_carecontext";
-        public const string PATH_ON_NOTIFY_CONTEXTS = "/" + CURRENT_VERSION + "/links/context/on-notify";
+        public const string PATH_ON_NOTIFY_CONTEXTS = "/api/"+ VERSION_V3 +"/links/context/on-notify";
         public static readonly string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         public static readonly string PATH_ON_DISCOVER = "/api/hiecm/user-initiated-linking/"+VERSION_V3+"/patient/care-context/on-discover";
         public static readonly string PATH_ON_LINK_INIT = "/api/hiecm/user-initiated-linking/"+VERSION_V3+"/link/care-context/on-init";
@@ -69,7 +69,7 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_PATIENT_PROFILE_ON_SHARE = "/" + CURRENT_VERSION + "/patients/profile/on-share";
         public const string PATH_FETCH_AUTH_MODES = "/" + CURRENT_VERSION + "/users/auth/fetch-modes";
         public const string PATH_ADD_PATIENT_CONTEXTS = "/api/hiecm/hip/" + VERSION_V3 + "/link/carecontext";
-        public const string PATH_NOTIFY_PATIENT_CONTEXTS = "/" + CURRENT_VERSION + "/links/context/notify";
+        public const string PATH_NOTIFY_PATIENT_CONTEXTS = "/api/hiecm/hip/"+ VERSION_V3 +"/link/context/notify";
         public const string PATH_FETCH_MODES = "/" + CURRENT_VERSION + "/hip/fetch-modes";
         public const string PATH_NEW_CARECONTEXT = "/" + CURRENT_VERSION + "/hip/new-carecontext";
         public const string PATH_ADD_CONTEXTS = "/" + CURRENT_VERSION + "/hip/add-contexts";

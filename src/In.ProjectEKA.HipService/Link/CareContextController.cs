@@ -87,7 +87,7 @@ namespace In.ProjectEKA.HipService.Link
                 careContextService.NotificationContextResponse(notifyContextRequest);
             if (error != null)
                 return StatusCode(StatusCodes.Status400BadRequest, error);
-            Guid requestId = gatewayNotificationContextRepresentation.requestId;
+            
             var cmSuffix = gatewayConfiguration.CmSuffix;
             try
             {
@@ -97,13 +97,12 @@ namespace In.ProjectEKA.HipService.Link
                     gatewayNotificationContextRepresentation.dump(gatewayNotificationContextRepresentation));
                 await gatewayClient.SendDataToGateway(PATH_NOTIFY_PATIENT_CONTEXTS,
                     gatewayNotificationContextRepresentation,
-                    cmSuffix, correlationId);
+                    cmSuffix, correlationId, hipId:bahmniConfiguration.Id);
                 return Accepted();
             }
             catch (Exception exception)
             {
-                logger.LogError(LogEvents.AddContext, exception, "Error happened for requestId: {RequestId} for" +
-                                                                 " notification-care context request", requestId);
+                logger.LogError(LogEvents.AddContext, exception, "Error happened for notification-care context request");
             }
 
             return StatusCode(StatusCodes.Status504GatewayTimeout,

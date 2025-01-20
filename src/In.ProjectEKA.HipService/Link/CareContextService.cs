@@ -153,11 +153,9 @@ namespace In.ProjectEKA.HipService.Link
             var careContext = new NotificationCareContext(patientReference, careContextReference);
             var hip = new NotificationContextHip(hipId);
             var date = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
-            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
-            var requestId = Guid.NewGuid();
             var notification = new NotificationContext(patient, careContext, hiTypes, date, hip);
             return new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
-                (new GatewayNotificationContextRepresentation(requestId, timeStamp, notification), null);
+                (new GatewayNotificationContextRepresentation(notification), null);
         }
 
         public async Task CallNotifyContext(NewContextRequest newContextRequest, CareContextRepresentation context)
@@ -167,10 +165,7 @@ namespace In.ProjectEKA.HipService.Link
             var notifyContext = new NotifyContextRequest(newContextRequest.HealthId,
                 newContextRequest.PatientReferenceNumber,
                 context.ReferenceNumber,
-                Enum.GetValues(typeof(HiType))
-                    .Cast<HiType>()
-                    .Select(v => v.ToString())
-                    .ToList(),
+                context.HiTypes.Select(hiType => hiType.ToString()).ToList(),
                 bahmniConfiguration.Id
             );
             request.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(notifyContext),
