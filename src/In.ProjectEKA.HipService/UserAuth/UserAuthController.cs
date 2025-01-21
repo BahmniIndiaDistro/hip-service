@@ -231,25 +231,6 @@ namespace In.ProjectEKA.HipService.UserAuth
             var ndhmDemographics = new NdhmDemographics(healthId, name, gender, dateOfBirth, phoneNumber);
             await userAuthService.Dump(ndhmDemographics);
         }
-
-        [Route(PATH_DEMOGRAPHICS)]
-        public async Task<ActionResult> DemographicAuth([FromBody] NdhmDemographics ndhmDemographics)
-        {
-            var authInitRequest = new AuthInitRequest(ndhmDemographics.HealthId, "DEMOGRAPHICS", "LINK");
-            
-            var initError = await userAuthService.AuthInit(authInitRequest, null, bahmniConfiguration,gatewayConfiguration);
-            if (initError != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, initError);
-            
-            var identifier = new Identifier(MOBILE, ndhmDemographics.PhoneNumber);
-            var demographics = new Demographics(ndhmDemographics.Name, ndhmDemographics.Gender,
-                ndhmDemographics.DateOfBirth, identifier);
-            var authConfirmRequest = new AuthConfirmRequest(null, ndhmDemographics.HealthId, demographics);
-            
-            var (authConfirm, confirmError) = await userAuthService.AuthConfirm(authConfirmRequest, null ,gatewayConfiguration);
-            return confirmError != null ? StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(confirmError.Error.Code,StatusCodes.Status400BadRequest),confirmError) : Accepted(authConfirm);
-        }
-
         [Authorize]
         [HttpPost(PATH_AUTH_NOTIFY)]
         public async Task<ActionResult> AuthNotify([FromHeader(Name = CORRELATION_ID)] string correlationId, 

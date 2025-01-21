@@ -1,17 +1,12 @@
 using System;
 using System.Threading.Tasks;
-using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common;
-using In.ProjectEKA.HipService.Common.Model;
-using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link.Model;
 using In.ProjectEKA.HipService.Logger;
-using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace In.ProjectEKA.HipService.Link
 {
@@ -20,101 +15,19 @@ namespace In.ProjectEKA.HipService.Link
     [ApiController]
     public class CareContextController : Controller
     {
-        private readonly GatewayConfiguration gatewayConfiguration;
-        private readonly IGatewayClient gatewayClient;
-        private readonly ILogger<CareContextController> logger;
         private readonly ICareContextService careContextService;
         private readonly ILinkPatientRepository linkPatientRepository;
-        private readonly BahmniConfiguration bahmniConfiguration;
-
-        public CareContextController(IGatewayClient gatewayClient,
-            ILogger<CareContextController> logger,
-            GatewayConfiguration gatewayConfiguration,
+        public CareContextController(
             ICareContextService careContextService,
-            ILinkPatientRepository linkPatientRepository,
-            BahmniConfiguration bahmniConfiguration
+            ILinkPatientRepository linkPatientRepository
         )
         {
-            this.gatewayClient = gatewayClient;
-            this.logger = logger;
-            this.gatewayConfiguration = gatewayConfiguration;
             this.careContextService = careContextService;
             this.linkPatientRepository = linkPatientRepository;
-            this.bahmniConfiguration = bahmniConfiguration;
-        }
-
-        [Route(PATH_ADD_CONTEXTS)]
-        public async Task<ActionResult> AddContexts(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId, [FromBody] AddContextsRequest addContextsRequest)
-        {
-            await careContextService.SetAccessToken(addContextsRequest.ConsentManagerUserId);
-            if (!UserAuthMap.HealthIdToAccessToken.ContainsKey(addContextsRequest.ConsentManagerUserId))
-            {
-                Log.Error("Unable to get link token for healthId: {healthId}",
-                    addContextsRequest.ConsentManagerUserId);
-                throw new Exception("Unable to get link token");
-            }
-            var linkToken = UserAuthMap.HealthIdToAccessToken[addContextsRequest.ConsentManagerUserId];
-            var cmSuffix = gatewayConfiguration.CmSuffix;
-            var requestId = Guid.NewGuid();
-            var (gatewayAddContextsRequestRepresentation, error) =
-               await careContextService.AddContextsResponse(addContextsRequest,cmSuffix,requestId);
-            if (error != null)
-                return StatusCode(StatusCodes.Status400BadRequest, error);
-            try
-            {
-                logger.Log(LogLevel.Information,
-                    LogEvents.AddContext,
-                    "Request for add-context to gateway: {@GatewayResponse}",
-                    gatewayAddContextsRequestRepresentation.dump(gatewayAddContextsRequestRepresentation));
-                logger.Log(LogLevel.Information, LogEvents.AddContext, $"cmSuffix: {{cmSuffix}}," +
-                                                                     $" correlationId: {{correlationId}}",
-                    cmSuffix, correlationId);
-                await gatewayClient.SendDataToGateway(PATH_ADD_PATIENT_CONTEXTS,
-                    gatewayAddContextsRequestRepresentation,
-                    cmSuffix, correlationId,linkToken:linkToken, requestId: requestId.ToString(), hipId:bahmniConfiguration.Id);
-                return Accepted();
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(LogEvents.AddContext, exception, "Error happened for add-care context request");
-            }
-
-            return StatusCode(StatusCodes.Status504GatewayTimeout,
-                new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway timed out")));
-        }
-
-        [Route(PATH_NOTIFY_CONTEXTS)]
-        public async Task<ActionResult> NotificationContext(
-            [FromHeader(Name = CORRELATION_ID)] string correlationId,
-            [FromBody] NotifyContextRequest notifyContextRequest)
-        {
-            var (gatewayNotificationContextRepresentation, error) =
-                careContextService.NotificationContextResponse(notifyContextRequest);
-            if (error != null)
-                return StatusCode(StatusCodes.Status400BadRequest, error);
             
-            var cmSuffix = gatewayConfiguration.CmSuffix;
-            try
-            {
-                logger.Log(LogLevel.Information,
-                    LogEvents.AddContext,
-                    "Request for notification-contexts to gateway: {@GatewayResponse}",
-                    gatewayNotificationContextRepresentation.dump(gatewayNotificationContextRepresentation));
-                await gatewayClient.SendDataToGateway(PATH_NOTIFY_PATIENT_CONTEXTS,
-                    gatewayNotificationContextRepresentation,
-                    cmSuffix, correlationId, hipId:bahmniConfiguration.Id);
-                return Accepted();
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(LogEvents.AddContext, exception, "Error happened for notification-care context request");
-            }
-
-            return StatusCode(StatusCodes.Status504GatewayTimeout,
-                new ErrorRepresentation(new Error(ErrorCode.GatewayTimedOut, "Gateway timed out")));
         }
-
+        
+        [Authorize]
         [HttpPost(PATH_ON_NOTIFY_CONTEXTS)]
         public AcceptedResult HipLinkOnNotifyContexts(HipLinkOnNotifyConfirmation confirmation)
         {

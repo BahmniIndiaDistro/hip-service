@@ -72,15 +72,12 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_NOTIFY_PATIENT_CONTEXTS = "/api/hiecm/hip/"+ VERSION_V3 +"/link/context/notify";
         public const string PATH_FETCH_MODES = "/" + CURRENT_VERSION + "/hip/fetch-modes";
         public const string PATH_NEW_CARECONTEXT = "/" + CURRENT_VERSION + "/hip/new-carecontext";
-        public const string PATH_ADD_CONTEXTS = "/" + CURRENT_VERSION + "/hip/add-contexts";
-        public const string PATH_NOTIFY_CONTEXTS = "/" + CURRENT_VERSION + "/hip/notify";
         public const string KYC_AND_LINK = "KYC_AND_LINK";
         public const string HIP = "HIP";
         public const string PATH_AUTH_INIT = "/" + CURRENT_VERSION + "/users/auth/init";
         public const string PATH_HIP_AUTH_INIT = "/" + CURRENT_VERSION + "/hip/auth/init";
         public const string PATH_HIP_AUTH_CONFIRM = "/" + CURRENT_VERSION + "/hip/auth/confirm";
         public const string PATH_ADD_NDHM_DEMOGRAPHICS = "/" + CURRENT_VERSION + "/hip/ndhm-demographics";
-        public const string PATH_DEMOGRAPHICS = "/" + CURRENT_VERSION + "/hip/auth/demographics";
         public const string PATH_HIP_DIRECT_AUTH = "/" + CURRENT_VERSION + "/hip/auth/direct";
         public const string PATH_AUTH_NOTIFY = "/" + CURRENT_VERSION + "/users/auth/notify";
         public const string PATH_AUTH_ON_NOTIFY = "/" + CURRENT_VERSION + "/users/auth/on-notify";

@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using Hl7.Fhir.Model;
 using In.ProjectEKA.HipLibrary.Patient.Model;
-using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link;
 using In.ProjectEKA.HipService.Link.Model;
-using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -28,23 +25,11 @@ namespace In.ProjectEKA.HipServiceTest.Link
         private readonly Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
         private readonly Mock<ICareContextService> careContextService = new Mock<ICareContextService>();
         private readonly Mock<ILinkPatientRepository> linkPatientRepository = new Mock<ILinkPatientRepository>();
-        private readonly Mock<HttpClient> httpClient = new Mock<HttpClient>();
-        private readonly Mock<IUserAuthRepository> userAuthRepository = new Mock<IUserAuthRepository>();
-
-        private readonly GatewayConfiguration gatewayConfiguration = new GatewayConfiguration()
-        {
-            CmSuffix = "sbx"
-        };
-        private readonly BahmniConfiguration bahmniConfiguration = new BahmniConfiguration()
-        {
-            Id = "bahmni"
-        };
-
+        
         public CareContextControllerTest()
         {
             careContextController =
-                new CareContextController(gatewayClient.Object,
-                    logger.Object, gatewayConfiguration, careContextService.Object, linkPatientRepository.Object,bahmniConfiguration);
+                new CareContextController(careContextService.Object, linkPatientRepository.Object);
         }
 
         [Fact]
@@ -67,7 +52,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
             var onAddContextRequest =
                 new HipLinkContextConfirmation( "doctest@sbx","Successfully Linked care context", error,
                     resp);
-            var addContextRequest = new AddContextsRequest("abc", careContexts, "pqr","abcd@sbx");
+            var addContextRequest = new NewContextRequest("abc", "pqr", careContexts, "abcd@sbx");
 
             careContextService.Setup(a => a.AddContextsResponse(addContextRequest,"sbx",requestId))
                 .Returns(Task.FromResult(new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
@@ -86,15 +71,13 @@ namespace In.ProjectEKA.HipServiceTest.Link
         [Fact]
         private void ShouldNotify()
         {
-            var timeStamp = DateTime.Now.ToUniversalTime();
-            var requestId = Guid.NewGuid();
             var error = new Error(ErrorCode.GatewayTimedOut, "Gateway timed out");
             var resp = new Resp("123");
-            var addContextsAcknowledgement = new AddContextsAcknowledgement("success");
+            var careContextRepresentation = new CareContextRepresentation("anc", "xyz","VISIT",new List<HiType>(){HiType.Prescription});
 
             var hiTypes = new List<string>();
-            hiTypes.Add("Medication");
-            var notifyContextRequest = new NotifyContextRequest("123", "swjs", "wew", hiTypes, "456");
+            hiTypes.Add("Prescription");
+            var notifyContextRequest = new NewContextRequest("abc", "swjs", new List<CareContextRepresentation>(){careContextRepresentation},"doctest@sbx");
             var onNotifyContextRequest =
                 new HipLinkContextConfirmation("doctest@sbx", "Successfully Linked care context", error,
                     resp);
@@ -105,7 +88,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 new GatewayNotificationContextRepresentation(
                     new NotificationContext(patient, notificationCareContext, hiTypes, new DateTime().ToString(DateTimeFormat), hipReference));
 
-            careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest))
+            careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest, careContextRepresentation))
                 .Returns(new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
                     (gatewayNotificationContextsRequestRepresentation, null));
 

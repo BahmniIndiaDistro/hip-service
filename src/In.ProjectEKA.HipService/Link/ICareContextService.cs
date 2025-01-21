@@ -10,10 +10,10 @@ namespace In.ProjectEKA.HipService.Link
     public interface ICareContextService
     {
         public Task<Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>> AddContextsResponse(
-            AddContextsRequest addContextsRequest, string cmSuffix, Guid requestId);
+            NewContextRequest addContextsRequest, string cmSuffix, Guid requestId);
 
         public Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation> NotificationContextResponse(
-            NotifyContextRequest notifyContextRequest);
+            NewContextRequest notifyContextRequest, CareContextRepresentation context);
 
         public Task CallNotifyContext(NewContextRequest newContextRequest,
             CareContextRepresentation context);
