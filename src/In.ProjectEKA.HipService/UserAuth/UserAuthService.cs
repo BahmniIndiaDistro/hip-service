@@ -374,34 +374,14 @@ namespace In.ProjectEKA.HipService.UserAuth
             {
                 healthId = getHealthId(accessToken);
             }
-            var authConfirm = new AuthConfirm(healthId, accessToken);
-            var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
-            if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
+            Tuple<AuthConfirm, ErrorRepresentation> authConfirmResponse = await updateAuthConfirmRepository(healthId, accessToken);
+            if (authConfirmResponse.Item2 != null)
             {
-                var authConfirmResponse = await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
-                if (!authConfirmResponse.HasValue)
-                {
-                    return new Tuple<AuthConfirm, ErrorRepresentation>(null,
-                        new ErrorRepresentation(new Error(ErrorCode.DuplicateAuthConfirmRequest,
-                            "Auth confirm request already exists")));
-                }
+                return authConfirmResponse;
             }
-            else
-            {
-                userAuthRepository.Update(authConfirm);
-            }
-            
             var requestId = Guid.Parse(onGenerateTokenRequest.Response.RequestId);
-            UserAuthMap.RequestIdToAccessToken.Add(requestId, accessToken);
-            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(healthId))
-            {
-                UserAuthMap.HealthIdToAccessToken[healthId] = accessToken;
-            }
-            else
-            {
-                UserAuthMap.HealthIdToAccessToken.Add(healthId, accessToken);
-            }
-            return new Tuple<AuthConfirm, ErrorRepresentation>(authConfirm, null);
+            updateUserAuthMaps(accessToken, healthId, requestId);
+            return authConfirmResponse;
         }
 
         public Error CheckAccessToken(string accessToken)
@@ -422,6 +402,41 @@ namespace In.ProjectEKA.HipService.UserAuth
             return new Error(ErrorCode.BadRequest,
                 "Access token should not be null");
 
+        }
+
+        private void updateUserAuthMaps(string accessToken, string healthId, Guid requestId)
+        {
+            UserAuthMap.RequestIdToAccessToken.Add(requestId, accessToken);
+            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(healthId))
+            {
+                UserAuthMap.HealthIdToAccessToken[healthId] = accessToken;
+            }
+            else
+            {
+                UserAuthMap.HealthIdToAccessToken.Add(healthId, accessToken);
+            }
+        }
+
+        private async Task<Tuple<AuthConfirm, ErrorRepresentation>> updateAuthConfirmRepository(string healthId, string accessToken)
+        {
+            var authConfirm = new AuthConfirm(healthId, accessToken);
+            var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
+            if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
+            {
+                var authConfirmResponse = await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
+                if (!authConfirmResponse.HasValue)
+                {
+                    return new Tuple<AuthConfirm, ErrorRepresentation>(null,
+                        new ErrorRepresentation(new Error(ErrorCode.DuplicateAuthConfirmRequest,
+                            "Auth confirm request already exists")));
+                }
+            }
+            else
+            {
+                userAuthRepository.Update(authConfirm);
+            }
+
+            return new Tuple<AuthConfirm, ErrorRepresentation>(authConfirm, null);
         }
 
     }
