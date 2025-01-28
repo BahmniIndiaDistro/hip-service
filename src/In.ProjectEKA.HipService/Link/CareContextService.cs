@@ -121,7 +121,7 @@ namespace In.ProjectEKA.HipService.Link
             var i = 0;
             do
             {
-                Thread.Sleep(gatewayConfiguration.TimeOut + 8000);
+                await Task.Delay(gatewayConfiguration.TimeOut + 8000);
                 if (UserAuthMap.RequestIdToErrorMessage.ContainsKey(requestId))
                 {
                     var gatewayError = UserAuthMap.RequestIdToErrorMessage[requestId];
