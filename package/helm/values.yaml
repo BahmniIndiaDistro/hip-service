@@ -19,9 +19,9 @@ service:
   port: 8000
 
 config:
-  GATEWAY_URL: "https://dev.abdm.gov.in/gateway"
+  GATEWAY_URL: "https://dev.abdm.gov.in"
   ABHA_NUMBER_URL: "https://abhasbx.abdm.gov.in/abha/api"
-  ABHA_ADDRESS_URL: "https://phrsbx.abdm.gov.in/api"
+  ABHA_ADDRESS_URL: "https://abhasbx.abdm.gov.in/abha/api/v3/phr/web"
   BAHMNI_URL: ""
   GATEWAY_CMSUFFIX: "sbx"
   OTPSERVICE_URL: "http://otp-service:80"
