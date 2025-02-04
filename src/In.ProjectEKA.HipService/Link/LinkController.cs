@@ -162,26 +162,21 @@ namespace In.ProjectEKA.HipService.Link
         [HttpPost(PATH_ON_ADD_CONTEXTS)]
         public async Task<AcceptedResult> HipLinkOnAddContexts(HipLinkContextConfirmation confirmation)
         {
-            Log.Information("Link on-add-context received." +
-                            $" RequestId:{confirmation.RequestId}, " +
-                            $" Timestamp:{confirmation.Timestamp}");
+            Log.Information("Link on-add-context received.");
             if (confirmation.Error != null)
                 Log.Information($" Error Code:{confirmation.Error.Code}," +
                                 $" Error Message:{confirmation.Error.Message}");
-            else if (confirmation.Acknowledgement != null)
+            else if (confirmation.Status != null)
             {
-                if (confirmation.Acknowledgement.Status.Equals(Status.SUCCESS.ToString()))
-                {
                     var error =
-                        await linkPatient.VerifyAndLinkCareContexts(confirmation.Resp.RequestId);
+                        await linkPatient.VerifyAndLinkCareContexts(confirmation.Response.RequestId);
                     if (error != null)
                     {
                         Log.Error(error);
                     }
-                }
-                Log.Information($" Acknowledgment Status:{confirmation.Acknowledgement.Status}");
+                Log.Information($" Acknowledgment Status:{confirmation.Status}");
             }
-            Log.Information($" Resp RequestId:{confirmation.Resp.RequestId}");
+            Log.Information($" Resp RequestId:{confirmation.Response.RequestId}");
             return Accepted();
         }
     }

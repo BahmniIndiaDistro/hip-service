@@ -60,7 +60,7 @@ namespace In.ProjectEKA.HipServiceTest.Consent
                         It.IsAny<string>(),
                         It.IsAny<GatewayConsentRepresentation>(),
                         It.IsAny<string>(),
-                        It.IsAny<string>()))
+                        It.IsAny<string>(),null,null,null))
                 .Returns(Task.Run(() => { }));
         }
 
@@ -147,7 +147,7 @@ namespace In.ProjectEKA.HipServiceTest.Consent
                                 c.Acknowledgement.ConsentId == consentNotification.Notification.ConsentId
                                 && c.Response.RequestId == requestId),
                         consentNotification.Notification.ConsentDetail.ConsentManager.Id,
-                                correlationId),
+                                correlationId,null,null,null),
                 Times.Once);
         }
     }

@@ -27,6 +27,9 @@ namespace In.ProjectEKA.HipService.Common
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_PROFILE = "/" + VERSION_V3 + "/hip/verification/abhaAddress/getProfile";
         public const string APP_PATH_VERIFICATION_ABHAADDRESS_CARD = "/" + VERSION_V3 + "/hip/verification/abhaAddress/getCard";
 
+        public const string PATH_GENERATE_TOKEN = "/api/hiecm/"+ VERSION_V3 +"/token/generate-token";
+        public const string PATH_ON_GENERATE_TOKEN = "/api/"+ VERSION_V3 +"/hip/token/on-generate-token";
+
         public const string PATH_SESSIONS =  "api/hiecm/gateway/"+VERSION_V3+"/sessions";
         public const string PATH_CARE_CONTEXTS_DISCOVER = "/api/"+VERSION_V3 + "/hip/patient/care-context/discover";
         public const string PATH_CONSENTS_HIP = "/api/" + VERSION_V3 + "/consent/request/hip/notify";
@@ -39,8 +42,8 @@ namespace In.ProjectEKA.HipService.Common
         public const string PATH_ON_AUTH_CONFIRM = CURRENT_VERSION + "/users/auth/on-confirm";
         public const string PATH_ON_AUTH_INIT = "/" + CURRENT_VERSION + "/users/auth/on-init";
         public const string PATH_ON_FETCH_AUTH_MODES = "/" + CURRENT_VERSION + "/users/auth/on-fetch-modes";
-        public const string PATH_ON_ADD_CONTEXTS = "/" + CURRENT_VERSION + "/links/link/on-add-contexts";
-        public const string PATH_ON_NOTIFY_CONTEXTS = "/" + CURRENT_VERSION + "/links/context/on-notify";
+        public const string PATH_ON_ADD_CONTEXTS = "/api/"+ VERSION_V3 +"/link/on_carecontext";
+        public const string PATH_ON_NOTIFY_CONTEXTS = "/api/"+ VERSION_V3 +"/links/context/on-notify";
         public static readonly string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
         public static readonly string PATH_ON_DISCOVER = "/api/hiecm/user-initiated-linking/"+VERSION_V3+"/patient/care-context/on-discover";
         public static readonly string PATH_ON_LINK_INIT = "/api/hiecm/user-initiated-linking/"+VERSION_V3+"/link/care-context/on-init";
@@ -65,26 +68,23 @@ namespace In.ProjectEKA.HipService.Common
         public const string TIMESTAMP = "TIMESTAMP";
         public const string PATH_PATIENT_PROFILE_ON_SHARE = "/" + CURRENT_VERSION + "/patients/profile/on-share";
         public const string PATH_FETCH_AUTH_MODES = "/" + CURRENT_VERSION + "/users/auth/fetch-modes";
-        public const string PATH_ADD_PATIENT_CONTEXTS = "/" + CURRENT_VERSION + "/links/link/add-contexts";
-        public const string PATH_NOTIFY_PATIENT_CONTEXTS = "/" + CURRENT_VERSION + "/links/context/notify";
+        public const string PATH_ADD_PATIENT_CONTEXTS = "/api/hiecm/hip/" + VERSION_V3 + "/link/carecontext";
+        public const string PATH_NOTIFY_PATIENT_CONTEXTS = "/api/hiecm/hip/"+ VERSION_V3 +"/link/context/notify";
         public const string PATH_FETCH_MODES = "/" + CURRENT_VERSION + "/hip/fetch-modes";
         public const string PATH_NEW_CARECONTEXT = "/" + CURRENT_VERSION + "/hip/new-carecontext";
-        public const string PATH_ADD_CONTEXTS = "/" + CURRENT_VERSION + "/hip/add-contexts";
-        public const string PATH_NOTIFY_CONTEXTS = "/" + CURRENT_VERSION + "/hip/notify";
         public const string KYC_AND_LINK = "KYC_AND_LINK";
         public const string HIP = "HIP";
         public const string PATH_AUTH_INIT = "/" + CURRENT_VERSION + "/users/auth/init";
         public const string PATH_HIP_AUTH_INIT = "/" + CURRENT_VERSION + "/hip/auth/init";
         public const string PATH_HIP_AUTH_CONFIRM = "/" + CURRENT_VERSION + "/hip/auth/confirm";
         public const string PATH_ADD_NDHM_DEMOGRAPHICS = "/" + CURRENT_VERSION + "/hip/ndhm-demographics";
-        public const string PATH_DEMOGRAPHICS = "/" + CURRENT_VERSION + "/hip/auth/demographics";
         public const string PATH_HIP_DIRECT_AUTH = "/" + CURRENT_VERSION + "/hip/auth/direct";
         public const string PATH_AUTH_NOTIFY = "/" + CURRENT_VERSION + "/users/auth/notify";
         public const string PATH_AUTH_ON_NOTIFY = "/" + CURRENT_VERSION + "/users/auth/on-notify";
 
         public const string PATH_HIP_SMS_NOTIFY = "/" + CURRENT_VERSION + "/hip/patients/sms/notify";
-        public const string PATH_SMS_NOTIFY = "/" + CURRENT_VERSION + "/patients/sms/notify2";
-        public const string PATH_SMS_ON_NOTIFY = "/" + CURRENT_VERSION + "/patients/sms/on-notify";
+        public const string PATH_SMS_NOTIFY = "/api/hiecm/hip/"+ VERSION_V3 +"/link/patient/links/sms/notify2";
+        public const string PATH_SMS_ON_NOTIFY = "/api/"+ VERSION_V3 +"/patients/sms/on-notify";
 
         public const string REPORTING_SESSION = "reporting_session";
         public const string OPENMRS_SESSION_ID_COOKIE_NAME = "JSESSIONID";

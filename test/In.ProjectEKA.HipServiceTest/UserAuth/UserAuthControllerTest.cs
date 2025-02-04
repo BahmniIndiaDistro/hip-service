@@ -86,10 +86,10 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_FETCH_AUTH_MODES,
-                            gatewayFetchModesRequestRepresentation, cmSuffix, correlationId))
+                            gatewayFetchModesRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask)
-                .Callback<string, GatewayFetchModesRequestRepresentation, string, string>
-                ((path, gr, suffix, corId)
+                .Callback<string, GatewayFetchModesRequestRepresentation, string, string,string,string,string>
+                ((path, gr, suffix, corId,hipId,requestId,linkToken)
                     => userAuthController.SetAuthModes(onFetchAuthModeRequest));
 
             List<Mode> modesReturned = new List<Mode>();
@@ -122,7 +122,7 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_FETCH_AUTH_MODES,
-                            gatewayFetchModesRequestRepresentation, cmSuffix, correlationId))
+                            gatewayFetchModesRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.FromResult(""));
 
             if (userAuthController.GetAuthModes(correlationId, request).Result is JsonResult authMode)
@@ -304,7 +304,7 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_FETCH_AUTH_MODES,
-                            gatewayFetchModesRequestRepresentation, gatewayConfiguration.CmSuffix, correlationId))
+                            gatewayFetchModesRequestRepresentation, gatewayConfiguration.CmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask);
 
             var response = await userAuthController.GetAuthModes(correlationId, request) as ObjectResult;

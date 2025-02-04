@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using Hl7.Fhir.Model;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link;
 using In.ProjectEKA.HipService.Link.Model;
-using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -27,82 +25,70 @@ namespace In.ProjectEKA.HipServiceTest.Link
         private readonly Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
         private readonly Mock<ICareContextService> careContextService = new Mock<ICareContextService>();
         private readonly Mock<ILinkPatientRepository> linkPatientRepository = new Mock<ILinkPatientRepository>();
-        private readonly Mock<HttpClient> httpClient = new Mock<HttpClient>();
-        private readonly Mock<IUserAuthRepository> userAuthRepository = new Mock<IUserAuthRepository>();
-
-        private readonly GatewayConfiguration gatewayConfiguration = new GatewayConfiguration()
-        {
-            CmSuffix = "sbx"
-        };
-
+        
         public CareContextControllerTest()
         {
             careContextController =
-                new CareContextController(gatewayClient.Object,
-                    logger.Object, gatewayConfiguration, careContextService.Object, linkPatientRepository.Object);
+                new CareContextController(careContextService.Object, linkPatientRepository.Object);
         }
 
         [Fact]
         private void ShouldAddContext()
         {
-            var timeStamp = DateTime.Now.ToUniversalTime();
             var requestId = Guid.NewGuid();
             var cmSuffix = "sbx";
             var careContextRepresentation = new CareContextRepresentation("anc", "xyz");
             var careContexts = new List<CareContextRepresentation>();
             careContexts.Add(careContextRepresentation);
-            var addCareContextPatient = new AddCareContextsPatient("1234", "qwqwqw", careContexts);
-            var careContextLink = new AddCareContextsLink("1222", addCareContextPatient);
-            var addContextsAcknowledgement = new AddContextsAcknowledgement("success");
             var error = new Error(ErrorCode.GatewayTimedOut, "Gateway timed out");
             var resp = new Resp("123");
             var correlationId = Uuid.Generate().ToString();
+            var linkConfirmationRepresentation =
+                new LinkConfirmationRepresentation("1234", "qwqwqw", careContexts, "Prescription", 1);
 
             var gatewayAddContextsRequestRepresentation =
-                new GatewayAddContextsRequestRepresentation(requestId, timeStamp.ToString(DateTimeFormat), careContextLink);
+                new GatewayAddContextsRequestRepresentation("doctest@sbx",new List<LinkConfirmationRepresentation>(){linkConfirmationRepresentation});
 
             var onAddContextRequest =
-                new HipLinkContextConfirmation(requestId.ToString(), timeStamp, addContextsAcknowledgement, error,
+                new HipLinkContextConfirmation( "doctest@sbx","Successfully Linked care context", error,
                     resp);
-            var addContextRequest = new AddContextsRequest("abc", careContexts, "pqr","abcd@sbx");
+            var addContextRequest = new NewContextRequest("abc", "pqr", careContexts, "abcd@sbx");
 
-            careContextService.Setup(a => a.AddContextsResponse(addContextRequest,"sbx"))
+            careContextService.Setup(a => a.AddContextsResponse(addContextRequest,"sbx",requestId))
                 .Returns(Task.FromResult(new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
                     (gatewayAddContextsRequestRepresentation, null)));
 
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_ADD_PATIENT_CONTEXTS,
-                            gatewayAddContextsRequestRepresentation, cmSuffix, correlationId))
+                            gatewayAddContextsRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask)
-                .Callback<string, GatewayAddContextsRequestRepresentation, string, string>
-                ((path, gr, suffix, corId)
+                .Callback<string, GatewayAddContextsRequestRepresentation, string, string,string, string,string>
+                ((path, gr, suffix, corId,hipId,requestId,linkToken)
                     => careContextController.Accepted(onAddContextRequest));
         }
 
         [Fact]
         private void ShouldNotify()
         {
-            var timeStamp = DateTime.Now.ToUniversalTime();
-            var requestId = Guid.NewGuid();
             var error = new Error(ErrorCode.GatewayTimedOut, "Gateway timed out");
             var resp = new Resp("123");
-            var addContextsAcknowledgement = new AddContextsAcknowledgement("success");
+            var careContextRepresentation = new CareContextRepresentation("anc", "xyz","VISIT",new List<HiType>(){HiType.Prescription});
 
             var hiTypes = new List<string>();
-            hiTypes.Add("Medication");
-            var notifyContextRequest = new NotifyContextRequest("123", "swjs", "wew", hiTypes, "456");
+            hiTypes.Add("Prescription");
+            var notifyContextRequest = new NewContextRequest("abc", "swjs", new List<CareContextRepresentation>(){careContextRepresentation},"doctest@sbx");
             var onNotifyContextRequest =
-                new HipLinkContextConfirmation(requestId.ToString(), timeStamp, addContextsAcknowledgement, error,
+                new HipLinkContextConfirmation("doctest@sbx", "Successfully Linked care context", error,
                     resp);
             var patient = new NotificationPatientContext("12");
             var notificationCareContext = new NotificationCareContext("abc", "qqwq");
             var hipReference = new NotificationContextHip("1212");
             var gatewayNotificationContextsRequestRepresentation =
-                new GatewayNotificationContextRepresentation(requestId, timeStamp.ToString(DateTimeFormat),
+                new GatewayNotificationContextRepresentation(
                     new NotificationContext(patient, notificationCareContext, hiTypes, new DateTime().ToString(DateTimeFormat), hipReference));
 
-            careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest))
+            careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest, careContextRepresentation))
                 .Returns(new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
                     (gatewayNotificationContextsRequestRepresentation, null));
 
@@ -113,10 +99,10 @@ namespace In.ProjectEKA.HipServiceTest.Link
             gatewayClient.Setup(
                     client =>
                         client.SendDataToGateway(PATH_NOTIFY_PATIENT_CONTEXTS,
-                            gatewayNotificationContextsRequestRepresentation, cmSuffix, correlationId))
+                            gatewayNotificationContextsRequestRepresentation, cmSuffix, correlationId,null,null,null))
                 .Returns(Task.CompletedTask)
-                .Callback<string, GatewayNotificationContextRepresentation, string, string>
-                ((path, gr, suffix, corId)
+                .Callback<string, GatewayNotificationContextRepresentation, string, string,string, string,string>
+                ((path, gr, suffix, corId,hipId,requestId,linkToken)
                     => careContextController.Accepted(onNotifyContextRequest));
         }
 

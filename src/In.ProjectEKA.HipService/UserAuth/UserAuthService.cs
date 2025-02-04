@@ -358,13 +358,38 @@ namespace In.ProjectEKA.HipService.UserAuth
         {
             await userAuthRepository.AddDemographics(ndhmDemographics).ConfigureAwait(false);
         }
-        
-        private Error CheckAccessToken(string accessToken)
+
+        public async Task<Tuple<AuthConfirm, ErrorRepresentation>> HandleOnGenerateLinkToken(OnGenerateTokenRequest onGenerateTokenRequest)
+        {
+            var accessToken = onGenerateTokenRequest.LinkToken;
+            var tokenError = CheckAccessToken(accessToken);
+            if (tokenError != null)
+            {
+                return new Tuple<AuthConfirm, ErrorRepresentation>(null,
+                    new ErrorRepresentation(tokenError));
+                   
+            }
+            var healthId = onGenerateTokenRequest.AbhaAddress;
+            if(healthId == null)
+            {
+                healthId = getHealthId(accessToken);
+            }
+            Tuple<AuthConfirm, ErrorRepresentation> authConfirmResponse = await updateAuthConfirmRepository(healthId, accessToken);
+            if (authConfirmResponse.Item2 != null)
+            {
+                return authConfirmResponse;
+            }
+            var requestId = Guid.Parse(onGenerateTokenRequest.Response.RequestId);
+            updateUserAuthMaps(accessToken, healthId, requestId);
+            return authConfirmResponse;
+        }
+
+        public Error CheckAccessToken(string accessToken)
         {
             if (accessToken != null)
             {
                 var token = new JwtSecurityTokenHandler().ReadToken(accessToken) as JwtSecurityToken;
-                if (token?.Claims.First(c => c.Type == "patientId").Value == null)
+                if (token?.Claims.First(c => c.Type == "abhaAddress").Value == null)
                     return new Error(ErrorCode.BadRequest, "Invalid Access token");
                 var expInUnixTimeStamp = token?.Claims.First(c => c.Type == "exp").Value;
                 var exp = DateTimeOffset
@@ -377,6 +402,41 @@ namespace In.ProjectEKA.HipService.UserAuth
             return new Error(ErrorCode.BadRequest,
                 "Access token should not be null");
 
+        }
+
+        private void updateUserAuthMaps(string accessToken, string healthId, Guid requestId)
+        {
+            UserAuthMap.RequestIdToAccessToken.Add(requestId, accessToken);
+            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(healthId))
+            {
+                UserAuthMap.HealthIdToAccessToken[healthId] = accessToken;
+            }
+            else
+            {
+                UserAuthMap.HealthIdToAccessToken.Add(healthId, accessToken);
+            }
+        }
+
+        private async Task<Tuple<AuthConfirm, ErrorRepresentation>> updateAuthConfirmRepository(string healthId, string accessToken)
+        {
+            var authConfirm = new AuthConfirm(healthId, accessToken);
+            var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
+            if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
+            {
+                var authConfirmResponse = await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
+                if (!authConfirmResponse.HasValue)
+                {
+                    return new Tuple<AuthConfirm, ErrorRepresentation>(null,
+                        new ErrorRepresentation(new Error(ErrorCode.DuplicateAuthConfirmRequest,
+                            "Auth confirm request already exists")));
+                }
+            }
+            else
+            {
+                userAuthRepository.Update(authConfirm);
+            }
+
+            return new Tuple<AuthConfirm, ErrorRepresentation>(authConfirm, null);
         }
 
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -230,25 +231,6 @@ namespace In.ProjectEKA.HipService.UserAuth
             var ndhmDemographics = new NdhmDemographics(healthId, name, gender, dateOfBirth, phoneNumber);
             await userAuthService.Dump(ndhmDemographics);
         }
-
-        [Route(PATH_DEMOGRAPHICS)]
-        public async Task<ActionResult> DemographicAuth([FromBody] NdhmDemographics ndhmDemographics)
-        {
-            var authInitRequest = new AuthInitRequest(ndhmDemographics.HealthId, "DEMOGRAPHICS", "LINK");
-            
-            var initError = await userAuthService.AuthInit(authInitRequest, null, bahmniConfiguration,gatewayConfiguration);
-            if (initError != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, initError);
-            
-            var identifier = new Identifier(MOBILE, ndhmDemographics.PhoneNumber);
-            var demographics = new Demographics(ndhmDemographics.Name, ndhmDemographics.Gender,
-                ndhmDemographics.DateOfBirth, identifier);
-            var authConfirmRequest = new AuthConfirmRequest(null, ndhmDemographics.HealthId, demographics);
-            
-            var (authConfirm, confirmError) = await userAuthService.AuthConfirm(authConfirmRequest, null ,gatewayConfiguration);
-            return confirmError != null ? StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(confirmError.Error.Code,StatusCodes.Status400BadRequest),confirmError) : Accepted(authConfirm);
-        }
-
         [Authorize]
         [HttpPost(PATH_AUTH_NOTIFY)]
         public async Task<ActionResult> AuthNotify([FromHeader(Name = CORRELATION_ID)] string correlationId, 
@@ -284,6 +266,35 @@ namespace In.ProjectEKA.HipService.UserAuth
             Log.Information($" Error Code:{error.Error.Code}," +
                             $" Error Message:{error.Error.Message}");
             return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code,StatusCodes.Status400BadRequest), error);
+        }
+        
+        [Authorize]
+        [HttpPost(PATH_ON_GENERATE_TOKEN)]
+        public async Task<ActionResult> OnGenerateLinkToken(OnGenerateTokenRequest request,
+        [FromHeader(Name = REQUEST_ID), Required] string requestId,
+        [FromHeader(Name = TIMESTAMP)] string timestamp)
+        {
+            logger.Log(LogLevel.Information,
+                LogEvents.UserAuth, "On generate token request received." +
+                                    $" RequestId:{requestId}, " +
+                                    $" Timestamp:{timestamp}," +
+                                    $" ResponseRequestId:{request.Response.RequestId}, ");
+            if (request.Error != null)
+            {
+                RequestIdToErrorMessage.Add(Guid.Parse(request.Response.RequestId), request.Error);
+                logger.Log(LogLevel.Information,
+                    LogEvents.UserAuth, $" Error Code:{request.Error.Code}," +
+                                        $" Error Message:{request.Error.Message}.");
+            }
+            else if (request.LinkToken != null)
+            {
+                await userAuthService.HandleOnGenerateLinkToken(request);
+            }
+
+            logger.Log(LogLevel.Information,
+                LogEvents.UserAuth, $"Response RequestId:{request.Response.RequestId}");
+            
+            return Accepted();
         }
     }
 }

@@ -4,11 +4,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common;
 using In.ProjectEKA.HipService.Common.Model;
+using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link.Model;
+using In.ProjectEKA.HipService.Logger;
 using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
@@ -25,13 +28,16 @@ namespace In.ProjectEKA.HipService.Link
     {
         private readonly HttpClient httpClient;
         private readonly IUserAuthRepository userAuthRepository;
+        private readonly IUserAuthService  userAuthService;
         private readonly BahmniConfiguration bahmniConfiguration;
         private readonly ILinkPatientRepository linkPatientRepository;
         private readonly LinkPatient linkPatient;
         private readonly IOptions<HipConfiguration> hipConfiguration;
-        
+        private readonly IGatewayClient gatewayClient;
+        private readonly GatewayConfiguration gatewayConfiguration;        
         public CareContextService(HttpClient httpClient, IUserAuthRepository userAuthRepository,
-            BahmniConfiguration bahmniConfiguration, ILinkPatientRepository linkPatientRepository, LinkPatient linkPatient, IOptions<HipConfiguration> hipConfiguration)
+            BahmniConfiguration bahmniConfiguration, ILinkPatientRepository linkPatientRepository, LinkPatient linkPatient, IOptions<HipConfiguration> hipConfiguration, IGatewayClient gatewayClient, GatewayConfiguration gatewayConfiguration,
+            IUserAuthService userAuthService)
         {
             this.httpClient = httpClient;
             this.userAuthRepository = userAuthRepository;
@@ -39,19 +45,17 @@ namespace In.ProjectEKA.HipService.Link
             this.linkPatientRepository = linkPatientRepository;
             this.linkPatient = linkPatient;
             this.hipConfiguration = hipConfiguration;
+            this.gatewayClient = gatewayClient;
+            this.gatewayConfiguration = gatewayConfiguration;
+            this.userAuthService = userAuthService;
         }
 
         public async Task<Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>> AddContextsResponse(
-            AddContextsRequest addContextsRequest, string cmSuffix)
+            NewContextRequest addContextsRequest, string cmSuffix, Guid requestId)
         {
-            var accessToken = UserAuthMap.HealthIdToAccessToken[addContextsRequest.ConsentManagerUserId];
-            var referenceNumber = addContextsRequest.ReferenceNumber;
             var careContexts = addContextsRequest.CareContexts;
-            var display = addContextsRequest.Display;
-            var patient = new AddCareContextsPatient(referenceNumber, display, careContexts);
-            var link = new AddCareContextsLink(accessToken, patient);
-            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
-            var requestId = Guid.NewGuid();
+            var abhaAddress = addContextsRequest.HealthId;
+            
             if (!await linkPatient.SaveInitiatedLinkRequest(requestId.ToString(), null, requestId.ToString())
                 .ConfigureAwait(false))
                 return new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
@@ -59,11 +63,22 @@ namespace In.ProjectEKA.HipService.Link
             var careContextReferenceNumbers = addContextsRequest.CareContexts
                 .Select(context => context.ReferenceNumber)
                 .ToArray();
+            var linkConfirmationRepresentations = careContexts
+                .Where(cc => cc.HiTypes != null && cc.HiTypes.Any())
+                .SelectMany(cc => cc.HiTypes.Select(hiType => new { HiType = hiType, CareContext = cc }))
+                .GroupBy(x => x.HiType)
+                .Select(group => new LinkConfirmationRepresentation(addContextsRequest.PatientReferenceNumber,
+                    addContextsRequest.PatientName,
+                    group.Select(x => new CareContextRepresentation(x.CareContext.ReferenceNumber, x.CareContext.Display))
+                        .ToList(),
+                    group.Key.ToString(),
+                    group.Count()))
+                .ToList();
             var (_, exception1) = await linkPatientRepository.SaveRequestWith(
                     requestId.ToString(),
                     cmSuffix,
-                    addContextsRequest.ConsentManagerUserId,
-                    addContextsRequest.ReferenceNumber,
+                    abhaAddress,
+                    addContextsRequest.PatientReferenceNumber,
                     careContextReferenceNumbers)
                 .ConfigureAwait(false);
             if (exception1 != null)
@@ -71,73 +86,132 @@ namespace In.ProjectEKA.HipService.Link
                 (null, new ErrorRepresentation(new Error(ErrorCode.ServerInternalError,
                     ErrorMessage.DatabaseStorageError)));
             return new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
-                (new GatewayAddContextsRequestRepresentation(requestId, timeStamp, link), null);
+                (new GatewayAddContextsRequestRepresentation( abhaAddress,linkConfirmationRepresentations), null);
         }
         
         public async Task SetAccessToken(string healthId)
         {
-            var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();
-            var request = new HttpRequestMessage(HttpMethod.Post,  hipConfiguration.Value.Url + PATH_DEMOGRAPHICS);
-            request.Content = new StringContent(JsonConvert.SerializeObject(demographics), Encoding.UTF8,
-                "application/json");
-            await httpClient.SendAsync(request).ConfigureAwait(false);
-            if (!UserAuthMap.HealthIdToAccessToken.TryGetValue(healthId, out _))
+            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(healthId))
             {
-                var (accessToken, error) = await userAuthRepository.GetAccessToken(healthId);
-                UserAuthMap.HealthIdToAccessToken.Add(healthId, accessToken);
+                var linkToken = UserAuthMap.HealthIdToAccessToken[healthId];
+                var error = userAuthService.CheckAccessToken(linkToken);
+                if (error == null)
+                    return;
             }
+            var (linkTokenFromDb,exception) = await userAuthRepository.GetAccessToken(healthId);
+            if (linkTokenFromDb != null)
+            {
+                 var error = userAuthService.CheckAccessToken(linkTokenFromDb);
+                 if (error == null)
+                 {
+                     UserAuthMap.HealthIdToAccessToken.Add(healthId, linkTokenFromDb);
+                     return;
+                 }
+            }
+            
+            var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();
+            var requestId = Guid.NewGuid();
+            if (demographics == null)
+                return;
+            var generateTokenPayload = new GenerateLinkTokenRequest(demographics.HealthId, demographics.Name,
+                demographics.Gender, demographics.DateOfBirth.Split("-").First());
+            
+            await gatewayClient.SendDataToGateway(PATH_GENERATE_TOKEN, generateTokenPayload, gatewayConfiguration.CmSuffix,
+                Guid.NewGuid().ToString(), bahmniConfiguration.Id, requestId.ToString() );
+            var i = 0;
+            do
+            {
+                await Task.Delay(gatewayConfiguration.TimeOut + 8000);
+                if (UserAuthMap.RequestIdToErrorMessage.ContainsKey(requestId))
+                {
+                    var gatewayError = UserAuthMap.RequestIdToErrorMessage[requestId];
+                    UserAuthMap.RequestIdToErrorMessage.Remove(requestId);
+                    break;
+                }
+
+                if (UserAuthMap.RequestIdToAccessToken.ContainsKey(requestId))
+                {
+                    Log.Information(
+                        "Response about to be send for requestId: {RequestId} with accessToken: {AccessToken}",
+                        requestId, UserAuthMap.RequestIdToAccessToken[requestId]
+                    );
+                    break;
+                }
+                i++;
+            } while (i < gatewayConfiguration.Counter);
         }
 
         public Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation> NotificationContextResponse(
-            NotifyContextRequest notifyContextRequest)
+            NewContextRequest notifyContextRequest, CareContextRepresentation context)
         {
-            var id = notifyContextRequest.PatientId;
-            var patientReference = notifyContextRequest.PatientReference;
-            var careContextReference = notifyContextRequest.CareContextReference;
-            var hiTypes = notifyContextRequest.HiTypes;
-            var hipId = notifyContextRequest.HipId;
+            var id = notifyContextRequest.HealthId;
+            var patientReference = notifyContextRequest.PatientReferenceNumber;
+            var careContextReference = context.ReferenceNumber;
+            var hiTypes = context.HiTypes.Select(hiType => hiType.ToString()).ToList();
+            var hipId = bahmniConfiguration.Id;
             var patient = new NotificationPatientContext(id);
             var careContext = new NotificationCareContext(patientReference, careContextReference);
             var hip = new NotificationContextHip(hipId);
             var date = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
-            var timeStamp = DateTime.Now.ToUniversalTime().ToString(DateTimeFormat);
-            var requestId = Guid.NewGuid();
             var notification = new NotificationContext(patient, careContext, hiTypes, date, hip);
             return new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
-                (new GatewayNotificationContextRepresentation(requestId, timeStamp, notification), null);
+                (new GatewayNotificationContextRepresentation(notification), null);
         }
 
         public async Task CallNotifyContext(NewContextRequest newContextRequest, CareContextRepresentation context)
         {
-            var request =
-                new HttpRequestMessage(HttpMethod.Get, hipConfiguration.Value.Url + PATH_NOTIFY_CONTEXTS);
-            var notifyContext = new NotifyContextRequest(newContextRequest.HealthId,
-                newContextRequest.PatientReferenceNumber,
-                context.ReferenceNumber,
-                Enum.GetValues(typeof(HiType))
-                    .Cast<HiType>()
-                    .Select(v => v.ToString())
-                    .ToList(),
-                bahmniConfiguration.Id
-            );
-            request.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(notifyContext),
-                Encoding.UTF8, "application/json");
-
-            await httpClient.SendAsync(request).ConfigureAwait(false);
+            var (gatewayNotificationContextRepresentation, error) =
+                NotificationContextResponse(newContextRequest, context);
+            if (error != null)
+                Log.Error("Notify for Care Context failed with error: {@Error}", error);
+            
+            var cmSuffix = gatewayConfiguration.CmSuffix;
+            try
+            {
+                Log.Information(
+                    "Request for notification-contexts to gateway: {@GatewayResponse}",
+                    gatewayNotificationContextRepresentation.dump(gatewayNotificationContextRepresentation));
+                await gatewayClient.SendDataToGateway(PATH_NOTIFY_PATIENT_CONTEXTS,
+                    gatewayNotificationContextRepresentation,
+                    cmSuffix, Guid.NewGuid().ToString(), hipId:bahmniConfiguration.Id);
+                
+            }
+            catch (Exception exception)
+            {
+                Log.Error("Error happened for notification-care context request", exception);
+            }
         }
 
         public async Task CallAddContext(NewContextRequest newContextRequest)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, hipConfiguration.Value.Url + PATH_ADD_CONTEXTS);
-            var addContextRequest = new AddContextsRequest(
-                newContextRequest.PatientReferenceNumber,
-                newContextRequest.CareContexts,
-                newContextRequest.PatientName,
-                newContextRequest.HealthId);
-
-            request.Content = new StringContent(JsonConvert.SerializeObject(addContextRequest),
-                Encoding.UTF8, "application/json");
-            await httpClient.SendAsync(request).ConfigureAwait(false);
+            var abhaAddress = newContextRequest.HealthId;
+            await SetAccessToken(abhaAddress);
+            if (!UserAuthMap.HealthIdToAccessToken.ContainsKey(abhaAddress))
+            {
+                Log.Error("Unable to get link token for healthId: {healthId}",
+                    abhaAddress);
+                throw new Exception("Unable to get link token");
+            }
+            var linkToken = UserAuthMap.HealthIdToAccessToken[abhaAddress];
+            var cmSuffix = gatewayConfiguration.CmSuffix;
+            var requestId = Guid.NewGuid();
+            var (gatewayAddContextsRequestRepresentation, error) =
+                await AddContextsResponse(newContextRequest,cmSuffix,requestId);
+            if (error != null)
+                Log.Error("Linking Care Context failed with error: {@Error}", error);
+            try
+            {
+                Log.Information(
+                    "Request for add-context to gateway: {@GatewayResponse}",
+                    gatewayAddContextsRequestRepresentation.dump(gatewayAddContextsRequestRepresentation));
+                await gatewayClient.SendDataToGateway(PATH_ADD_PATIENT_CONTEXTS,
+                    gatewayAddContextsRequestRepresentation,
+                    cmSuffix, null, linkToken:linkToken, requestId: requestId.ToString(), hipId:bahmniConfiguration.Id);
+            }
+            catch (Exception exception)
+            {
+                Log.Error("Error happened for add-care context request", exception);
+            }
         }
 
         public bool IsLinkedContext(List<string> careContexts, string context)
