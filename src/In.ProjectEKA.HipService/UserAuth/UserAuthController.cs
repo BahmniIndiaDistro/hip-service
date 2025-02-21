@@ -271,7 +271,7 @@ namespace In.ProjectEKA.HipService.UserAuth
         [Authorize]
         [HttpPost(PATH_ON_GENERATE_TOKEN)]
         public async Task<ActionResult> OnGenerateLinkToken(OnGenerateTokenRequest request,
-        [FromHeader(Name = REQUEST_ID), Required] string requestId,
+        [FromHeader(Name = REQUEST_ID)] string requestId,
         [FromHeader(Name = TIMESTAMP)] string timestamp)
         {
             logger.Log(LogLevel.Information,
