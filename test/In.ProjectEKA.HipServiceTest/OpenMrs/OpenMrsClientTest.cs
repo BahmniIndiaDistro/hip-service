@@ -35,8 +35,9 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                 )
                 .ReturnsAsync( new HttpResponseMessage
                 {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    Content = new StringContent("some error message")
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    Content = new StringContent("some error message"),
+                    RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://someurl/openmrs/path/to/resource")
                 })
                 .Verifiable();
 
@@ -98,17 +99,15 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
                     ItExpr.IsAny<CancellationToken>())
-                    .Callback<HttpRequestMessage, CancellationToken>((response, token) =>
+                    .Callback<HttpRequestMessage, CancellationToken>((request, token) =>
                     {
-                        if (response.RequestUri.AbsoluteUri == "https://someurl/openmrs/path/to/resource")
-                        // response.RequestUri.AbsoluteUri == "https://someurl/openmrs/path/to/resource")
-                        {
-                            wasCalledWithTheRightUri = true;
-                        }
+                        wasCalledWithTheRightUri = request.RequestUri != null
+                            && request.RequestUri.ToString().Contains("path/to/resource");
                     })
                     .ReturnsAsync(new HttpResponseMessage
                     {
-                        StatusCode = HttpStatusCode.OK
+                        StatusCode = HttpStatusCode.OK,
+                        RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://someurl/openmrs/path/to/resource")
                     })
                     .Verifiable();
 

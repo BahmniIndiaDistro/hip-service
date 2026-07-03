@@ -28,7 +28,11 @@ namespace In.ProjectEKA.HipServiceTest.SmsNotification
             UserAuthMap.HealthIdToLatestVisitUuid[healthId] = visitUuid;
 
             var openMrsClient = new Mock<IOpenMrsClient>();
-            var bahmniConfiguration = new BahmniConfiguration(openMrsClient.Object);
+            var bahmniConfiguration = new BahmniConfiguration(openMrsClient.Object)
+            {
+                Id = "HIP_ID_123",
+                Name = "Test Facility"
+            };
             var smsNotificationService = new SmsNotificationService();
 
             var result = smsNotificationService.SmsNotifyRequest(

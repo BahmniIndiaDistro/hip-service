@@ -1,4 +1,6 @@
 using Hl7.Fhir.Model;
+using In.ProjectEKA.HipLibrary.Patient.Model;
+using Optional;
 
 namespace In.ProjectEKA.HipServiceTest.DataFlow
 {
@@ -24,7 +26,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
     public class DataFlowClientTest
     {
         [Fact]
-        private void ShouldReturnDataComponent()
+        private async Task ShouldReturnDataComponent()
         {
             const string gatewayUrl = "https://root/central-registry";
             var dataFlowNotificationClient = new Mock<DataFlowNotificationClient>(MockBehavior.Strict, null);
@@ -43,17 +45,31 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             var httpClient = new HttpClient(handlerMock.Object);
             Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
-            var dataRequest = TestBuilder.TraceableDataRequest(transactionId);
+            var baseDataRequest = TestBuilder.TraceableDataRequest(transactionId);
+            var dataRequest = new TraceableDataRequest(
+                new List<GrantedContext> {new GrantedContext("patient", "patient:visit-uuid")},
+                baseDataRequest.DateRange,
+                baseDataRequest.DataPushUrl,
+                baseDataRequest.HiType,
+                baseDataRequest.TransactionId,
+                baseDataRequest.KeyMaterial,
+                baseDataRequest.ConsentManagerId,
+                baseDataRequest.ConsentId,
+                baseDataRequest.CmSuffix,
+                baseDataRequest.CorrelationId,
+                baseDataRequest.PatientUuid);
             var content = TestBuilder.Faker().Random.String();
             var checksum = TestBuilder.Faker().Random.Hash();
             var dataNotificationRequest = TestBuilder.DataNotificationRequest(transactionId);
-            var correlationId = Uuid.Generate().ToString();
+            var correlationId = dataRequest.CorrelationId;
             var entries = new List<Entry>
             {
                 new Entry(content, MediaTypeNames.Application.Json, checksum, "careContextReference")
             }.AsEnumerable();
             var expectedUri = new Uri("https://callback/data/notification");
             var dataFlowClient = new DataFlowClient(httpClient, dataFlowNotificationClient.Object, configuration, bahmniConfiguration, gatewayClient.Object);
+            gatewayClient.Setup(client => client.Authenticate(correlationId))
+                .ReturnsAsync(Option.Some("auth-token"));
             handlerMock
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -79,7 +95,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
                         request.StatusNotification.SessionStatus);
                 });
 
-            dataFlowClient.SendDataToHiu(dataRequest, entries, null).ConfigureAwait(false);
+            await dataFlowClient.SendDataToHiu(dataRequest, entries, null);
 
             handlerMock.Protected().Verify(
                 "SendAsync",
@@ -90,7 +106,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
         }
 
         [Fact]
-        private void ShouldNotifyGatewayAboutFailureInDataTransfer()
+        private async Task ShouldNotifyGatewayAboutFailureInDataTransfer()
         {
             const string id = "ConsentManagerId";
             var dataFlowNotificationClient = new Mock<DataFlowNotificationClient>(MockBehavior.Strict, null);
@@ -106,10 +122,24 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             var httpClient = new HttpClient(handlerMock.Object);
             Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
-            var dataRequest = TestBuilder.TraceableDataRequest(TestBuilder.Faker().Random.Hash());
+            var baseDataRequest = TestBuilder.TraceableDataRequest(TestBuilder.Faker().Random.Hash());
+            var dataRequest = new TraceableDataRequest(
+                new List<GrantedContext> {new GrantedContext("patient", "patient:visit-uuid")},
+                baseDataRequest.DateRange,
+                baseDataRequest.DataPushUrl,
+                baseDataRequest.HiType,
+                baseDataRequest.TransactionId,
+                baseDataRequest.KeyMaterial,
+                baseDataRequest.ConsentManagerId,
+                baseDataRequest.ConsentId,
+                baseDataRequest.CmSuffix,
+                baseDataRequest.CorrelationId,
+                baseDataRequest.PatientUuid);
             var entries = new List<Entry>().AsEnumerable();
             var dataFlowClient = new DataFlowClient(httpClient, dataFlowNotificationClient.Object, configuration, bahmniConfiguration, gatewayClient.Object);
-            var correlationId = Uuid.Generate().ToString();
+            var correlationId = dataRequest.CorrelationId;
+            gatewayClient.Setup(client => client.Authenticate(correlationId))
+                .ReturnsAsync(Option.Some("auth-token"));
             handlerMock
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -118,10 +148,10 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
                     ItExpr.IsAny<CancellationToken>())
                 .Throws(new Exception("Unknown exception"))
                 .Verifiable();
-            dataFlowNotificationClient.Setup(client => client.NotifyGateway(id, It.IsAny<DataNotificationRequest>(),correlationId))
+            dataFlowNotificationClient.Setup(client => client.NotifyGateway(id, It.IsAny<DataNotificationRequest>(), correlationId))
                 .Returns(Task.CompletedTask);
 
-            dataFlowClient.SendDataToHiu(dataRequest, entries, null).ConfigureAwait(false);
+            await dataFlowClient.SendDataToHiu(dataRequest, entries, null);
 
             handlerMock.Protected().Verify(
                 "SendAsync",

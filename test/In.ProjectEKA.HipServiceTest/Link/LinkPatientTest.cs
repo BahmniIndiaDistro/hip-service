@@ -68,7 +68,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 otpServiceConfigurations,
                 openmrsClient.Object,
                 userAuthService.Object,
-                new BahmniConfiguration(openmrsClient.Object));
+                new BahmniConfiguration(openmrsClient.Object) { Name = "Test Facility" });
         }
 
         [Fact]
