@@ -36,10 +36,12 @@ namespace In.ProjectEKA.HipService.Consent
         [HttpPost(PATH_CONSENTS_HIP)]
         public AcceptedResult ConsentNotification(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
-            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = REQUEST_ID)] string requestId,
             [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] ConsentArtefactRepresentation consentArtefact)
         {
+            requestId = String.IsNullOrEmpty(requestId) ? Guid.NewGuid().ToString() : requestId;
+            correlationId = String.IsNullOrEmpty(correlationId) ? Guid.NewGuid().ToString() : correlationId;
             backgroundJob.Enqueue(() => StoreConsent(consentArtefact, correlationId, requestId));
             return Accepted();
         }
@@ -70,12 +72,15 @@ namespace In.ProjectEKA.HipService.Consent
                 if (notification.Status == ConsentStatus.REVOKED)
                 {
                     var consent = await consentRepository.GetFor(notification.ConsentId);
-                    var cmSuffix = consent.ConsentArtefact.ConsentManager.Id;
-                    var gatewayResponse = new GatewayConsentRepresentation(
-                        new ConsentUpdateResponse(ConsentUpdateStatus.OK.ToString(), notification.ConsentId),
-                        null,
-                        new Resp(requestId));
-                    await gatewayClient.SendDataToGateway(PATH_CONSENT_ON_NOTIFY, gatewayResponse, cmSuffix, correlationId);
+                    if (consent != null)
+                    {
+                        var cmSuffix = consent.ConsentArtefact.ConsentManager.Id;
+                        var gatewayResponse = new GatewayConsentRepresentation(
+                            new ConsentUpdateResponse(ConsentUpdateStatus.OK.ToString(), notification.ConsentId),
+                            null,
+                            new Resp(requestId));
+                        await gatewayClient.SendDataToGateway(PATH_CONSENT_ON_NOTIFY, gatewayResponse, cmSuffix, correlationId);
+                    }
                 }
             }
         }

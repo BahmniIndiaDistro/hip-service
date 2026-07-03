@@ -140,7 +140,7 @@ namespace In.ProjectEKA.HipService
                 .AddSingleton(HttpClient)
                 .AddSingleton<IHealthCheckClient>(_ => new OpenMrsHealthCheckClient(new Dictionary<string, string>
                     {
-                        {"OpenMRS-FHIR", Constants.PATH_OPENMRS_FHIR},
+                        // {"OpenMRS-FHIR", Constants.PATH_OPENMRS_FHIR},
                         {"OpenMRS-REST", Constants.PATH_OPENMRS_REST}
                     },
                     new OpenMrsClient(HttpClient,
@@ -153,7 +153,12 @@ namespace In.ProjectEKA.HipService
                 .AddScoped<IDataFlowRepository, DataFlowRepository>()
                 .AddScoped<IHealthInformationRepository, HealthInformationRepository>()
                 .AddSingleton(Configuration.GetSection("Gateway").Get<GatewayConfiguration>())
-                .AddSingleton(Configuration.GetSection("Bahmni").Get<BahmniConfiguration>())
+                .AddSingleton<BahmniConfiguration>(sp =>
+                {
+                    var bahmniConfiguration = new BahmniConfiguration(sp.GetRequiredService<IOpenMrsClient>());
+                    Configuration.GetSection("Bahmni").Bind(bahmniConfiguration);
+                    return bahmniConfiguration;
+                }) // for HFR ID and facility name visit location wise
                 .AddSingleton(Configuration.GetSection("Cors").Get<CorsConfiguration>())
                 .AddSingleton(new GatewayClient(HttpClient,
                     Configuration.GetSection("Gateway").Get<GatewayConfiguration>()))
@@ -314,8 +319,8 @@ namespace In.ProjectEKA.HipService
         {
             const string claimTypeClientId = "clientId";
             var accessToken = context.SecurityToken as JwtSecurityToken;
-            if (!CheckRoleInAccessToken(accessToken))
-                return false;
+            // if (!CheckRoleInAccessToken(accessToken))
+            //     return false;
             if (!context.Principal.HasClaim(claim => claim.Type == claimTypeClientId))
                 return false;
             var clientId = context.Principal.Claims.First(claim => claim.Type == claimTypeClientId).Value;

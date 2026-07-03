@@ -80,9 +80,10 @@ namespace In.ProjectEKA.HipService.SmsNotification
         [Authorize]
         [HttpPost (PATH_SMS_ON_NOTIFY)]
         public AcceptedResult SmsNotifyStatus(OnSmsNotifyRequest request,
-        [FromHeader(Name = REQUEST_ID), Required] string requestId,
+        [FromHeader(Name = REQUEST_ID)] string requestId,
         [FromHeader(Name = TIMESTAMP)] string timestamp)
         {
+            requestId = String.IsNullOrEmpty(requestId) ? Guid.NewGuid().ToString() : requestId;
             logger.Log(LogLevel.Information,
                 LogEvents.SmsNotify, "On Sms Notify request received." +
                                     $" RequestId:{requestId}, " +

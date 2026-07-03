@@ -18,6 +18,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
     using HipLibrary.Patient;
     using HipLibrary.Patient.Model;
     using HipService.Common;
+    using HipService.Common.Model;
     using HipService.Discovery;
     using HipService.Link;
     using HipService.Link.Model;
@@ -66,7 +67,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 discoveryRequestRepository.Object,
                 otpServiceConfigurations,
                 openmrsClient.Object,
-                userAuthService.Object);
+                userAuthService.Object,
+                new BahmniConfiguration(openmrsClient.Object));
         }
 
         [Fact]

@@ -51,7 +51,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow.Builder
             const string consentManagerId = "ConsentManagerId";
             const string consentId = "ConsentId";
             var dateRange = new HipLibrary.Patient.Model.DateRange("from", "to");
-            const string callBackUrl = "http://callback/data/notification";
+            const string callBackUrl = "https://callback/data/notification";
             var keyMaterial = new KeyMaterialLib(faker.Random.Word(), faker.Random.Word(),
                 new KeyStructureLib("", "", faker.Random.Hash()),
                 faker.Random.Hash());
@@ -71,7 +71,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow.Builder
             const string consentManagerId = "ConsentManagerId";
             const string consentId = "ConsentId";
             var dateRange = new HipLibrary.Patient.Model.DateRange("from", "to");
-            const string callBackUrl = "http://callback/data/notification";
+            const string callBackUrl = "https://callback/data/notification";
             var keyMaterial = new KeyMaterialLib(faker.Random.Word(), faker.Random.Word(),
                 new KeyStructureLib("", "", faker.Random.Hash()),
                 faker.Random.Hash());
@@ -145,7 +145,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow.Builder
             var media = Faker().Random.String();
             var checksum = Faker().Random.Hash();
             var careContextReference = Faker().Random.String();
-            return new Entry(content, media, checksum, null, careContextReference);
+            return new Entry(content, media, checksum, careContextReference);
         }
 
         internal static HealthInformation HealthInformation(string token, DateTime dateTime)

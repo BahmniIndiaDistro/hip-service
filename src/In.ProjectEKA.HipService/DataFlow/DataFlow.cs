@@ -16,13 +16,13 @@ namespace In.ProjectEKA.HipService.DataFlow
 
     public class DataFlow : IDataFlow
     {
-        private readonly IConsentRepository consentRepository;
-        private readonly IOptions<DataFlowConfiguration> dataFlowConfiguration;
-        private readonly IDataFlowRepository dataFlowRepository;
-        private readonly IHealthInformationRepository healthInformationRepository;
-        private readonly ILogger<DataFlow> logger;
-        private readonly IMessagingQueueManager messagingQueueManager;
-        private readonly ILinkPatientRepository linkPatientRepository;
+        private  IConsentRepository consentRepository;
+        private  IOptions<DataFlowConfiguration> dataFlowConfiguration;
+        private  IDataFlowRepository dataFlowRepository;
+        private  IHealthInformationRepository healthInformationRepository;
+        private  ILogger<DataFlow> logger;
+        private  IMessagingQueueManager messagingQueueManager;
+        private  ILinkPatientRepository linkPatientRepository;
 
         public DataFlow(IDataFlowRepository dataFlowRepository,
             IMessagingQueueManager messagingQueueManager,
@@ -162,7 +162,8 @@ namespace In.ProjectEKA.HipService.DataFlow
                 "dd/MM/yyyyTHH:mm:ss.fffzzz",
                 "yyyy-MM-dd'T'HH:mm:ss.ffffff",
                 "yyyy-MM-dd'T'HH:mm:ss.fff'Z'",
-                "yyyy-MM-ddTHH:mm:ss.fffffffZ"
+                "yyyy-MM-ddTHH:mm:ss.fffffffZ",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
             };
             var tryParseExact = DateTime.TryParseExact(expiryDate,
                 formatStrings,

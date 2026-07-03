@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -24,11 +25,36 @@ namespace In.ProjectEKA.HipService.OpenMrs
         {
             var responseMessage = await httpClient.GetAsync(Path.Join(configuration.Url, openMrsUrl));
 
+            Log.Debug(
+                    $"Getting the data from OpenMrs url {responseMessage.RequestMessage.RequestUri}");
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                if (!responseMessage.StatusCode.Equals(HttpStatusCode.BadRequest))
+                {
+                    var error = await responseMessage.Content.ReadAsStringAsync();
+                    Log.Error($"Failure in getting the data from OpenMrs url {responseMessage.RequestMessage.RequestUri} with status code {responseMessage.StatusCode}" +
+                    $" {error}");
+                    throw new OpenMrsConnectionException();
+                }
+                Log.Error($"Failure in getting the data from OpenMrs url {responseMessage.RequestMessage.RequestUri} with status code {responseMessage.StatusCode}");
+            }
+
+            return responseMessage;
+        }
+        
+        public async Task<HttpResponseMessage> PostAsync(string openMrsUrl, string jsonContent)
+        {
+            var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var responseMessage = await httpClient.PostAsync(Path.Join(configuration.Url, openMrsUrl), httpContent);
+
+            Log.Debug(
+                    $"Posting the data with OpenMrs url {responseMessage.RequestMessage.RequestUri}");
             if (!responseMessage.IsSuccessStatusCode)
             {
                 var error = await responseMessage.Content.ReadAsStringAsync();
                 Log.Error(
-                    $"Failure in getting the data from OpenMrs with status code {responseMessage.StatusCode}" +
+                    $"Failure in posting the data into OpenMrs url {responseMessage.RequestMessage.RequestUri} with status code {responseMessage.StatusCode}" +
                     $" {error}");
                 throw new OpenMrsConnectionException();
             }

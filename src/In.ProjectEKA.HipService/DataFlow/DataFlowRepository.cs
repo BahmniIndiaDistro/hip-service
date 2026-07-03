@@ -9,7 +9,7 @@ namespace In.ProjectEKA.HipService.DataFlow
 
     public class DataFlowRepository : IDataFlowRepository
     {
-        private readonly DataFlowContext dataFlowContext;
+        private DataFlowContext dataFlowContext;
 
         public DataFlowRepository(DataFlowContext dataFlowContext)
         {

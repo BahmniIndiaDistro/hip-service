@@ -23,6 +23,7 @@ namespace In.ProjectEKA.HipService.DataFlow.Encryptor
                 senderKeyPair,
                 receivedKeyMaterial.Curve,
                 receivedKeyMaterial.CryptoAlg));
+            // Log.Information($"DhPublicKey details: {receivedKeyMaterial.DhPublicKey.Expiry}  with  {sharedKey}");
             var encryptedContent = Encrypt(sharedKey, content, randomKeySender,
                 receivedKeyMaterial.Nonce);
             return encryptedContent == string.Empty ? Option.None<string>() : Option.Some(encryptedContent);

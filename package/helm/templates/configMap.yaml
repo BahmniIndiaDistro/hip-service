@@ -14,6 +14,7 @@ data:
   HEALTH_CHECK_DURATION: "{{ .Values.config.HEALTH_CHECK_DURATION }}"
   Cors__allowedOrigins: "{{ .Values.config.CORS_ALLOWED_ORIGIN }}"
   Bahmni__Id: "{{ .Values.config.BAHMNI_ID }}"
+  Bahmni__Name: "{{ .Values.config.BAHMNI_NAME }}"
   ConnectionStrings__DefaultConnection: "{{ .Values.config.CONNECTION_STRING }}"
   rabbit__HostName: "{{ .Values.config.RABBITMQ_HOST }}"
   rabbit__UserName: "{{ .Values.config.RABBITMQ_USERNAME }}"

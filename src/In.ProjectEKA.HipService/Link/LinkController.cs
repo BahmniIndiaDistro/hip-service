@@ -20,7 +20,7 @@ namespace In.ProjectEKA.HipService.Link
     using static Common.Constants;
     using Model;
 
-    [Authorize]
+    // [Authorize]
     [ApiController]
     [Consumes("application/json")]
     [Produces("application/json")]
@@ -45,10 +45,11 @@ namespace In.ProjectEKA.HipService.Link
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         public AcceptedResult LinkFor(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
-            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = REQUEST_ID)] string requestId,
             [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] LinkReferenceRequest request)
         {
+            requestId = String.IsNullOrEmpty(requestId) ? Guid.NewGuid().ToString() : requestId;
             backgroundJob.Enqueue(() => LinkPatient(request, correlationId, requestId));
             return Accepted();
         }
@@ -69,10 +70,11 @@ namespace In.ProjectEKA.HipService.Link
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         public AcceptedResult LinkPatientFor(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
-            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = REQUEST_ID)] string requestId,
             [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] LinkPatientRequest request)
         {
+            requestId = String.IsNullOrEmpty(requestId) ? Guid.NewGuid().ToString() : requestId;
             backgroundJob.Enqueue(() => LinkPatientCareContextFor(request, correlationId, requestId));
             return Accepted();
         }

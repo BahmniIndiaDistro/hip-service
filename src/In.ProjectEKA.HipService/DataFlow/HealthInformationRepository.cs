@@ -8,7 +8,7 @@ namespace In.ProjectEKA.HipService.DataFlow
 
     public class HealthInformationRepository : IHealthInformationRepository
     {
-        private readonly DataFlowContext dataFlowContext;
+        private  DataFlowContext dataFlowContext;
 
         public HealthInformationRepository(DataFlowContext dataFlowContext)
         {

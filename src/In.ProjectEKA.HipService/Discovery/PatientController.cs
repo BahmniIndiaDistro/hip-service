@@ -45,10 +45,11 @@ namespace In.ProjectEKA.HipService.Discovery
 
         public AcceptedResult DiscoverPatientCareContexts(
             [FromHeader(Name = CORRELATION_ID)] string correlationId,
-            [FromHeader(Name = REQUEST_ID), Required] string requestId,
+            [FromHeader(Name = REQUEST_ID)] string requestId,
             [FromHeader(Name = TIMESTAMP)] string timestamp,
             [FromBody] DiscoveryRequest request)
         {
+            requestId = String.IsNullOrEmpty(requestId) ? Guid.NewGuid().ToString() : requestId;
             Log.Information($"discovery request received for {request.Patient.Id} with {requestId}.");
             Log.Information("Started Execution");
             Log.Information("calling GetPatientCareContext Method, Patient Name -> " + request.Patient.Name);

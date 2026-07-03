@@ -8,7 +8,7 @@ namespace In.ProjectEKA.HipLibrary.Matcher
     {
         public Expression<Func<Patient, bool>> Of(string value)
         {
-            return patientInfo => patientInfo.PhoneNumber == value;
+            return patientInfo => patientInfo.PhoneNumber.Trim() == value.Trim();
         }
     }
 }

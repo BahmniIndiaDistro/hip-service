@@ -29,7 +29,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
         public CareContextControllerTest()
         {
             careContextController =
-                new CareContextController(careContextService.Object, linkPatientRepository.Object);
+                new CareContextController(careContextService.Object, linkPatientRepository.Object, null, null);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
                     new NotificationContext(patient, notificationCareContext, hiTypes, new DateTime().ToString(DateTimeFormat), hipReference));
 
             careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest, careContextRepresentation))
-                .Returns(new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
+                .ReturnsAsync(new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
                     (gatewayNotificationContextsRequestRepresentation, null));
 
             var cmSuffix = "sbx";

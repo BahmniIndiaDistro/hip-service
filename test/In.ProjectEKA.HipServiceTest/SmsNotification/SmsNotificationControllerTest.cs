@@ -35,7 +35,7 @@ namespace In.ProjectEKA.HipServiceTest.SmsNotification
         public SmsNotificationControllerTest()
         {
             smsNotificationController = new SmsNotificationController(gatewayClient.Object, logger.Object,
-                new SmsNotificationService(), new BahmniConfiguration(), gatewayConfiguration, new HttpClient(),
+                new SmsNotificationService(), new BahmniConfiguration(new Mock<IOpenMrsClient>().Object), gatewayConfiguration, new HttpClient(),
                 new OpenMrsConfiguration());
         }
 

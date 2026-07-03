@@ -15,6 +15,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
     using FluentAssertions;
     using HipService.Gateway;
     using In.ProjectEKA.HipService.DataFlow.Model;
+    using In.ProjectEKA.HipService.OpenMrs;
     using Moq;
     using Moq.Protected;
     using Xunit;
@@ -33,9 +34,15 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
                 ClientId = "IN0410000183",
                 ClientSecret = TestBuilder.RandomString()
             };
+            var openMrsClient = new Mock<IOpenMrsClient>();
+            var bahmniConfiguration = new HipService.Common.Model.BahmniConfiguration(openMrsClient.Object)
+            {
+                Id = "HIP_ID_123"
+            };
             const string transactionId = "transactionId";
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             var httpClient = new HttpClient(handlerMock.Object);
+            Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
             var dataRequest = TestBuilder.TraceableDataRequest(transactionId);
             var content = TestBuilder.Faker().Random.String();
             var checksum = TestBuilder.Faker().Random.Hash();
@@ -43,10 +50,10 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             var correlationId = Uuid.Generate().ToString();
             var entries = new List<Entry>
             {
-                new Entry(content, MediaTypeNames.Application.Json, checksum, null, "careContextReference")
+                new Entry(content, MediaTypeNames.Application.Json, checksum, "careContextReference")
             }.AsEnumerable();
-            var expectedUri = new Uri("http://callback/data/notification");
-            var dataFlowClient = new DataFlowClient(httpClient, dataFlowNotificationClient.Object, configuration);
+            var expectedUri = new Uri("https://callback/data/notification");
+            var dataFlowClient = new DataFlowClient(httpClient, dataFlowNotificationClient.Object, configuration, bahmniConfiguration, gatewayClient.Object);
             handlerMock
                 .Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -72,7 +79,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
                         request.StatusNotification.SessionStatus);
                 });
 
-            dataFlowClient.SendDataToHiu(dataRequest, entries, null);
+            dataFlowClient.SendDataToHiu(dataRequest, entries, null).ConfigureAwait(false);
 
             handlerMock.Protected().Verify(
                 "SendAsync",
@@ -91,11 +98,17 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             {
                 ClientId = id
             };
+            var openMrsClient = new Mock<IOpenMrsClient>();
+            var bahmniConfiguration = new HipService.Common.Model.BahmniConfiguration(openMrsClient.Object)
+            {
+                Id = "HIP_ID_123"
+            };
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
             var httpClient = new HttpClient(handlerMock.Object);
+            Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
             var dataRequest = TestBuilder.TraceableDataRequest(TestBuilder.Faker().Random.Hash());
             var entries = new List<Entry>().AsEnumerable();
-            var dataFlowClient = new DataFlowClient(httpClient, dataFlowNotificationClient.Object, configuration);
+            var dataFlowClient = new DataFlowClient(httpClient, dataFlowNotificationClient.Object, configuration, bahmniConfiguration, gatewayClient.Object);
             var correlationId = Uuid.Generate().ToString();
             handlerMock
                 .Protected()
@@ -108,7 +121,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             dataFlowNotificationClient.Setup(client => client.NotifyGateway(id, It.IsAny<DataNotificationRequest>(),correlationId))
                 .Returns(Task.CompletedTask);
 
-            dataFlowClient.SendDataToHiu(dataRequest, entries, null);
+            dataFlowClient.SendDataToHiu(dataRequest, entries, null).ConfigureAwait(false);
 
             handlerMock.Protected().Verify(
                 "SendAsync",

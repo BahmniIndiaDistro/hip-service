@@ -4,7 +4,7 @@ namespace In.ProjectEKA.HipLibrary.Patient.Model
 
     public class CareBundle
     {
-        public CareBundle(string careContextReference, Bundle bundleForThisCcr)
+        public CareBundle(string careContextReference, string bundleForThisCcr)
         {
             CareContextReference = careContextReference;
             BundleForThisCcr = bundleForThisCcr;
@@ -12,6 +12,6 @@ namespace In.ProjectEKA.HipLibrary.Patient.Model
 
         public string CareContextReference { get; }
 
-        public Bundle BundleForThisCcr { get; }
+        public string BundleForThisCcr { get; }
     }
 }

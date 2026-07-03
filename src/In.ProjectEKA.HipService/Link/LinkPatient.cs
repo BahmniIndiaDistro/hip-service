@@ -1,7 +1,10 @@
+using In.ProjectEKA.HipService.Common.Model;
+using System.Text.Encodings.Web;
 using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 namespace In.ProjectEKA.HipService.Link
@@ -29,6 +32,7 @@ namespace In.ProjectEKA.HipService.Link
         private readonly ReferenceNumberGenerator referenceNumberGenerator;
         private readonly IOpenMrsClient openMrsClient;
         private readonly IUserAuthService userAuthService;
+        private readonly BahmniConfiguration bahmniConfiguration;
 
         public LinkPatient(
             ILinkPatientRepository linkPatientRepository,
@@ -37,7 +41,9 @@ namespace In.ProjectEKA.HipService.Link
             ReferenceNumberGenerator referenceNumberGenerator,
             IDiscoveryRequestRepository discoveryRequestRepository,
             IOptions<OtpServiceConfiguration> otpService,
-            IOpenMrsClient openMrsClient, IUserAuthService userAuthService)
+            IOpenMrsClient openMrsClient,
+            IUserAuthService userAuthService,
+            BahmniConfiguration bahmniConfiguration)
         {
             this.linkPatientRepository = linkPatientRepository;
             this.patientRepository = patientRepository;
@@ -47,6 +53,7 @@ namespace In.ProjectEKA.HipService.Link
             this.otpService = otpService;
             this.openMrsClient = openMrsClient;
             this.userAuthService = userAuthService;
+            this.bahmniConfiguration = bahmniConfiguration;
         }
 
         public virtual async Task<ValueTuple<PatientLinkEnquiryRepresentation, ErrorRepresentation>> LinkPatients(
@@ -71,6 +78,33 @@ namespace In.ProjectEKA.HipService.Link
                 var careContextReferenceNumbers = request.Patient.CareContexts
                     .Select(context => context.ReferenceNumber)
                     .ToArray();
+
+                // Extract visit UUID from first care context (format: "patientId:visitUuid")
+                var visitUuid = careContextReferenceNumbers.First() != null
+                    ? bahmniConfiguration.ExtractVisitUuidFromReference(careContextReferenceNumbers.First())
+                    : null;
+                var hipId = bahmniConfiguration.GetHfrIdByVisitUuid(visitUuid);
+                if (string.IsNullOrEmpty(hipId))
+                {
+                    Log.Information($"PostTo: Attempting to set HFR ID for visit UUID: {visitUuid}");
+                    var hfrId = await bahmniConfiguration.SetHfrIdForVisitAsync(visitUuid).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(hfrId))
+                    {
+                        hipId = hfrId;
+                        Log.Information($"PostTo: Successfully set HFR ID {hfrId} for visit UUID {visitUuid}");
+                    }
+                    else
+                    {
+                        hipId = bahmniConfiguration.GetDefaultHfrId();
+                    }
+                }
+                var hipName = bahmniConfiguration.GetFacilityNameByVisitUuid(visitUuid);
+                if (string.IsNullOrEmpty(hipName))
+                {
+                    hipName = bahmniConfiguration.GetDefaultFacilityName();
+                }
+                hipName = UrlEncoder.Default.Encode(hipName);
+
                 var (_, exception) = await linkPatientRepository.SaveRequestWith(
                     linkRefNumber,
                     request.Patient.ConsentManagerId,
@@ -86,7 +120,7 @@ namespace In.ProjectEKA.HipService.Link
                 var session = new Session(
                     linkRefNumber,
                     new Communication(CommunicationMode.MOBILE, patient.PhoneNumber),
-                    new OtpGenerationDetail(otpService.Value.SenderSystemName,
+                    new OtpGenerationDetail(hipName,
                         OtpAction.LINK_PATIENT_CARECONTEXT.ToString()));
                 var otpGeneration = await patientVerification.SendTokenFor(session);
                 if (otpGeneration != null)
@@ -270,5 +304,6 @@ namespace In.ProjectEKA.HipService.Link
                 Task.FromResult<ErrorRepresentation>(new ErrorRepresentation(new Error(ErrorCode.CareContextNotFound,
                         ErrorMessage.CareContextNotFound))));
         }
+
     }
 }

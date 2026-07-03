@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Common;
@@ -12,13 +9,10 @@ using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.Link.Model;
 using In.ProjectEKA.HipService.Logger;
-using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.UserAuth;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Optional.Unsafe;
-using HiType = In.ProjectEKA.HipLibrary.Patient.Model.HiType;
 
 namespace In.ProjectEKA.HipService.Link
 {
@@ -34,7 +28,7 @@ namespace In.ProjectEKA.HipService.Link
         private readonly LinkPatient linkPatient;
         private readonly IOptions<HipConfiguration> hipConfiguration;
         private readonly IGatewayClient gatewayClient;
-        private readonly GatewayConfiguration gatewayConfiguration;        
+        private readonly GatewayConfiguration gatewayConfiguration;
         public CareContextService(HttpClient httpClient, IUserAuthRepository userAuthRepository,
             BahmniConfiguration bahmniConfiguration, ILinkPatientRepository linkPatientRepository, LinkPatient linkPatient, IOptions<HipConfiguration> hipConfiguration, IGatewayClient gatewayClient, GatewayConfiguration gatewayConfiguration,
             IUserAuthService userAuthService)
@@ -55,8 +49,9 @@ namespace In.ProjectEKA.HipService.Link
         {
             var careContexts = addContextsRequest.CareContexts;
             var abhaAddress = addContextsRequest.HealthId;
+            var linkReferenceNumber = Guid.NewGuid().ToString();
             
-            if (!await linkPatient.SaveInitiatedLinkRequest(requestId.ToString(), null, requestId.ToString())
+            if (!await linkPatient.SaveInitiatedLinkRequest(requestId.ToString(), null, linkReferenceNumber)
                 .ConfigureAwait(false))
                 return new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
                     (null, new ErrorRepresentation(new Error(ErrorCode.DuplicateRequestId, ErrorMessage.DuplicateRequestId)));
@@ -75,7 +70,7 @@ namespace In.ProjectEKA.HipService.Link
                     group.Count()))
                 .ToList();
             var (_, exception1) = await linkPatientRepository.SaveRequestWith(
-                    requestId.ToString(),
+                    linkReferenceNumber,
                     cmSuffix,
                     abhaAddress,
                     addContextsRequest.PatientReferenceNumber,
@@ -86,38 +81,43 @@ namespace In.ProjectEKA.HipService.Link
                 (null, new ErrorRepresentation(new Error(ErrorCode.ServerInternalError,
                     ErrorMessage.DatabaseStorageError)));
             return new Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>
-                (new GatewayAddContextsRequestRepresentation( abhaAddress,linkConfirmationRepresentations), null);
+                (new GatewayAddContextsRequestRepresentation(
+                    abhaAddress,
+                    linkConfirmationRepresentations), null);
         }
         
-        public async Task SetAccessToken(string healthId)
+        public async Task SetAccessToken(string healthId, string hipId)
         {
-            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(healthId))
+            var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();
+            if (demographics != null)
+                UserAuthMap.UpdateHealthIdToPhoneNumber(demographics.PhoneNumber, healthId);
+            var compositeKey = healthId + COMPOSITE_AUTH_KEY_SEPARATOR + hipId;
+            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(compositeKey))
             {
-                var linkToken = UserAuthMap.HealthIdToAccessToken[healthId];
+                var linkToken = UserAuthMap.HealthIdToAccessToken[compositeKey];
                 var error = userAuthService.CheckAccessToken(linkToken);
                 if (error == null)
                     return;
             }
-            var (linkTokenFromDb,exception) = await userAuthRepository.GetAccessToken(healthId);
+            var (linkTokenFromDb,exception) = await userAuthRepository.GetAccessToken(healthId, hipId);
             if (linkTokenFromDb != null)
             {
                  var error = userAuthService.CheckAccessToken(linkTokenFromDb);
                  if (error == null)
                  {
-                     UserAuthMap.HealthIdToAccessToken.Add(healthId, linkTokenFromDb);
+                     UserAuthMap.HealthIdToAccessToken.Add(compositeKey, linkTokenFromDb);
                      return;
                  }
             }
-            
-            var demographics = (userAuthRepository.GetDemographics(healthId).Result).ValueOrDefault();
             var requestId = Guid.NewGuid();
             if (demographics == null)
                 return;
+            UserAuthMap.RequestIdToHipId.Add(requestId.ToString(), hipId);
             var generateTokenPayload = new GenerateLinkTokenRequest(demographics.HealthId, demographics.Name,
                 demographics.Gender, demographics.DateOfBirth.Split("-").First());
             
             await gatewayClient.SendDataToGateway(PATH_GENERATE_TOKEN, generateTokenPayload, gatewayConfiguration.CmSuffix,
-                Guid.NewGuid().ToString(), bahmniConfiguration.Id, requestId.ToString() );
+                Guid.NewGuid().ToString(), hipId:hipId, requestId.ToString());
             var i = 0;
             do
             {
@@ -132,8 +132,8 @@ namespace In.ProjectEKA.HipService.Link
                 if (UserAuthMap.RequestIdToAccessToken.ContainsKey(requestId))
                 {
                     Log.Information(
-                        "Response about to be send for requestId: {RequestId} with accessToken: {AccessToken}",
-                        requestId, UserAuthMap.RequestIdToAccessToken[requestId]
+                        "Response about to be send for requestId: {RequestId} and HealthId: {HealthId}",
+                        requestId, demographics.HealthId
                     );
                     break;
                 }
@@ -141,14 +141,30 @@ namespace In.ProjectEKA.HipService.Link
             } while (i < gatewayConfiguration.Counter);
         }
 
-        public Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation> NotificationContextResponse(
+        public async Task<Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>> NotificationContextResponse(
             NewContextRequest notifyContextRequest, CareContextRepresentation context)
         {
             var id = notifyContextRequest.HealthId;
             var patientReference = notifyContextRequest.PatientReferenceNumber;
             var careContextReference = context.ReferenceNumber;
             var hiTypes = context.HiTypes.Select(hiType => hiType.ToString()).ToList();
-            var hipId = bahmniConfiguration.Id;
+            // Extract visit UUID from care context reference (format: "patientId:visitUuid")
+            var visitUuid = bahmniConfiguration.ExtractVisitUuidFromReference(careContextReference);
+            var hipId = bahmniConfiguration.GetHfrIdByVisitUuid(visitUuid);
+            if (string.IsNullOrEmpty(hipId))
+            {
+                Log.Information($"PostTo: Attempting to set HFR ID for visit UUID: {visitUuid}");
+                var hfrId = await bahmniConfiguration.SetHfrIdForVisitAsync(visitUuid).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(hfrId))
+                {
+                    hipId = hfrId;
+                    Log.Information($"PostTo: Successfully set HFR ID {hfrId} for visit UUID {visitUuid}");
+                }
+                else
+                {
+                    hipId = bahmniConfiguration.GetDefaultHfrId();
+                }
+            }
             var patient = new NotificationPatientContext(id);
             var careContext = new NotificationCareContext(patientReference, careContextReference);
             var hip = new NotificationContextHip(hipId);
@@ -161,20 +177,45 @@ namespace In.ProjectEKA.HipService.Link
         public async Task CallNotifyContext(NewContextRequest newContextRequest, CareContextRepresentation context)
         {
             var (gatewayNotificationContextRepresentation, error) =
-                NotificationContextResponse(newContextRequest, context);
+                await NotificationContextResponse(newContextRequest, context).ConfigureAwait(false);
             if (error != null)
                 Log.Error("Notify for Care Context failed with error: {@Error}", error);
             
             var cmSuffix = gatewayConfiguration.CmSuffix;
+            // Extract visit UUID from care context reference
+            var visitUuid = bahmniConfiguration.ExtractVisitUuidFromReference(context.ReferenceNumber);
+            var hipId = bahmniConfiguration.GetHfrIdByVisitUuid(visitUuid);
+            if (string.IsNullOrEmpty(hipId))
+            {
+                Log.Information($"PostTo: Attempting to set HFR ID for visit UUID: {visitUuid}");
+                var hfrId = await bahmniConfiguration.SetHfrIdForVisitAsync(visitUuid).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(hfrId))
+                {
+                    hipId = hfrId;
+                    Log.Information($"PostTo: Successfully set HFR ID {hfrId} for visit UUID {visitUuid}");
+                }
+                else
+                {
+                    hipId = bahmniConfiguration.GetDefaultHfrId();
+                }
+            }
             try
             {
+                var compositeKey = newContextRequest.HealthId + COMPOSITE_AUTH_KEY_SEPARATOR + hipId;
+                if (!UserAuthMap.HealthIdToAccessToken.ContainsKey(compositeKey))
+                {
+                    Log.Error("Unable to get link token for healthId: {healthId} and hipId: {hipId}",
+                        newContextRequest.HealthId, hipId);
+                    throw new Exception("Unable to get link token");
+                }
+                var linkToken = UserAuthMap.HealthIdToAccessToken[compositeKey];
+                UserAuthMap.UpdateHealthIdToLatestVisitUuid(newContextRequest.HealthId, visitUuid);
                 Log.Information(
                     "Request for notification-contexts to gateway: {@GatewayResponse}",
                     gatewayNotificationContextRepresentation.dump(gatewayNotificationContextRepresentation));
                 await gatewayClient.SendDataToGateway(PATH_NOTIFY_PATIENT_CONTEXTS,
                     gatewayNotificationContextRepresentation,
-                    cmSuffix, Guid.NewGuid().ToString(), hipId:bahmniConfiguration.Id);
-                
+                    cmSuffix, Guid.NewGuid().ToString(), hipId:hipId, linkToken:linkToken, requestId: Guid.NewGuid().ToString());
             }
             catch (Exception exception)
             {
@@ -185,20 +226,43 @@ namespace In.ProjectEKA.HipService.Link
         public async Task CallAddContext(NewContextRequest newContextRequest)
         {
             var abhaAddress = newContextRequest.HealthId;
-            await SetAccessToken(abhaAddress);
-            if (!UserAuthMap.HealthIdToAccessToken.ContainsKey(abhaAddress))
+            // Extract visit UUID from first care context (if available)
+            var visitUuid = newContextRequest.CareContexts?.First() != null 
+                ? bahmniConfiguration.ExtractVisitUuidFromReference(newContextRequest.CareContexts.First().ReferenceNumber)
+                : null;
+            UserAuthMap.UpdateHealthIdToLatestVisitUuid(abhaAddress, visitUuid);
+            string hipId = bahmniConfiguration.GetHfrIdByVisitUuid(visitUuid);
+            if (string.IsNullOrEmpty(hipId))
             {
-                Log.Error("Unable to get link token for healthId: {healthId}",
-                    abhaAddress);
+                Log.Information($"PostTo: Attempting to set HFR ID for visit UUID: {visitUuid}");
+                var hfrId = await bahmniConfiguration.SetHfrIdForVisitAsync(visitUuid).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(hfrId))
+                {
+                    hipId = hfrId;
+                    Log.Information($"PostTo: Successfully set HFR ID {hfrId} for visit UUID {visitUuid}");
+                }
+                else
+                {
+                    hipId = bahmniConfiguration.GetDefaultHfrId();
+                }
+            }
+            await SetAccessToken(abhaAddress, hipId);
+            var compositeKey = abhaAddress + COMPOSITE_AUTH_KEY_SEPARATOR + hipId;
+            if (!UserAuthMap.HealthIdToAccessToken.ContainsKey(compositeKey))
+            {
+                Log.Error("Unable to get link token for healthId: {healthId} and hipId: {hipId}", abhaAddress, hipId);
                 throw new Exception("Unable to get link token");
             }
-            var linkToken = UserAuthMap.HealthIdToAccessToken[abhaAddress];
+            var linkToken = UserAuthMap.HealthIdToAccessToken[compositeKey];
             var cmSuffix = gatewayConfiguration.CmSuffix;
             var requestId = Guid.NewGuid();
             var (gatewayAddContextsRequestRepresentation, error) =
-                await AddContextsResponse(newContextRequest,cmSuffix,requestId);
+                await AddContextsResponse(newContextRequest, cmSuffix, requestId);
             if (error != null)
+            {
                 Log.Error("Linking Care Context failed with error: {@Error}", error);
+                return;
+            }
             try
             {
                 Log.Information(
@@ -206,7 +270,7 @@ namespace In.ProjectEKA.HipService.Link
                     gatewayAddContextsRequestRepresentation.dump(gatewayAddContextsRequestRepresentation));
                 await gatewayClient.SendDataToGateway(PATH_ADD_PATIENT_CONTEXTS,
                     gatewayAddContextsRequestRepresentation,
-                    cmSuffix, null, linkToken:linkToken, requestId: requestId.ToString(), hipId:bahmniConfiguration.Id);
+                    cmSuffix, Guid.NewGuid().ToString(), hipId:hipId, linkToken:linkToken, requestId: requestId.ToString());
             }
             catch (Exception exception)
             {
@@ -218,5 +282,6 @@ namespace In.ProjectEKA.HipService.Link
         {
             return careContexts.Any(careContext => careContext.Equals(context));
         }
+
     }
 }

@@ -17,20 +17,20 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
         private void ShouldProcessMessage()
         {
             var collect = new Mock<ICollectHipService>();
-            var dataFlowClient = new Mock<DataFlowClient>(MockBehavior.Strict, null, null, null);
+            var dataFlowClient = new Mock<DataFlowClient>(MockBehavior.Strict, null, null, null, null, null, null);
             var dataEntryFactory = new Mock<DataEntryFactory>();
             var dataFlowMessageHandler =
                 new DataFlowMessageHandler(collect.Object, dataFlowClient.Object, dataEntryFactory.Object);
             var transactionId = TestBuilder.Faker().Random.Uuid().ToString();
             var dataRequest = TestBuilder.TraceableDataRequest(transactionId);
-            var careBundles = new List<CareBundle> {new CareBundle("careContextReference", new Bundle())};
+            var careBundles = new List<CareBundle> {new CareBundle("careContextReference", "")};
             var entries = new Entries(careBundles);
             var data = Option.Some(entries);
             var content = TestBuilder.Faker().Random.String();
             var checksum = TestBuilder.Faker().Random.Hash();
             var entriesList = new List<Entry>
             {
-                new Entry(content, MediaTypeNames.Application.Json, checksum, null, "careContextReference")
+                new Entry(content, MediaTypeNames.Application.Json, checksum, "careContextReference")
             };
             var requestKeyMaterial = TestBuilder.KeyMaterialLib();
             collect.Setup(c => c.CollectData(dataRequest)).ReturnsAsync(data);

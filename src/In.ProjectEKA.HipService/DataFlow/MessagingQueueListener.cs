@@ -31,7 +31,7 @@ namespace In.ProjectEKA.HipService.DataFlow
             channel.QueueDeclare(
                 MessagingQueueConstants.DataRequestRoutingKey,
                 true,
-                true,
+                false,
                 false,
                 null);
             channel.QueueBind(

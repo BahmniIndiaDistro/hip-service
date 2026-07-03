@@ -41,8 +41,8 @@ public static class VerificationRequestMapper
         if (verificationRequestOtp.IdentifierType.Equals(IdentifierType.MOBILE_NUMBER))
         {
             return new ABHALoginRequestOTP(
-                new List<ABHAScope> { ABHAScope.ABHA_LOGIN, ABHAScope.MOBILE_VERIFY },
-                ABHALoginHint.MOBILE,
+                new List<ABHAScope> { ABHAScope.ABHA_LOGIN, ABHAScope.MOBILE_VERIFY, ABHAScope.SEARCH_ABHA },
+                ABHALoginHint.ABHA_INDEX,
                 encryptedIdentifier,
                 OTPSystem.ABDM
             );

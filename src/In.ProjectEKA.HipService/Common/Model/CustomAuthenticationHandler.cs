@@ -34,7 +34,7 @@ namespace In.ProjectEKA.HipService.Common.Model
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             
-            if (Request.Cookies.ContainsKey(REPORTING_SESSION))
+            if (Request.Cookies.ContainsKey(REPORTING_SESSION) || Request.Cookies.ContainsKey(OPENMRS_SESSION_ID_COOKIE_NAME))
             {
                 return await PerformCookieAuth();
             }
@@ -90,6 +90,10 @@ namespace In.ProjectEKA.HipService.Common.Model
         private async Task<AuthenticateResult> PerformCookieAuth()
         {
             string sessionId = Request.Cookies[REPORTING_SESSION];
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                sessionId = Request.Cookies[OPENMRS_SESSION_ID_COOKIE_NAME];
+            }
             var httpClient = new HttpClient();
 
             var request = new HttpRequestMessage(HttpMethod.Get, _configuration.Url + WHO_AM_I);

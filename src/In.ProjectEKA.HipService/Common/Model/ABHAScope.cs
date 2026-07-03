@@ -9,6 +9,7 @@ public class ABHAScope
     public static readonly ABHAScope ABHA_LOGIN = new ABHAScope("abha-login");
     public static readonly ABHAScope ABHA_ADDRESS_LOGIN = new ABHAScope("abha-address-login");
     public static readonly ABHAScope AADHAAR_VERIFY = new ABHAScope("aadhaar-verify");
+    public static readonly ABHAScope SEARCH_ABHA = new ABHAScope("search-abha");
 
     public string Value { get; private set; }
 
