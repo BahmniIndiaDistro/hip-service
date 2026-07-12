@@ -51,7 +51,8 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs.HealthCheck
                 )
                 .ReturnsAsync(new HttpResponseMessage
                 {
-                    StatusCode = HttpStatusCode.OK
+                    StatusCode = HttpStatusCode.OK,
+                    RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://someurl/openmrs/path/to/resource")
                 })
                 .Verifiable();
             OpenMrsHealthCheckClient openMrsHealthCheckClient = new OpenMrsHealthCheckClient(new Dictionary<string, string> { { "Service", "path/to/resource" }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Hangfire.Dashboard.Resources;
 using In.ProjectEKA.HipService.UserAuth.Database;
@@ -20,11 +21,11 @@ namespace In.ProjectEKA.HipService.UserAuth
             this.ndhmDemographicsContext = ndhmDemographicsContext;
         }
 
-        public async Task<Option<AuthConfirm>> Get(string healthId)
+        public async Task<Option<AuthConfirm>> Get(string healthId, string hipId)
         {
             var authConfirm = await authContext.AuthConfirm
                 .FirstOrDefaultAsync(c =>
-                    c.HealthId == healthId).ConfigureAwait(false);
+                    c.HealthId == healthId && c.HipId == hipId).ConfigureAwait(false);
             if (authConfirm != null)
                 authContext.Entry<AuthConfirm>(authConfirm).State = EntityState.Detached;
             return Option.Some<AuthConfirm>(authConfirm);
@@ -90,12 +91,13 @@ namespace In.ProjectEKA.HipService.UserAuth
             }
         }
 
-        public async Task Delete(string healthId)
+        public async Task Delete(string healthId, string hipId = null)
         {
-            var deleteRequest = await authContext.AuthConfirm
-                .FirstAsync(request =>
-                    request.HealthId == healthId);
-            authContext.Remove(deleteRequest);
+            var query = authContext.AuthConfirm.Where(request => request.HealthId == healthId);
+            if (hipId != null)
+                query = query.Where(request => request.HipId == hipId);
+            var deleteRequests = await query.ToListAsync();
+            authContext.RemoveRange(deleteRequests);
             await authContext.SaveChangesAsync();
         }
 
@@ -109,12 +111,13 @@ namespace In.ProjectEKA.HipService.UserAuth
         }
 
         public async Task<Tuple<string, Exception>> GetAccessToken(
-            string healthId)
+            string healthId, string hipId)
         {
             try
             {
                 var authRequest = await authContext.AuthConfirm
-                    .FirstOrDefaultAsync(request => request.HealthId.Equals(healthId));
+                    .FirstOrDefaultAsync(request =>
+                        request.HealthId.Equals(healthId) && request.HipId.Equals(hipId));
                 return new Tuple<string, Exception>(authRequest != null ? authRequest.AccessToken : null, null);
             }
             catch (Exception exception)

@@ -17,9 +17,11 @@ namespace In.ProjectEKA.HipService.DataFlow.Encryptor
     {
         public static string GenerateRandomKey()
         {
-            var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
             var randomBytes = new byte[32];
-            rngCryptoServiceProvider.GetBytes(randomBytes);
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
             return GetBase64FromByte(randomBytes);
         }
 
@@ -52,7 +54,7 @@ namespace In.ProjectEKA.HipService.DataFlow.Encryptor
         {
             var randomKeySenderBytes = GetByteFromBase64(randomKeySender).ToArray();
             var randomKeyReceiverBytes = GetByteFromBase64(randomKeyReceiver).ToArray();
-            var sb = new byte[randomKeyReceiverBytes.Length];
+            var sb = new byte[randomKeySenderBytes.Length];
             for (var i = 0; i < randomKeySenderBytes.Length; i++)
                 sb[i] = (byte) (randomKeySenderBytes[i] ^ randomKeyReceiverBytes[i % randomKeyReceiverBytes.Length]);
 

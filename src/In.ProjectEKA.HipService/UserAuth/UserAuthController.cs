@@ -268,7 +268,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             return StatusCode(ErrorCodeToStatusCode.GetValueOrDefault(error.Error.Code,StatusCodes.Status400BadRequest), error);
         }
         
-        [Authorize]
+        // [Authorize]
         [HttpPost(PATH_ON_GENERATE_TOKEN)]
         public async Task<ActionResult> OnGenerateLinkToken(OnGenerateTokenRequest request,
         [FromHeader(Name = REQUEST_ID)] string requestId,

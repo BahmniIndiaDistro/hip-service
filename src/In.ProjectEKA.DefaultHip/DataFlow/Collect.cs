@@ -33,7 +33,7 @@ namespace In.ProjectEKA.DefaultHip.DataFlow
                 foreach (var result in patientData.GetOrDefault(careContextReference))
                 {
                     Log.Information($"Returning file: {result}");
-                    bundles.Add(new CareBundle(careContextReference, await FileReader.ReadJsonAsync<Bundle>(result)));
+                    bundles.Add(new CareBundle(careContextReference, result));
                 }
 
             var entries = new Entries(bundles);
@@ -84,7 +84,7 @@ namespace In.ProjectEKA.DefaultHip.DataFlow
                     var refData = patientDataMap[grantedContext.PatientReference];
                     var ccData = refData?[grantedContext.CareContextReference];
                     var listOfDataFiles = new List<string>();
-                    if (ccData == null) continue;
+                    if (ccData == null || ccData.Count == 0) continue;
                     // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                     foreach (var ccRecord in ccData)
                     {
@@ -115,7 +115,7 @@ namespace In.ProjectEKA.DefaultHip.DataFlow
         {
             var ccList = JsonConvert.SerializeObject(request.CareContexts);
             var requestedHiTypes = string.Join(", ", request.HiType.Select(hiType => hiType.ToString()));
-            Log.Information("Data request received." +
+            Log.Information("Data request received in Collect." +
                             $" transactionId:{request.TransactionId} , " +
                             $"CareContexts:{ccList}, " +
                             $"HiTypes:{requestedHiTypes}," +

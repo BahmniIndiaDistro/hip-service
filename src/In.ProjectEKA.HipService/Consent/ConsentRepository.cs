@@ -27,6 +27,8 @@ namespace In.ProjectEKA.HipService.Consent
         {
             var consentArtefact = await consentContext.ConsentArtefact
                 .FirstOrDefaultAsync(c => c.ConsentArtefactId == consentArtefactId);
+            if (consentArtefact == null)
+                return;
             consentArtefact.Status = status;
             await consentContext.SaveChangesAsync();
         }

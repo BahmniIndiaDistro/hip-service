@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using In.ProjectEKA.HipService.Link.Model;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 
 namespace In.ProjectEKA.HipService.Link.Database
@@ -48,9 +51,12 @@ namespace In.ProjectEKA.HipService.Link.Database
             {
                 builder.Property(p => p.DateTimeStamp)
                     .HasDefaultValueSql("now()");
-                builder.Property(p => p.Status)
-                    .HasDefaultValueSql("false");
             });
+
+            var careContextsComparer = new ValueComparer<List<string>>(
+                (left, right) => (left ?? new List<string>()).SequenceEqual(right ?? new List<string>()),
+                value => (value ?? new List<string>()).Aggregate(0, (hash, item) => HashCode.Combine(hash, item.GetHashCode())),
+                value => (value ?? new List<string>()).ToList());
 
             modelBuilder.Entity<LinkedAccounts>()
                 .Property(e => e.CareContexts)
@@ -58,7 +64,8 @@ namespace In.ProjectEKA.HipService.Link.Database
                     v => JsonConvert.SerializeObject(v,
                         new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore}),
                     v => JsonConvert.DeserializeObject<List<string>>(v,
-                        new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore}));
+                        new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore}))
+                .Metadata.SetValueComparer(careContextsComparer);
         }
     }
 }

@@ -153,7 +153,12 @@ namespace In.ProjectEKA.HipService
                 .AddScoped<IDataFlowRepository, DataFlowRepository>()
                 .AddScoped<IHealthInformationRepository, HealthInformationRepository>()
                 .AddSingleton(Configuration.GetSection("Gateway").Get<GatewayConfiguration>())
-                .AddSingleton(Configuration.GetSection("Bahmni").Get<BahmniConfiguration>())
+                .AddSingleton<BahmniConfiguration>(sp =>
+                {
+                    var bahmniConfiguration = new BahmniConfiguration(sp.GetRequiredService<IOpenMrsClient>());
+                    Configuration.GetSection("Bahmni").Bind(bahmniConfiguration);
+                    return bahmniConfiguration;
+                }) // for HFR ID and facility name visit location wise
                 .AddSingleton(Configuration.GetSection("Cors").Get<CorsConfiguration>())
                 .AddSingleton(new GatewayClient(HttpClient,
                     Configuration.GetSection("Gateway").Get<GatewayConfiguration>()))

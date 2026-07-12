@@ -32,7 +32,9 @@ namespace In.ProjectEKA.HipService.DataFlow
                 foreach (var result in patientData.GetOrDefault(careContextReference))
                 {
                     var bundle = new FhirJsonParser().Parse<Bundle>(result);
-                    bundles.Add(new CareBundle(careContextReference, bundle));
+                    string bundleJsonStr = bundle.ToJson();
+                    Log.Debug("Bundle content: " + bundleJsonStr);
+                    bundles.Add(new CareBundle(careContextReference, bundleJsonStr));
                 }
             }
 
@@ -63,7 +65,14 @@ namespace In.ProjectEKA.HipService.DataFlow
                         }
                     }
 
-                    careContextsAndListOfDataFiles.Add(grantedContext.CareContextReference, listOfDataFiles);
+                    if (careContextsAndListOfDataFiles.TryGetValue(grantedContext.CareContextReference, out var existingList))
+                    {
+                        existingList.AddRange(listOfDataFiles);
+                    }
+                    else
+                    {
+                        careContextsAndListOfDataFiles[grantedContext.CareContextReference] = listOfDataFiles;
+                    }
                 }
 
                 return careContextsAndListOfDataFiles;
@@ -80,7 +89,7 @@ namespace In.ProjectEKA.HipService.DataFlow
         {
             var ccList = JsonConvert.SerializeObject(request.CareContexts);
             var requestedHiTypes = string.Join(", ", request.HiType.Select(hiType => hiType.ToString()));
-            Log.Information("Data request received." +
+            Log.Information("Data request received in CollectHipService." +
                             $" transactionId:{request.TransactionId} , " +
                             $"CareContexts:{ccList}, " +
                             $"HiTypes:{requestedHiTypes}," +

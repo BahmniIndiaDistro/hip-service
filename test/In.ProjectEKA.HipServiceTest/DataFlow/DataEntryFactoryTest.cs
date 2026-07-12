@@ -36,15 +36,14 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             var bundleList = new List<Bundle>();
             bundleList.Add(new Bundle());
             var careBundles = new List<CareBundle>();
-            careBundles.Add(new CareBundle("careContextReference", new Bundle()));
+            careBundles.Add(new CareBundle("careContextReference", ""));
             var dataEntries = new Entries(careBundles);
             var expectedEntries = new List<Entry>
             {
                 new Entry(
                     "5zGyp5O9GkggioxwWyUGOQ==",
                     "application/fhir+json",
-                    "MD5",
-                    null,
+                    "bahmni-md5",
                     "careContextReference")
             }.AsEnumerable();
             var transactionId = TestBuilder.Faker().Random.Uuid().ToString();
@@ -88,7 +87,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
                 It.IsAny<string>(),
                 It.IsAny<string>())).Returns(Option.Some("https://hip/health-information"));
             var careBundles = new List<CareBundle>();
-            careBundles.Add(new CareBundle("careContextReference", new Bundle()));
+            careBundles.Add(new CareBundle("careContextReference", ""));
             var dataEntries = new Entries(careBundles);
             var entries = dataEntryFactory.Process(
                 dataEntries, keyMaterialLib, transactionId);
@@ -98,8 +97,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             {
                 foreach (var entry in dataEntries.Entries)
                 {
-                    entry.Content.Should().BeNull();
-                    entry.Link.Should().Contain("https://hip/health-information");
+                    entry.Content.Should().Contain("https://hip/health-information");
                 }
             });
         }

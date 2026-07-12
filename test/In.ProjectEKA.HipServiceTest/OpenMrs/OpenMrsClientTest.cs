@@ -35,13 +35,14 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                 )
                 .ReturnsAsync( new HttpResponseMessage
                 {
-                    StatusCode = HttpStatusCode.BadRequest,
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://someurl/openmrs/path/to/resource"),
                     Content = new StringContent("some error message")
                 })
                 .Verifiable();
 
             //When
-            Func<Task> getAsyncMethod = async () => { await openmrsClient.GetAsync("path/to/resource"); };
+            Func<Task> getAsyncMethod = async () => { await openmrsClient.GetAsync("path/to/resource").ConfigureAwait(false); };
 
             //Then
             getAsyncMethod.Should().Throw<OpenMrsConnectionException>();
@@ -77,9 +78,9 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
         }
 
         [Theory]
-        [InlineData("path/to/resource")]
-        [InlineData("/path/to/resource")]
-        public async Task ShouldInterrogateTheRightDataSource(string patientDiscoveryPath)
+        [InlineData("path/to/resource", "https://someurl/openmrs/path/to/resource")]
+        [InlineData("/path/to/resource", "https://someurl/openmrs//path/to/resource")]
+        public async Task ShouldInterrogateTheRightDataSource(string patientDiscoveryPath, string expectedUri)
         {
             //Given
             var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Loose);
@@ -100,15 +101,15 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
                     ItExpr.IsAny<CancellationToken>())
                     .Callback<HttpRequestMessage, CancellationToken>((response, token) =>
                     {
-                        if (response.RequestUri.AbsoluteUri == "https://someurl/openmrs/path/to/resource" ||
-                        response.RequestUri.AbsoluteUri == "https://someurl/openmrs//path/to/resource")
+                        if (response.RequestUri.AbsoluteUri == expectedUri)
                         {
                         wasCalledWithTheRightUri = true;
                         }
                     })
                     .ReturnsAsync(new HttpResponseMessage
                     {
-                        StatusCode = HttpStatusCode.OK
+                    StatusCode = HttpStatusCode.OK,
+                    RequestMessage = new HttpRequestMessage(HttpMethod.Get, "https://someurl/openmrs/path/to/resource")
                     })
                     .Verifiable();
 
