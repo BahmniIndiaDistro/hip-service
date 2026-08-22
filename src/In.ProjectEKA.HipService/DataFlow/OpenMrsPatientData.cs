@@ -13,7 +13,7 @@ namespace In.ProjectEKA.HipService.DataFlow
 {
     public class OpenMrsPatientData : IOpenMrsPatientData
     {
-        private readonly Dictionary<string, string> hiTypeToRootElement = new Dictionary<string, string>()
+        public static readonly Dictionary<string, string> hiTypeToRootElement = new Dictionary<string, string>()
         {
             {HiType.Prescription.ToString().ToLower(), "prescriptions"},
             {HiType.DiagnosticReport.ToString().ToLower(), "diagnosticReports"},
@@ -21,7 +21,8 @@ namespace In.ProjectEKA.HipService.DataFlow
             {HiType.DischargeSummary.ToString().ToLower(), "dischargeSummary"},
             {HiType.ImmunizationRecord.ToString().ToLower(), "immunizationRecord"},
             {HiType.HealthDocumentRecord.ToString().ToLower(), "healthDocumentRecord"},
-            {HiType.WellnessRecord.ToString().ToLower(), "wellnessRecord"}
+            {HiType.WellnessRecord.ToString().ToLower(), "wellnessRecord"},
+            {HiType.Invoice.ToString().ToLower(), "invoice"}
         };
 
         private readonly IOpenMrsClient openMrsClient;
@@ -55,10 +56,9 @@ namespace In.ProjectEKA.HipService.DataFlow
         }
 
         private async Task<List<string>> GetForVisits(string hiType, string consentId, string grantedContext,
-            string toDate,
-            string fromDate)
+            string toDate, string fromDate)
         {
-            var pathForVisit = $"{Constants.PATH_OPENMRS_HITYPE}{hiTypeToRootElement[hiType]}/visit/";
+            var pathForVisit = $"{Constants.PATH_OPENMRS_HITYPE}{hiTypeToRootElement[hiType]}/visit";
             var query = HttpUtility.ParseQueryString(string.Empty);
             if (
                 !string.IsNullOrEmpty(consentId) &&
@@ -70,22 +70,34 @@ namespace In.ProjectEKA.HipService.DataFlow
                 var careContexReference = grantedContext.Split(":");
                 query["patientId"] = consentId;
                 query["visitUuid"] = careContexReference[1];
-                query["fromDate"] = DateTime.Parse(fromDate).ToString("yyyy-MM-dd");
+                query["fromDate"] = DateTime.Parse(fromDate).AddDays(-1).ToString("yyyy-MM-dd");
                 query["toDate"] = DateTime.Parse(toDate).AddDays(1).ToString("yyyy-MM-dd");
             }
 
             if (query.ToString() != "")
             {
-                pathForVisit = $"{pathForVisit}?{query}";
+                pathForVisit = $"{pathForVisit}?{query.ToString()}";
             }
 
             Log.Information("VISIT endpoint being called: " + pathForVisit);
             var response = await openMrsClient.GetAsync(pathForVisit);
             if (response == null) return new List<string>();
             var content = await response.Content.ReadAsStringAsync();
+            // Log.Information("VISIT endpoint content: " + content);
+            if (string.IsNullOrEmpty(content)) {
+                Log.Debug("No content found for VISIT endpoint, pathForVisit: " + pathForVisit);
+                return new List<string>();
+            }
             var jsonDoc = JsonDocument.Parse(content);
+            if (jsonDoc == null) {
+                Log.Debug("No root element found for VISIT endpoint, pathForVisit: " + pathForVisit);
+                return new List<string>();
+            }
             var root = jsonDoc.RootElement;
-            var entries = root.GetProperty(hiTypeToRootElement[hiType]);
+            if (root.ValueKind == JsonValueKind.Undefined || !root.TryGetProperty(hiTypeToRootElement[hiType], out JsonElement entries)) {
+                Log.Debug("No entries found for VISIT endpoint, pathForVisit: " + pathForVisit);
+                return new List<string>();
+            }
             var listOfData = new List<string>();
             if (entries.GetArrayLength() > 0)
             {
@@ -93,6 +105,8 @@ namespace In.ProjectEKA.HipService.DataFlow
                 {
                     listOfData.Add(jsonElement.GetProperty("bundle").ToString());
                 }
+            } else {
+                Log.Debug("No entries found for VISIT endpoint, pathForVisit: " + pathForVisit);
             }
 
             return listOfData;

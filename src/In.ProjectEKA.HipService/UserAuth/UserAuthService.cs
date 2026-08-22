@@ -13,6 +13,7 @@ using In.ProjectEKA.HipService.Gateway;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.Extensions.Logging;
 using Optional;
+using Optional.Unsafe;
 using static In.ProjectEKA.HipService.Common.Constants;
 using Error = In.ProjectEKA.HipLibrary.Patient.Model.Error;
 
@@ -24,13 +25,15 @@ namespace In.ProjectEKA.HipService.UserAuth
         private readonly IUserAuthRepository userAuthRepository;
         private readonly ILogger<UserAuthController> logger;
         private readonly IGatewayClient gatewayClient;
+        private readonly BahmniConfiguration bahmniConfiguration;
 
 
-        public UserAuthService(IUserAuthRepository userAuthRepository, ILogger<UserAuthController> logger, IGatewayClient gatewayClient)
+        public UserAuthService(IUserAuthRepository userAuthRepository, ILogger<UserAuthController> logger, IGatewayClient gatewayClient, BahmniConfiguration bahmniConfiguration)
         {
             this.userAuthRepository = userAuthRepository;
             this.logger = logger;
             this.gatewayClient = gatewayClient;
+            this.bahmniConfiguration = bahmniConfiguration;
         }
         
 
@@ -295,22 +298,10 @@ namespace In.ProjectEKA.HipService.UserAuth
             {
                 healthId = getHealthId(onAuthConfirmRequest.auth.accessToken);
             }
-            var authConfirm = new AuthConfirm(healthId, accessToken);
-            var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
-            if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
-            {
-                var authConfirmResponse = await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
-                if (!authConfirmResponse.HasValue)
-                {
-                    return new Tuple<AuthConfirm, ErrorRepresentation>(null,
-                        new ErrorRepresentation(new Error(ErrorCode.DuplicateAuthConfirmRequest,
-                            "Auth confirm request already exists")));
-                }
-            }
-            else
-            {
-                userAuthRepository.Update(authConfirm);
-            }
+            var authConfirmResponse = await SaveAuthConfirm(healthId, accessToken).ConfigureAwait(false);
+            if (authConfirmResponse.Item2 != null)
+                return authConfirmResponse;
+            var authConfirm = authConfirmResponse.Item1;
 
             UserAuthMap.HealthIdToTransactionId.Remove(healthId);
             var requestId = Guid.Parse(onAuthConfirmRequest.resp.RequestId);
@@ -339,16 +330,7 @@ namespace In.ProjectEKA.HipService.UserAuth
             {
                 UserAuthMap.TransactionIdToPatientDetails.Add(Guid.Parse(request.auth.transactionId), request.auth.patient);
                 var healthId = request.auth.patient.id;
-                var authConfirm = new AuthConfirm(healthId, request.auth.accessToken);
-                var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
-                if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
-                {
-                    await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
-                }
-                else
-                {
-                    userAuthRepository.Update(authConfirm);
-                }
+                await SaveAuthConfirm(healthId, request.auth.accessToken).ConfigureAwait(false);
             }
 
             return null;
@@ -357,6 +339,7 @@ namespace In.ProjectEKA.HipService.UserAuth
         public async Task Dump(NdhmDemographics ndhmDemographics)
         {
             await userAuthRepository.AddDemographics(ndhmDemographics).ConfigureAwait(false);
+            UserAuthMap.UpdateHealthIdToPhoneNumber(ndhmDemographics.PhoneNumber, ndhmDemographics.HealthId);
         }
 
         public async Task<Tuple<AuthConfirm, ErrorRepresentation>> HandleOnGenerateLinkToken(OnGenerateTokenRequest onGenerateTokenRequest)
@@ -374,13 +357,18 @@ namespace In.ProjectEKA.HipService.UserAuth
             {
                 healthId = getHealthId(accessToken);
             }
-            Tuple<AuthConfirm, ErrorRepresentation> authConfirmResponse = await updateAuthConfirmRepository(healthId, accessToken);
+            var hipId = bahmniConfiguration.GetDefaultHfrId();
+            if (UserAuthMap.RequestIdToHipId.ContainsKey(onGenerateTokenRequest.Response.RequestId))
+            {
+                hipId = UserAuthMap.RequestIdToHipId[onGenerateTokenRequest.Response.RequestId];
+            }
+            Tuple<AuthConfirm, ErrorRepresentation> authConfirmResponse = await updateAuthConfirmRepository(healthId, accessToken, hipId);
             if (authConfirmResponse.Item2 != null)
             {
                 return authConfirmResponse;
             }
             var requestId = Guid.Parse(onGenerateTokenRequest.Response.RequestId);
-            updateUserAuthMaps(accessToken, healthId, requestId);
+            updateUserAuthMaps(accessToken, healthId, requestId, hipId);
             return authConfirmResponse;
         }
 
@@ -404,24 +392,49 @@ namespace In.ProjectEKA.HipService.UserAuth
 
         }
 
-        private void updateUserAuthMaps(string accessToken, string healthId, Guid requestId)
+        private void updateUserAuthMaps(string accessToken, string healthId, Guid requestId, string hipId)
         {
-            UserAuthMap.RequestIdToAccessToken.Add(requestId, accessToken);
-            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(healthId))
+            if (hipId == null)
             {
-                UserAuthMap.HealthIdToAccessToken[healthId] = accessToken;
+                hipId = bahmniConfiguration.GetDefaultHfrId();
+                if (UserAuthMap.RequestIdToHipId.ContainsKey(requestId.ToString()))
+                {
+                    hipId = UserAuthMap.RequestIdToHipId[requestId.ToString()];
+                }
+            }
+            var compositeKey = healthId + COMPOSITE_AUTH_KEY_SEPARATOR + hipId;
+            UserAuthMap.RequestIdToAccessToken.Add(requestId, accessToken);
+            if (UserAuthMap.HealthIdToAccessToken.ContainsKey(compositeKey))
+            {
+                UserAuthMap.HealthIdToAccessToken[compositeKey] = accessToken;
             }
             else
             {
-                UserAuthMap.HealthIdToAccessToken.Add(healthId, accessToken);
+                UserAuthMap.HealthIdToAccessToken.Add(compositeKey, accessToken);
             }
         }
 
-        private async Task<Tuple<AuthConfirm, ErrorRepresentation>> updateAuthConfirmRepository(string healthId, string accessToken)
+        private async Task<Tuple<AuthConfirm, ErrorRepresentation>> updateAuthConfirmRepository(string healthId, string accessToken, string hipId)
         {
-            var authConfirm = new AuthConfirm(healthId, accessToken);
-            var savedAuthConfirm = userAuthRepository.Get(healthId).Result;
-            if (savedAuthConfirm.Equals(Option.Some<AuthConfirm>(null)))
+            return await SaveAuthConfirm(healthId, accessToken, hipId).ConfigureAwait(false);
+        }
+
+        private async Task<Tuple<AuthConfirm, ErrorRepresentation>> SaveAuthConfirm(string healthId, string accessToken, string hipId = null)
+        {
+            var authConfirm = new AuthConfirm(healthId, hipId, accessToken);
+            var savedAuthConfirm = await userAuthRepository.Get(healthId, hipId).ConfigureAwait(false);
+            var existing = savedAuthConfirm.ValueOrDefault();
+            if (existing == null)
+            {
+                var authConfirmResponse = await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
+                if (!authConfirmResponse.HasValue)
+                {
+                    return new Tuple<AuthConfirm, ErrorRepresentation>(null,
+                        new ErrorRepresentation(new Error(ErrorCode.DuplicateAuthConfirmRequest,
+                            "Auth confirm request already exists")));
+                }
+            }
+            else if (existing.HipId != hipId)
             {
                 var authConfirmResponse = await userAuthRepository.Add(authConfirm).ConfigureAwait(false);
                 if (!authConfirmResponse.HasValue)

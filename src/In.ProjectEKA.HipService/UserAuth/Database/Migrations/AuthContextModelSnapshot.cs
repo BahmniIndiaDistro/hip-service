@@ -23,10 +23,13 @@ namespace In.ProjectEKA.HipService.Migrations
                     b.Property<string>("HealthId")
                         .HasColumnType("text");
 
+                    b.Property<string>("HipId")
+                        .HasColumnType("text");
+
                     b.Property<string>("AccessToken")
                         .HasColumnType("text");
 
-                    b.HasKey("HealthId");
+                    b.HasKey("HealthId", "HipId");
 
                     b.ToTable("AuthConfirm");
                 });

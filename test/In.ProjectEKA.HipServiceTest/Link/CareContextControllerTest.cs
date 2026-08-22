@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using Hl7.Fhir.Model;
 using In.ProjectEKA.HipLibrary.Patient.Model;
 using In.ProjectEKA.HipService.Gateway;
+using In.ProjectEKA.HipService.Common.Model;
 using In.ProjectEKA.HipService.Link;
 using In.ProjectEKA.HipService.Link.Model;
+using In.ProjectEKA.HipService.OpenMrs;
 using In.ProjectEKA.HipService.UserAuth.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -25,11 +27,15 @@ namespace In.ProjectEKA.HipServiceTest.Link
         private readonly Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
         private readonly Mock<ICareContextService> careContextService = new Mock<ICareContextService>();
         private readonly Mock<ILinkPatientRepository> linkPatientRepository = new Mock<ILinkPatientRepository>();
+        private readonly Mock<IOpenMrsClient> openMrsClient = new Mock<IOpenMrsClient>();
         
         public CareContextControllerTest()
         {
             careContextController =
-                new CareContextController(careContextService.Object, linkPatientRepository.Object);
+                new CareContextController(careContextService.Object,
+                    linkPatientRepository.Object,
+                    openMrsClient.Object,
+                    new BahmniConfiguration(openMrsClient.Object));
         }
 
         [Fact]
@@ -89,7 +95,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
                     new NotificationContext(patient, notificationCareContext, hiTypes, new DateTime().ToString(DateTimeFormat), hipReference));
 
             careContextService.Setup(a => a.NotificationContextResponse(notifyContextRequest, careContextRepresentation))
-                .Returns(new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
+                .ReturnsAsync(new Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>
                     (gatewayNotificationContextsRequestRepresentation, null));
 
             var cmSuffix = "sbx";
@@ -107,7 +113,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
         }
 
         [Fact]
-        private void ShouldCallAddContextApi()
+        private async Task ShouldCallAddContextApi()
         {
             var careContexts = new List<CareContextRepresentation>
             {
@@ -119,9 +125,9 @@ namespace In.ProjectEKA.HipServiceTest.Link
 
             linkPatientRepository.Setup(e => e.GetLinkedCareContextsOfPatient(newContextRequest.PatientReferenceNumber))
                 .ReturnsAsync(new Tuple<List<string>, Exception>(linkedCareContexts, null));
-            careContextService.Setup(e => e.IsLinkedContext(linkedCareContexts, careContexts[0].Display))
+            careContextService.Setup(e => e.IsLinkedContext(linkedCareContexts, careContexts[0].ReferenceNumber))
                 .Returns(false);
-            careContextController.PassContext(newContextRequest);
+            await careContextController.PassContext(newContextRequest);
 
             careContextService.Verify(a => a.CallAddContext(newContextRequest), Times.Exactly(1));
         }

@@ -7,31 +7,31 @@ namespace In.ProjectEKA.HipService.Verification.Model;
 
 public class ABHALoginVerifyOTPRequest
 {
-    public AuthDataModel AuthData { get; set; }
-    public List<string> Scope { get; }
+    public AuthDataModel authData { get; set; }
+    public List<string> scope { get; }
     public ABHALoginVerifyOTPRequest(string txnId, List<string> abhaScopes, string otpValue)
     {
-        Scope = abhaScopes;
-        AuthData = new AuthDataModel
+        scope = abhaScopes;
+        authData = new AuthDataModel
         {
-            AuthMethods = new List<string> { ABHAAuthMethods.OTP.Value },
-            Otp = new OtpModel
+            authMethods = new List<string> { ABHAAuthMethods.OTP.Value },
+            otp = new OtpModel
             {
-                TxnId = txnId,
-                OtpValue = otpValue
+                txnId = txnId,
+                otpValue = otpValue
             }
         };
     }
     public class AuthDataModel
     {
-        public List<string> AuthMethods { get; set; }
-        public OtpModel Otp { get; set; }
+        public List<string> authMethods { get; set; }
+        public OtpModel otp { get; set; }
     }
 
     public class OtpModel
     {
-        public string TxnId { get; set; }
-        public string OtpValue { get; set; }
+        public string txnId { get; set; }
+        public string otpValue { get; set; }
     }
     
 }

@@ -34,8 +34,8 @@ public class ABHAProfileResponse
     public string WardName { get; set; }
     public List<string> AuthMethods { get; set; }
     public Dictionary<string, string> Tags { get; set; }
-    public bool KycVerified { get; set; }
+    public string KycVerified { get; set; }
     public string VerificationStatus { get; set; }
     public string VerificationType { get; set; }
-    public bool EmailVerified { get; set; }
+    public string EmailVerified { get; set; }
 }

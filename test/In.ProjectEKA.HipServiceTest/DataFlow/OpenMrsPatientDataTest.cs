@@ -27,7 +27,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             var toDate = "2020-12-12";
             var hiType = "prescription";
             var pathForPrescription =
-                "ws/rest/v1/hip/prescriptions/visit/?patientId=12&visitUuid=1234&fromDate=2020-01-01&toDate=2020-12-13";
+                "ws/rest/v1/hip/prescriptions/visit?patientId=12&visitUuid=1234&fromDate=2019-12-31&toDate=2020-12-13";
 
             OpenMrsClientMock
                 .Setup(x => x.GetAsync(pathForPrescription))
@@ -76,7 +76,7 @@ namespace In.ProjectEKA.HipServiceTest.DataFlow
             var toDate = "2020-12-12";
             var hiType = "diagnosticreport";
             var pathForPrescription =
-                "ws/rest/v1/hip/diagnosticReports/visit/?patientId=12&visitUuid=1234&fromDate=2020-01-01&toDate=2020-12-13";
+                "ws/rest/v1/hip/diagnosticReports/visit?patientId=12&visitUuid=1234&fromDate=2019-12-31&toDate=2020-12-13";
 
             OpenMrsClientMock
                 .Setup(x => x.GetAsync(pathForPrescription))

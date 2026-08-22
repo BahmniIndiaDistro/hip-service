@@ -12,7 +12,7 @@ namespace In.ProjectEKA.HipService.Link
         public Task<Tuple<GatewayAddContextsRequestRepresentation, ErrorRepresentation>> AddContextsResponse(
             NewContextRequest addContextsRequest, string cmSuffix, Guid requestId);
 
-        public Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation> NotificationContextResponse(
+        public Task<Tuple<GatewayNotificationContextRepresentation, ErrorRepresentation>> NotificationContextResponse(
             NewContextRequest notifyContextRequest, CareContextRepresentation context);
 
         public Task CallNotifyContext(NewContextRequest newContextRequest,
@@ -20,6 +20,6 @@ namespace In.ProjectEKA.HipService.Link
 
         public Task CallAddContext(NewContextRequest newContextRequest);
         public bool IsLinkedContext(List<string> careContexts, string context);
-        Task SetAccessToken(string patientReferenceNumber);
+        Task SetAccessToken(string patientReferenceNumber, string hipId);
     }
 }

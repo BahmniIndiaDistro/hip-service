@@ -31,7 +31,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
             var bundle = new FhirJsonParser().Parse<Bundle>(content);
             bundle.Entry.ForEach(entry =>
             {
-                if (entry.Resource.ResourceType.Equals(ResourceType.Patient))
+                if (entry.Resource.TryDeriveResourceType(out ResourceType outResourceType) && outResourceType.Equals(ResourceType.Patient))
                 {
                     patients.Add((Patient) entry.Resource);
                 }
@@ -62,7 +62,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
             var bundle = new FhirJsonParser().Parse<Bundle>(content);
             bundle.Entry.ForEach(entry =>
             {
-                if (entry.Resource.ResourceType.Equals(ResourceType.Patient))
+                if (entry.Resource.TryDeriveResourceType(out ResourceType outResourceType) && outResourceType.Equals(ResourceType.Patient))
                 {
                     patients.Add((Patient) entry.Resource);
                 }
@@ -86,7 +86,7 @@ namespace In.ProjectEKA.HipService.OpenMrs
                 query["identifier"]=patientIdentifier;
             }
             if (query.ToString() != ""){
-                path = $"{path}/?{query}";
+                path = $"{path}?{query}";
             }
 
             var response = await openMrsClient.GetAsync(path);

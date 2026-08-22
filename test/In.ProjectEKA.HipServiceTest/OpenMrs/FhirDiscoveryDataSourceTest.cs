@@ -185,7 +185,7 @@ namespace In.ProjectEKA.HipServiceTest.OpenMrs
             var openmrsClientMock = new Mock<IOpenMrsClient>();
             var discoveryDataSource = new FhirDiscoveryDataSource(openmrsClientMock.Object);
             var identifier = "GAN203007";
-            var path = $"{Endpoints.Fhir.OnPatientPath}/?identifier={identifier}";
+            var path = $"{Endpoints.Fhir.OnPatientPath}?identifier={identifier}";
 
             openmrsClientMock
                 .Setup(x => x.GetAsync(path))

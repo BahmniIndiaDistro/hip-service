@@ -85,7 +85,7 @@ namespace In.ProjectEKA.HipService.Gateway
 
         public virtual async Task SendDataToGateway<T>(string urlPath, T response, string cmSuffix, string correlationId, string hipId = null,string requestId=null, string linkToken = null)
         {
-            await PostTo(configuration.Url + urlPath, response, cmSuffix, correlationId, hipId,requestId,linkToken).ConfigureAwait(false);
+            await PostTo(configuration.Url + urlPath, response, cmSuffix, correlationId, hipId, requestId, linkToken).ConfigureAwait(false);
         }
 
         public virtual async Task<HttpResponseMessage> CallABHAService<T>(HttpMethod method, string baseUrl,string urlPath,
@@ -101,7 +101,7 @@ namespace In.ProjectEKA.HipService.Gateway
                     Log.Debug("Request Payload {@payload}", representation);
                     response = await httpClient
                         .SendAsync(CreateHttpRequest(method, baseUrl + urlPath, representation, token.ValueOr(String.Empty),
-                            null, correlationId,xtoken, tToken, transactionId))
+                            configuration.CmSuffix, correlationId, xtoken, tToken, transactionId))
                         .ConfigureAwait(false);
                     Log.Information("Response Status from ABHA Service for URI {@uri} is {@status}", baseUrl + urlPath, response.StatusCode);
                     Log.Debug("Response Payload {@payload}", response.Content.ReadAsStringAsync());

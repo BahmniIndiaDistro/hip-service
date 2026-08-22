@@ -41,7 +41,7 @@ namespace In.ProjectEKA.HipService.Creation
             try
             {
                 logger.Log(LogLevel.Information,
-                    LogEvents.Creation, "Request for ABHA-patient-profile to gateway");
+                    LogEvents.Creation, "Request for ABHA-patient-profile to gateway: sessionId: {SessionId}", sessionId);
                 if (HealthIdNumberTokenDictionary.ContainsKey(sessionId))
                 {
                     HealthIdNumberTokenDictionary[sessionId] = tokenRequest;
@@ -50,8 +50,8 @@ namespace In.ProjectEKA.HipService.Creation
                 {
                     HealthIdNumberTokenDictionary.Add(sessionId, tokenRequest);
                 }
-                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, gatewayConfiguration.AbhaNumberServiceUrl,ABHA_PATIENT_PROFILE,
-                    null, null,$"{tokenRequest.tokenType} {tokenRequest.token}" ))
+                using (var response = await gatewayClient.CallABHAService<string>(HttpMethod.Get, gatewayConfiguration.AbhaNumberServiceUrl, ABHA_ACCOUNT,
+                    null, null, $"{tokenRequest.tokenType} {tokenRequest.token}" ))
                 {
                     var responseContent = await response?.Content.ReadAsStringAsync();
 
@@ -60,7 +60,7 @@ namespace In.ProjectEKA.HipService.Creation
                         var createAbhaResponse = JsonConvert.DeserializeObject<ABHAProfile>(responseContent);
                         return createAbhaResponse;
                     }
-                    logger.LogError(LogEvents.Creation, "Error happened for ABHA patient profile with error response" + responseContent);
+                    logger.LogError(LogEvents.Creation, "Error happened for ABHA patient profile with error response " + responseContent);
                     return null;
                 }
                 

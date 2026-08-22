@@ -6,6 +6,7 @@ public class ABHALoginHint
     public static readonly ABHALoginHint MOBILE = new ABHALoginHint("mobile");
     public static readonly ABHALoginHint ABHA_NUMBER = new ABHALoginHint("abha-number");
     public static readonly ABHALoginHint ABHA_Address = new ABHALoginHint("abha-address");
+    public static readonly ABHALoginHint ABHA_INDEX = new ABHALoginHint("index");
 
     public string Value { get; private set; }
 

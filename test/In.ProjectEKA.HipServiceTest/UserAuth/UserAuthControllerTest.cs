@@ -35,10 +35,9 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
         private readonly Mock<GatewayClient> gatewayClient = new Mock<GatewayClient>(MockBehavior.Strict, null, null);
         private readonly Mock<IUserAuthService> userAuthService = new Mock<IUserAuthService>();
 
-        private readonly BahmniConfiguration bahmniConfiguration = new BahmniConfiguration()
-        {
-            Id = "Bahmni"
-        };
+        private readonly Mock<IOpenMrsClient> openMrsClient = new Mock<IOpenMrsClient>();
+
+        private readonly BahmniConfiguration bahmniConfiguration;
 
         private readonly GatewayConfiguration gatewayConfiguration = new GatewayConfiguration()
         {
@@ -55,6 +54,10 @@ namespace In.ProjectEKA.HipServiceTest.UserAuth
 
         public UserAuthControllerTest()
         {
+            bahmniConfiguration = new BahmniConfiguration(openMrsClient.Object)
+            {
+                Id = "Bahmni"
+            };
             userAuthController = new UserAuthController(gatewayClient.Object,
                 logger.Object,
                 userAuthService.Object, bahmniConfiguration, gatewayConfiguration, httpClient, openMrsConfiguration);

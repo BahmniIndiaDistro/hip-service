@@ -4,7 +4,7 @@ namespace In.ProjectEKA.HipService.Creation.Model
     {
         public string abhaAddress;
         public string txnId;
-        public int preferred = 1;
+        public int preferred = 0;
 
         public CreateABHAAddressRequest(string txnId, string abhaAddress)
         {

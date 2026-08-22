@@ -18,6 +18,7 @@ namespace In.ProjectEKA.HipServiceTest.Link
     using HipLibrary.Patient;
     using HipLibrary.Patient.Model;
     using HipService.Common;
+    using HipService.Common.Model;
     using HipService.Discovery;
     using HipService.Link;
     using HipService.Link.Model;
@@ -59,6 +60,11 @@ namespace In.ProjectEKA.HipServiceTest.Link
         {
             var otpService = new OtpServiceConfiguration {BaseUrl = "http://localhost:5000", OffsetInMinutes = 5};
             var otpServiceConfigurations = Options.Create(otpService);
+            var bahmniConfiguration = new BahmniConfiguration(openmrsClient.Object)
+            {
+                Id = "HIP_ID_123",
+                Name = "HIP_NAME"
+            };
             linkPatient = new LinkPatient(linkRepository.Object,
                 patientRepository.Object,
                 patientVerification.Object,
@@ -66,7 +72,8 @@ namespace In.ProjectEKA.HipServiceTest.Link
                 discoveryRequestRepository.Object,
                 otpServiceConfigurations,
                 openmrsClient.Object,
-                userAuthService.Object);
+                userAuthService.Object,
+                bahmniConfiguration);
         }
 
         [Fact]

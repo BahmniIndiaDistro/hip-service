@@ -27,7 +27,8 @@
         <PackageReference Include="BouncyCastle.NetCore" Version="1.8.6" />
         <PackageReference Include="Curve25519" Version="1.0.1" />
         <PackageReference Include="Elastic.CommonSchema.Serilog" Version="1.5.1" />
-        <PackageReference Include="Hl7.Fhir.R4" Version="1.9.0" />
+        <PackageReference Include="Hl7.Fhir.R4" Version="5.8.0" />
+		<PackageReference Include="Hl7.Fhir.Specification.R4" Version="5.8.0" />
         <PackageReference Include="Microsoft.AspNetCore.HttpsPolicy" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.7" />
@@ -35,7 +36,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.7" />
 <!--        <PackageReference Include="NpgSql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.1" />-->
         <PackageReference Include="Optional" Version="4.0.0" />
